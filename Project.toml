@@ -3,6 +3,9 @@ uuid = "98bfc277-1877-43dc-819b-a3e38c30242f"
 authors = ["Patrick Altmeyer"]
 version = "0.1.0"
 
+[deps]
+MLJ = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"
+
 [compat]
 julia = "1.7"
 
