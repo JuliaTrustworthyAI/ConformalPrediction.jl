@@ -1,3 +1,0 @@
-module Models
-
-end

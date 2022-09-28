@@ -1,18 +1,17 @@
 module Calibration
 
 using MLJ
-using ..NonConformityMeasures
+using ..ConformalPrediction
+using ..ConformalScores
 
-struct CalibratedMachine
-    machine::Machine
-    scores::AbstractArray
+function calibrate!(conf_mach::ConformalClassifier, Xcal, ycal; score_fun::ClassifierScoreFunction=ModeError())
+    conf_mach.scores = sort(score_fun(conf_mach, Xcal, ycal), rev=true) # non-conformity scores
 end
 
-function calibrate(mach::Machine, Xcal, ycal)
-    scores = score(mach, Xcal, ycal) # non-conformity scores
-    return CalibratedMachine(mach, scores)
+function calibrate!(conf_mach::ConformalRegressor, Xcal, ycal; score_fun::RegressorScoreFunction=AbsoluteError())
+    conf_mach.scores = sort(score_fun(conf_mach, Xcal, ycal), rev=true) # non-conformity scores
 end
 
-export CalibratedMachine, calibrate
+export calibrate!
     
 end
