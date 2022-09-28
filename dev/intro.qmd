@@ -44,6 +44,10 @@ conf_mach = conformal_machine(mach)
 calibrate!(conf_mach, selectrows(X, calibration), y[calibration])
 ```
 
+```{julia}
+predict(conf_mach, selectrows(X, test))
+```
+
 
 ## Usage Example - Regression
 
