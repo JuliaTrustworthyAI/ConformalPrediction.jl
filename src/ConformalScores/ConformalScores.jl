@@ -6,10 +6,10 @@ abstract type AbstractScoreFunction end
 
 include("regression.jl")
 export RegressorScoreFunction
-export AbsoluteError
+export Naive
 
 include("classification.jl")
 export ClassifierScoreFunction
-export ModeError
+export LABEL
     
 end

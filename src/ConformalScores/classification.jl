@@ -1,9 +1,9 @@
 abstract type ClassifierScoreFunction <: AbstractScoreFunction end
 
-struct ModeError <: ClassifierScoreFunction end
+struct LABEL <: ClassifierScoreFunction end
 
 using MLJ
-function (s::ModeError)(conf_mach::ConformalClassifier, Xcal, ycal)
-    ŷ = predict_mode(conf_mach.mach, Xcal)
+function (s::LABEL)(conf_mach::ConformalClassifier, Xcal, ycal)
+    ŷ = pdf.(predict(conf_mach.mach, Xcal),ycal)
     @.(1.0 - ŷ)
 end
