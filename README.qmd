@@ -10,8 +10,10 @@ crossref:
 bibliography: https://raw.githubusercontent.com/pat-alt/bib/main/bib.bib
 output: asis
 execute: 
-  eval: false
+  eval: true
   echo: true
+  output: false
+  freeze: auto  # re-render only when source changes
 jupyter: julia-1.7
 ---
 
