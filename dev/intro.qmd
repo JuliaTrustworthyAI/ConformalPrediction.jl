@@ -12,7 +12,7 @@ bibliography: https://raw.githubusercontent.com/pat-alt/bib/main/bib.bib
 
 ```{julia}
 #| echo: false
-using Pkg; Pkg.activate("../")
+using Pkg; Pkg.activate("docs/")
 using Plots, PlotThemes
 theme(:wong)
 ```
