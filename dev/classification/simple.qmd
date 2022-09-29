@@ -1,0 +1,42 @@
+---
+format: 
+  commonmark:
+    variant: -raw_html
+    wrap: none
+    self-contained: true
+crossref:
+  fig-prefix: Figure
+  tbl-prefix: Table
+bibliography: https://raw.githubusercontent.com/pat-alt/bib/main/bib.bib
+output: asis
+execute: 
+  eval: false
+  echo: true
+jupyter: julia-1.7
+---
+
+```{julia}
+using MLJ
+X, y = MLJ.make_blobs(1000, 2, centers=2)
+train, calibration, test = partition(eachindex(y), 0.4, 0.4)
+```
+
+```{julia}
+EvoTreeClassifier = @load EvoTreeClassifier pkg=EvoTrees
+model = EvoTreeClassifier() 
+```
+
+```{julia}
+mach = machine(model, X, y)
+fit!(mach, rows=train)
+```
+
+```{julia}
+using ConformalPrediction
+conf_mach = conformal_machine(mach)
+calibrate!(conf_mach, selectrows(X, calibration), y[calibration])
+```
+
+```{julia}
+predict(conf_mach, selectrows(X, test))
+```
