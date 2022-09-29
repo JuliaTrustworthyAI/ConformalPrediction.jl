@@ -23,6 +23,7 @@ available_machines = ConformalPrediction.ConformalMachines.available_machines[:c
     for _method in keys(available_machines)
         @testset "Method: $(_method)" begin
             conf_mach = conformal_machine(mach; method=_method)
+            conf_mach = available_machines[_method](mach)
             @test isnothing(conf_mach.scores)
             @test typeof(conf_mach) <: ConformalPrediction.ConformalMachines.ConformalClassifier
             calibrate!(conf_mach, selectrows(X, calibration), y[calibration])
