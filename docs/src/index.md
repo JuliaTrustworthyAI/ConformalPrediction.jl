@@ -11,7 +11,7 @@ Documentation for [ConformalPrediction.jl](https://github.com/pat-alt/ConformalP
 
 ## Disclaimer ⚠️
 
-This package is in its very early stages of development. In fact, I’ve built this package largely to gain a better understanding of the topic itself. So far only the most simple approaches have been implemented:
+This package is in its very early stages of development. In fact, I’ve built this package largely to gain a better understanding of the topic myself. So far only the most simple approaches have been implemented:
 
 - Naive method for regression.
 - LABEL approach for classification (Sadinle, Lei, and Wasserman 2019).

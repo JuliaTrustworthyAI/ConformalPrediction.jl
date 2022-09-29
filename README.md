@@ -7,7 +7,7 @@
 
 ## Disclaimer ⚠️
 
-This package is in its very early stages of development. In fact, I’ve built this package largely to gain a better understanding of the topic itself. So far only the most simple approaches have been implemented:
+This package is in its very early stages of development. In fact, I’ve built this package largely to gain a better understanding of the topic myself. So far only the most simple approaches have been implemented:
 
 - Naive method for regression.
 - LABEL approach for classification (Sadinle, Lei, and Wasserman 2019).
@@ -64,11 +64,11 @@ predict(conf_mach, selectrows(X, rand(test,5)))
 ```
 
     5-element Vector{Vector{Pair{String, Vector{Float64}}}}:
-     ["lower" => [-1.6291530550407294], "upper" => [0.4270558801138472]]
-     ["lower" => [-1.0496291711256793], "upper" => [1.0065797640288974]]
-     ["lower" => [1.007328341769408], "upper" => [3.063537276923985]]
-     ["lower" => [-1.394649183193528], "upper" => [0.6615597519610488]]
-     ["lower" => [0.8025534115593342], "upper" => [2.858762346713911]]
+     ["lower" => [-2.5656268495995658], "upper" => [1.4558014252276577]]
+     ["lower" => [-2.5656268495995658], "upper" => [1.4558014252276577]]
+     ["lower" => [-2.5656268495995658], "upper" => [1.4558014252276577]]
+     ["lower" => [-3.906072026876036], "upper" => [0.11535624795118737]]
+     ["lower" => [-1.9725646439635294], "upper" => [2.048863630863694]]
 
 ## Contribute 🛠
 
