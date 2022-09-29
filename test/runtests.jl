@@ -2,5 +2,8 @@ using ConformalPrediction
 using Test
 
 @testset "ConformalPrediction.jl" begin
-    # Write your tests here.
+
+    include("classification.jl")
+    include("regression.jl")
+    
 end

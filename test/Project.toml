@@ -1,0 +1,4 @@
+[deps]
+EvoTrees = "f6006082-12f8-11e9-0c9c-0d5d367ab1e5"
+MLJ = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
