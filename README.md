@@ -7,14 +7,14 @@
 
 ## Disclaimer ⚠️
 
-This package is in its very early stages of development. In fact, development so far has mainly served my own understanding of the topic. So far only the most simple approaches have been implemented:
+This package is in its very early stages of development. In fact, I’ve built this package largely to gain a better understanding of the topic itself. So far only the most simple approaches have been implemented:
 
 - Naive method for regression.
-- LABEL approach for classification.
+- LABEL approach for classification (Sadinle, Lei, and Wasserman 2019).
 
 I have only tested it for a few of the supervised models offered by [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/).
 
-## Installation
+## Installation 🚩
 
 You can install the first stable release from the general registry:
 
@@ -30,7 +30,7 @@ using Pkg
 Pkg.add(url="https://github.com/pat-alt/ConformalPrediction.jl")
 ```
 
-## Usage Example - Regression
+## Usage Example - Regression 🔍
 
 To illustrate the intended use of the package, let’s have a quick look at a simple regression problem. Using [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) we first generate some synthetic data and then determine indices for our training, calibration and test data:
 
@@ -64,8 +64,16 @@ predict(conf_mach, selectrows(X, rand(test,5)))
 ```
 
     5-element Vector{Vector{Pair{String, Vector{Float64}}}}:
-     ["lower" => [0.07182511643655923], "upper" => [0.5388881759266905]]
-     ["lower" => [-0.04999786968433581], "upper" => [0.41706518980579543]]
-     ["lower" => [-0.027248940766274793], "upper" => [0.43981411872385645]]
-     ["lower" => [-0.027248940766274793], "upper" => [0.43981411872385645]]
-     ["lower" => [-0.14760898898766805], "upper" => [0.31945407050246316]]
+     ["lower" => [-1.6291530550407294], "upper" => [0.4270558801138472]]
+     ["lower" => [-1.0496291711256793], "upper" => [1.0065797640288974]]
+     ["lower" => [1.007328341769408], "upper" => [3.063537276923985]]
+     ["lower" => [-1.394649183193528], "upper" => [0.6615597519610488]]
+     ["lower" => [0.8025534115593342], "upper" => [2.858762346713911]]
+
+## Contribute 🛠
+
+Contributions are welcome! Please follow the [SciML ColPrac guide](https://github.com/SciML/ColPrac).
+
+## References 🎓
+
+Sadinle, Mauricio, Jing Lei, and Larry Wasserman. 2019. “Least Ambiguous Set-Valued Classifiers with Bounded Error Levels.” *Journal of the American Statistical Association* 114 (525): 223–34.

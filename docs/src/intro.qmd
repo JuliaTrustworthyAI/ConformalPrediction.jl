@@ -1,15 +1,3 @@
----
-format: 
-  commonmark:
-    variant: -raw_html
-    wrap: none
-    self-contained: true
-crossref:
-  fig-prefix: Figure
-  tbl-prefix: Table
-bibliography: https://raw.githubusercontent.com/pat-alt/bib/main/bib.bib
----
-
 ```{julia}
 #| echo: false
 using Pkg; Pkg.activate("docs")
@@ -21,14 +9,14 @@ theme(:wong)
 
 ## Disclaimer ⚠️
 
-This package is in its very early stages of development. In fact, development so far has mainly served my own understanding of the topic. So far only the most simple approaches have been implemented:
+This package is in its very early stages of development. In fact, I've built this package largely to gain a better understanding of the topic itself. So far only the most simple approaches have been implemented:
 
 - Naive method for regression.
-- LABEL approach for classification.
+- LABEL approach for classification [@sadinle2019least].
 
 I have only tested it for a few of the supervised models offered by [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/).
 
-## Installation
+## Installation 🚩
 
 You can install the first stable release from the general registry:
 
@@ -44,7 +32,7 @@ using Pkg
 Pkg.add(url="https://github.com/pat-alt/ConformalPrediction.jl")
 ```
 
-## Usage Example - Regression
+## Usage Example - Regression 🔍
 
 To illustrate the intended use of the package, let's have a quick look at a simple regression problem. Using [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) we first generate some synthetic data and then determine indices for our training, calibration and test data:
 
@@ -77,6 +65,13 @@ Predictions can then be computed using the generic `predict` method. The code be
 #| output: true
 predict(conf_mach, selectrows(X, rand(test,5)))
 ```
+
+## Contribute 🛠
+
+Contributions are welcome! Please follow the [SciML ColPrac guide](https://github.com/SciML/ColPrac).
+
+## References 🎓
+
 
 
 
