@@ -3,6 +3,7 @@ abstract type ConformalRegressor <: ConformalMachine end
 using MLJ
 
 # Naive
+"The **Naive** method for conformal prediction is the simplest approach to regression."
 mutable struct NaiveConformalRegressor <: ConformalRegressor
     mach::Machine{<:Supervised}
     scores::Union{Nothing,AbstractArray}

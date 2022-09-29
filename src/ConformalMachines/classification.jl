@@ -3,6 +3,7 @@ abstract type ConformalClassifier <: ConformalMachine end
 using MLJ
 
 # LABEL
+"The LABEL method for conformal prediction is the simplest approach to classification."
 mutable struct LABELConformalClassifier <: ConformalClassifier
     mach::Machine{<:Supervised}
     scores::Union{Nothing,AbstractArray}
