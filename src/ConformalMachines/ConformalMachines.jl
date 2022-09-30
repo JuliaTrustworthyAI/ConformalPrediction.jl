@@ -14,11 +14,11 @@ function score(conf_mach::ConformalMachine, Xcal, ycal)
 end
 
 """
-    prediction_region(conf_mach::ConformalMachine, Xnew, ϵ::Real)
+    prediction_region(conf_mach::ConformalMachine, Xnew, q̂::Real)
 
-Generic method for generating prediction regions from a calibrated conformal machine.
+Generic method for generating prediction regions from a calibrated conformal machine for a given quantile.
 """
-function prediction_region(conf_mach::ConformalMachine, Xnew, ϵ::Real)
+function prediction_region(conf_mach::ConformalMachine, Xnew, q̂::Real)
     # pass
 end
 

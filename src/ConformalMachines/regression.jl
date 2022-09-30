@@ -18,8 +18,8 @@ function score(conf_mach::NaiveConformalRegressor, Xcal, ycal)
     return @.(abs(ŷ - ycal))
 end
 
-function prediction_region(conf_mach::NaiveConformalRegressor, Xnew, ϵ::Real)
+function prediction_region(conf_mach::NaiveConformalRegressor, Xnew, q̂::Real)
     ŷnew = MLJ.predict(conf_mach.mach, Xnew)
-    ŷnew = map(x -> ["lower" => x .- ϵ, "upper" => x .+ ϵ],eachrow(ŷnew))
+    ŷnew = map(x -> ["lower" => x .- q̂, "upper" => x .+ q̂],eachrow(ŷnew))
     return ŷnew 
 end

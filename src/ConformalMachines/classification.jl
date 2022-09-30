@@ -19,10 +19,10 @@ function score(conf_mach::LABELConformalClassifier, Xcal, ycal)
     return @.(1.0 - ŷ)
 end
 
-function prediction_region(conf_mach::LABELConformalClassifier, Xnew, ϵ::Real)
+function prediction_region(conf_mach::LABELConformalClassifier, Xnew, q̂::Real)
     L = levels(conf_mach.mach.data[2])
     ŷnew = MLJ.pdf(MLJ.predict(conf_mach.mach, Xnew), L)
-    ŷnew = map(x -> collect(key => 1-val <= ϵ::Real ? val : missing for (key,val) in zip(L,x)),eachrow(ŷnew))
+    ŷnew = map(x -> collect(key => 1-val <= q̂::Real ? val : missing for (key,val) in zip(L,x)),eachrow(ŷnew))
     return ŷnew 
 end
 
