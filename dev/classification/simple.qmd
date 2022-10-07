@@ -33,7 +33,7 @@ We firstly generate some synthetic data with three classes and partition it into
 
 ```{julia}
 using MLJ
-X, y = MLJ.make_blobs(1000, 2, centers=3, cluster_std=2)
+X, y = MLJ.make_moons(1000)
 train, calibration, test = partition(eachindex(y), 0.4, 0.4)
 ```
 
@@ -62,10 +62,23 @@ predict(conf_mach, selectrows(X, rand(test,5)))
 ```
 
 ```{julia}
-coverage = 0.99
+coverage = 0.90
 X_lim = map(i -> extrema(X[i]), eachindex(X))
 X_grid = collect(map(x_lim -> range(x_lim..., length=30), X_lim))
 label_grid = [Int.(predict_mode(conf_mach.mach, [x1 x2]).refs) for x1 in X_grid[1], x2 in X_grid[2]]
-label_grid = [sum([!ismissing(val) for (key,val) in predict(conf_mach, [x1 x2],coverage)[1]]) for x1 in X_grid[1], x2 in X_grid[2]]
+p_grid = [MLJ.pdf.(predict(conf_mach.mach, [x1 x2]), 1) for x1 in X_grid[1], x2 in X_grid[2]]
+C_grid = [sum([!ismissing(val) for (key,val) in predict(conf_mach, [x1 x2],coverage)[1]]) for x1 in X_grid[1], x2 in X_grid[2]]
 ```
+
+```{julia}
+using Plots
+p_p = contourf(X_grid[1], X_grid[2], reduce(vcat, p_grid))
+scatter!(X[:x1],X[:x2],colour=Int.(y.refs),group=Int.(y.refs))
+p_label = contourf(X_grid[1], X_grid[2], reduce(vcat, label_grid))
+scatter!(X[:x1],X[:x2],colour=Int.(y.refs),group=Int.(y.refs))
+p_C = contourf(X_grid[1], X_grid[2], reduce(vcat, C_grid))
+scatter!(X[:x1],X[:x2],colour=Int.(y.refs),group=Int.(y.refs))
+plot(p_p, p_label, p_C, layout=(1,3), size=(900,210))
+```
+
 
