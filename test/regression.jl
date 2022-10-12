@@ -5,30 +5,44 @@ EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
 model = EvoTreeRegressor() 
 mach = machine(model, X, y)
 fit!(mach, rows=train)
-available_machines = ConformalPrediction.ConformalMachines.available_machines[:regression]
+available_models = ConformalPrediction.ConformalModels.available_models[:regression]
 
 @testset "Classification" begin
 
     using ConformalPrediction
 
     @testset "Default" begin
-        conf_mach = conformal_machine(mach)
-        @test isnothing(conf_mach.scores)
-        @test typeof(conf_mach) <: ConformalPrediction.ConformalMachines.ConformalRegressor
-        calibrate!(conf_mach, selectrows(X, calibration), y[calibration])
-        @test !isnothing(conf_mach.scores)
-        predict(conf_mach, selectrows(X, test))
+        conf_model = conformal_model(model)
+        @test isnothing(conf_model.scores)
+        @test typeof(conf_model) <: ConformalPrediction.ConformalModels.ConformalRegressor
+
+        # No fitresult provided:
+        @test_throws AssertionError calibrate!(conf_model, selectrows(X, calibration), y[calibration])
+
+        # Use fitresult from machine:
+        conf_model.fitresult = mach.fitresult
+        calibrate!(conf_model, selectrows(X, calibration), y[calibration])
+
+        @test !isnothing(conf_model.scores)
+        predict(conf_model, selectrows(X, test))
     end
 
-    for _method in keys(available_machines)
+    for _method in keys(available_models)
         @testset "Method: $(_method)" begin
-            conf_mach = conformal_machine(mach; method=_method)
-            conf_mach = available_machines[_method](mach)
-            @test isnothing(conf_mach.scores)
-            @test typeof(conf_mach) <: ConformalPrediction.ConformalMachines.ConformalRegressor
-            calibrate!(conf_mach, selectrows(X, calibration), y[calibration])
-            @test !isnothing(conf_mach.scores)
-            predict(conf_mach, selectrows(X, test))
+            conf_model = conformal_model(model; method=_method)
+            conf_model = available_models[_method](model)
+            @test isnothing(conf_model.scores)
+            @test typeof(conf_model) <: ConformalPrediction.ConformalModels.ConformalRegressor
+            
+            # No fitresult provided:
+            @test_throws AssertionError calibrate!(conf_model, selectrows(X, calibration), y[calibration])
+
+            # Use fitresult from machine:
+            conf_model.fitresult = mach.fitresult
+            calibrate!(conf_model, selectrows(X, calibration), y[calibration])
+        
+            @test !isnothing(conf_model.scores)
+            predict(conf_model, selectrows(X, test))
         end
     end
     

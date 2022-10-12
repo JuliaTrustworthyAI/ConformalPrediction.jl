@@ -20,18 +20,18 @@ mach = machine(model, X, y)
 fit!(mach, rows=train)
 ```
 
-Next we instantiate our conformal machine and calibrate using the calibration data:
+Next we instantiate our conformal model and calibrate using the calibration data:
 
 ``` julia
 using ConformalPrediction
-conf_mach = conformal_machine(mach)
-calibrate!(conf_mach, selectrows(X, calibration), y[calibration])
+conf_model = conformal_model(model)
+calibrate!(conf_model, selectrows(X, calibration), y[calibration])
 ```
 
 Using the generic `predict` method we can generate prediction sets like so:
 
 ``` julia
-predict(conf_mach, selectrows(X, rand(test,5)))
+predict(conf_model, selectrows(X, rand(test,5)))
 ```
 
     ╭──────────────────────────────────────────────────────────────────────────╮

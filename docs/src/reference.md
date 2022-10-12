@@ -12,7 +12,7 @@ CurrentModule = ConformalPrediction
 ```@autodocs
 Modules = [
     ConformalPrediction,
-    ConformalPrediction.ConformalMachines
+    ConformalPrediction.ConformalModels
 ]
 Private = false
 ```
@@ -22,7 +22,7 @@ Private = false
 ```@autodocs
 Modules = [
     ConformalPrediction,
-    ConformalPrediction.ConformalMachines
+    ConformalPrediction.ConformalModels
 ]
 Public = false
 ```
