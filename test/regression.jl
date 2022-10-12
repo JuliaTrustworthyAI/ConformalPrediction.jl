@@ -23,6 +23,13 @@ available_models = ConformalPrediction.ConformalModels.available_models[:regress
         conf_model.fitresult = mach.fitresult
         calibrate!(conf_model, selectrows(X, calibration), y[calibration])
 
+        # Use generic fit() method:
+        conf_model.fitresult = nothing
+        _mach = machine(conf_model, X, y)
+        fit!(_mach, rows=train)
+        conf_model.fitresult = _mach.fitresult
+        calibrate!(conf_model, selectrows(X, calibration), y[calibration])
+
         @test !isnothing(conf_model.scores)
         predict(conf_model, selectrows(X, test))
     end
@@ -39,6 +46,13 @@ available_models = ConformalPrediction.ConformalModels.available_models[:regress
 
             # Use fitresult from machine:
             conf_model.fitresult = mach.fitresult
+            calibrate!(conf_model, selectrows(X, calibration), y[calibration])
+
+            # Use generic fit() method:
+            conf_model.fitresult = nothing
+            _mach = machine(conf_model, X, y)
+            fit!(_mach, rows=train)
+            conf_model.fitresult = _mach.fitresult
             calibrate!(conf_model, selectrows(X, calibration), y[calibration])
         
             @test !isnothing(conf_model.scores)

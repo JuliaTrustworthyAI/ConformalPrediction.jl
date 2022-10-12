@@ -1,15 +1,13 @@
 module ConformalModels
 
 using MLJ
-using MLJModelInterface
+import MLJModelInterface as MMI
 import MLJModelInterface: predict, fit, save, restore
 import MLJBase 
 
 "An abstract base type for conformal models."
-abstract type ConformalModel end
+abstract type ConformalModel <: MMI.Model end
 export ConformalModel
-
-const MMI = MLJModelInterface
 
 include("conformal_models.jl")
 

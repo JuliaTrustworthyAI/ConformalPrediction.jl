@@ -34,9 +34,10 @@ export conformal_model
 Wrapper function to fit the underlying MLJ model.
 """
 function MMI.fit(conf_model::ConformalModel, verbosity, X, y)
-    fitresult, cache, report = fit(conf_model.model, verbosity, MMI.reformat(X, y))
+    fitresult, cache, report = fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, X, y)...)
     return (fitresult, cache, report)
 end
+export fit
 
 # Calibration
 """
