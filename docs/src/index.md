@@ -44,11 +44,11 @@ X, y = MLJ.make_regression(1000, 2)
 train, calibration, test = partition(eachindex(y), 0.4, 0.4)
 ```
 
-We then train a boosted tree ([EvoTrees](https://github.com/Evovest/EvoTrees.jl)) and follow the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) training procedure.
+We then train a decision tree ([DecisionTree](https://github.com/Evovest/DecisionTree.jl)) and follow the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) training procedure.
 
 ``` julia
-EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
-model = EvoTreeRegressor() 
+DecisionTreeRegressor = @load DecisionTreeRegressor pkg=DecisionTree
+model = DecisionTreeRegressor() 
 mach = machine(model, X, y)
 fit!(mach, rows=train)
 ```

@@ -1,8 +1,8 @@
 using MLJ
 X, y = MLJ.make_regression(1000, 2)
 train, calibration, test = partition(eachindex(y), 0.4, 0.4)
-EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
-model = EvoTreeRegressor() 
+DecisionTreeRegressor = @load DecisionTreeRegressor pkg=DecisionTree
+model = DecisionTreeRegressor() 
 mach = machine(model, X, y)
 fit!(mach, rows=train)
 available_models = ConformalPrediction.ConformalModels.available_models[:regression]

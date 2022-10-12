@@ -11,11 +11,11 @@ X, y = MLJ.make_blobs(1000, 2, centers=3, cluster_std=2)
 train, calibration, test = partition(eachindex(y), 0.4, 0.4)
 ```
 
-Following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure, we train a boosted tree for the classification task:
+Following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure, we train a decision tree for the classification task:
 
 ``` julia
-EvoTreeClassifier = @load EvoTreeClassifier pkg=EvoTrees
-model = EvoTreeClassifier() 
+DecisionTreeClassifier = @load DecisionTreeClassifier pkg=DecisionTree
+model = DecisionTreeClassifier() 
 mach = machine(model, X, y)
 fit!(mach, rows=train)
 ```

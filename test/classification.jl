@@ -1,8 +1,8 @@
 using MLJ
 X, y = MLJ.make_blobs(1000, 2, centers=2)
 train, calibration, test = partition(eachindex(y), 0.4, 0.4)
-EvoTreeClassifier = @load EvoTreeClassifier pkg=EvoTrees
-model = EvoTreeClassifier() 
+DecisionTreeClassifier = @load DecisionTreeClassifier pkg=DecisionTree
+model = DecisionTreeClassifier() 
 mach = machine(model, X, y)
 fit!(mach, rows=train)
 available_models = ConformalPrediction.ConformalModels.available_models[:classification]

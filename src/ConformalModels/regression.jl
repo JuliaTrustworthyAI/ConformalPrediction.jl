@@ -1,7 +1,5 @@
 abstract type ConformalRegressor <: ConformalModel end
 
-
-
 # Naive
 "The **Naive** method for conformal prediction is the simplest approach to regression."
 mutable struct NaiveConformalRegressor{Model <: Supervised} <: ConformalRegressor

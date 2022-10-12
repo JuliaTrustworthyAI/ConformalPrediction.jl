@@ -1,5 +1,6 @@
 module ConformalModels
 
+using MLJ
 using MLJModelInterface
 import MLJModelInterface: predict, fit, save, restore
 import MLJBase 

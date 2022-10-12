@@ -1,7 +1,5 @@
 abstract type ConformalClassifier <: ConformalModel end
 
-
-
 # LABEL
 "The LABEL method for conformal prediction is the simplest approach to classification."
 mutable struct LABELConformalClassifier{Model <: Supervised} <: ConformalClassifier
