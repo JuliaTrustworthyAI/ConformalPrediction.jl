@@ -10,7 +10,7 @@
 This package is in its very early stages of development. In fact, I’ve built this package largely to gain a better understanding of the topic myself. So far only the most simple approaches have been implemented:
 
 - Naive method for regression.
-- LABEL approach for classification \[@sadinle2019least\].
+- LABEL approach for classification (Sadinle, Lei, and Wasserman 2019).
 
 I have only tested it for a few of the supervised models offered by [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/).
 
@@ -67,16 +67,16 @@ predict(conf_model, selectrows(X, rand(test,5)))
 
     ╭────────────────────────────────────────────────────────────────────╮
     │                                                                    │
-    │      (1)   ["lower" => [0.7481492241051734], "upper" =>            │
-    │  [1.6017980265025464]]                                             │
-    │      (2)   ["lower" => [-0.45078456455434623], "upper" =>          │
-    │  [0.4028642378430267]]                                             │
-    │      (3)   ["lower" => [-0.48909434913282746], "upper" =>          │
-    │  [0.3645544532645455]]                                             │
-    │      (4)   ["lower" => [-2.288264814073644], "upper" =>            │
-    │  [-1.4346160116762712]]                                            │
-    │      (5)   ["lower" => [-1.5395763293257505], "upper" =>           │
-    │  [-0.6859275269283777]]                                            │
+    │      (1)   ["lower" => [0.3963962694045419], "upper" =>            │
+    │  [1.0933093154587168]]                                             │
+    │      (2)   ["lower" => [0.819397821856154], "upper" =>             │
+    │  [1.516310867910329]]                                              │
+    │      (3)   ["lower" => [-0.6332868767933615], "upper" =>           │
+    │  [0.06362616926081349]]                                            │
+    │      (4)   ["lower" => [0.7215947047552422], "upper" =>            │
+    │  [1.4185077508094173]]                                             │
+    │      (5)   ["lower" => [2.0323107892753947], "upper" =>            │
+    │  [2.7292238353295697]]                                             │
     │                                                                    │
     │                                                                    │
     │                                                                    │
@@ -87,3 +87,5 @@ predict(conf_model, selectrows(X, rand(test,5)))
 Contributions are welcome! Please follow the [SciML ColPrac guide](https://github.com/SciML/ColPrac).
 
 ## References 🎓
+
+Sadinle, Mauricio, Jing Lei, and Larry Wasserman. 2019. “Least Ambiguous Set-Valued Classifiers with Bounded Error Levels.” *Journal of the American Statistical Association* 114 (525): 223–34.

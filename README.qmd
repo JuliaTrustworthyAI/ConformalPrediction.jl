@@ -9,6 +9,10 @@ execute:
   echo: true
   eval: true
   output: false
+crossref:
+  fig-prefix: Figure
+  tbl-prefix: Table
+bibliography: https://raw.githubusercontent.com/pat-alt/bib/main/bib.bib
 ---
 
 # ConformalPrediction
