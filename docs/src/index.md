@@ -13,8 +13,11 @@ Documentation for [ConformalPrediction.jl](https://github.com/pat-alt/ConformalP
 
 This package is in its very early stages of development. In fact, I’ve built this package largely to gain a better understanding of the topic myself. So far only the most simple approaches have been implemented:
 
-- Naive method for regression.
-- LABEL approach for classification (Sadinle, Lei, and Wasserman 2019).
+- Inductive Conformal Regression
+- Inductive Conformal Classification: LABEL approach for classification (Sadinle, Lei, and Wasserman 2019).
+- Naive Transductive Regression
+- Naive Transductive Classification
+- Jackknife Regression
 
 I have only tested it for a few of the supervised models offered by [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/).
 
@@ -71,16 +74,16 @@ predict(conf_model, selectrows(X, rand(test,5)))
 
     ╭────────────────────────────────────────────────────────────────────╮
     │                                                                    │
-    │      (1)   ["lower" => [0.27243371134520067], "upper" =>           │
-    │  [1.0198357965554317]]                                             │
-    │      (2)   ["lower" => [0.6621889092109277], "upper" =>            │
-    │  [1.4095909944211586]]                                             │
-    │      (3)   ["lower" => [0.6835568713212139], "upper" =>            │
-    │  [1.430958956531445]]                                              │
-    │      (4)   ["lower" => [0.6835568713212139], "upper" =>            │
-    │  [1.430958956531445]]                                              │
-    │      (5)   ["lower" => [0.005568859502752321], "upper" =>          │
-    │  [0.7529709447129833]]                                             │
+    │      (1)   ["lower" => [-0.37735918544313646], "upper" =>          │
+    │  [0.25501123982345947]]                                            │
+    │      (2)   ["lower" => [-1.2704487485197817], "upper" =>           │
+    │  [-0.6380783232531857]]                                            │
+    │      (3)   ["lower" => [-0.2025295551192382], "upper" =>           │
+    │  [0.4298408701473577]]                                             │
+    │      (4)   ["lower" => [0.41867048477119345], "upper" =>           │
+    │  [1.0510409100377893]]                                             │
+    │      (5)   ["lower" => [0.7474621801245576], "upper" =>            │
+    │  [1.3798326053911536]]                                             │
     │                                                                    │
     │                                                                    │
     │                                                                    │
