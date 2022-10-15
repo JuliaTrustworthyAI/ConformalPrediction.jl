@@ -9,14 +9,16 @@ function conformal_model(model::Supervised; method::Union{Nothing, Symbol}=nothi
     is_classifier = target_scitype(model) <: AbstractVector{<:Finite}
 
     if isnothing(method)
-        _method = is_classifier ? LABELConformalClassifier : NaiveConformalRegressor
+        _method = is_classifier ? SimpleInductiveClassifier : NaiveRegressor
     else
         if is_classifier
-            @assert method in keys(available_models[:classification]) "$(method) is not a valid method for classifiers."
-            _method = available_models[:classification][method]
+            classification_methods = merge(values(available_models[:classification])...)
+            @assert method in keys(classification_methods) "$(method) is not a valid method for classifiers."
+            _method = classification_methods[method]
         else
-            @assert method in keys(available_models[:regression]) "$(method) is not a valid method for regressors."
-            _method = available_models[:regression][method]
+            regression_methods = merge(values(available_models[:regression])...)
+            @assert method in keys(regression_methods) "$(method) is not a valid method for regressors."
+            _method = regression_methods[method]
         end
     end
 
@@ -29,26 +31,41 @@ export conformal_model
 
 # Training
 """
-    fit(conf_model::ConformalModel, verbosity, X, y)
+    fit(conf_model::TransductiveConformalModel, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model.
+Wrapper function to fit the underlying MLJ model and compute nonconformity scores in one single call. This method is only applicable to Transductive Conformal Prediction.
 """
-function MMI.fit(conf_model::ConformalModel, verbosity, X, y)
-    fitresult, cache, report = fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, X, y)...)
+function MMI.fit(conf_model::TransductiveConformalModel, verbosity, X, y)
+    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, X, y)...)
+    conf_model.fitresult = fitresult
+    # Use training data to compute nonconformity scores:
+    conf_model.scores = sort(ConformalModels.score(conf_model, X, y), rev=true) # non-conformity scores
+    return (fitresult, cache, report)
+end
+
+"""
+    fit(conf_model::InductiveConformalModel, verbosity, X, y)
+
+Wrapper function to fit the underlying MLJ model. For Inductive Conformal Prediction the underlying model is fitted on the *proper training set*. The `fitresult` is assigned to the model instance. Computation of nonconformity scores requires a separate calibration step involving a *calibration data set* (see [`calibrate!`](@ref)). 
+"""
+function MMI.fit(conf_model::InductiveConformalModel, verbosity, X, y)
+    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, X, y)...)
+    conf_model.fitresult = fitresult
     return (fitresult, cache, report)
 end
 export fit
 
 # Calibration
 """
-    calibrate!(conf_model::ConformalModel, Xcal, ycal)
+    calibrate!(conf_model::InductiveConformalModel, Xcal, ycal)
 
-Calibrates a conformal model using calibration data. 
+Calibrates a Inductive Conformal Model using calibration data. 
 """
-function calibrate!(conf_model::ConformalModel, Xcal, ycal)
+function calibrate!(conf_model::InductiveConformalModel, Xcal, ycal)
     @assert !isnothing(conf_model.fitresult) "Cannot calibrate a model that has not been fitted."
     conf_model.scores = sort(ConformalModels.score(conf_model, Xcal, ycal), rev=true) # non-conformity scores
 end
+
 export calibrate!
 
 using Statistics
@@ -70,7 +87,18 @@ export empirical_quantile
 
 # Prediction
 """
-    predict(conf_model::ConformalModel, Xnew; coverage=0.95)
+    MMI.predict(conf_model::ConformalModel, fitresult, Xnew)
+
+Compulsory generic `predict` method of MMI. Simply wraps the underlying model and apply generic method to underlying model.
+"""
+function MMI.predict(conf_model::ConformalModel, fitresult, Xnew)
+    yhat = predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
+    return yhat
+end
+
+# Conformal prediction through dispatch:
+"""
+    MMI.predict(conf_model::ConformalModel, Xnew, coverage::AbstractFloat=0.95)
 
 Computes the conformal prediction for any calibrated conformal model and new data `Xnew`. The default coverage ratio `(1-α)` is set to 95%.
 """

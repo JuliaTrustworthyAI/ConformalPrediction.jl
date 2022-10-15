@@ -7,25 +7,40 @@ import MLJBase
 
 "An abstract base type for conformal models."
 abstract type ConformalModel <: MMI.Model end
-export ConformalModel
+abstract type InductiveConformalModel <: ConformalModel end
+abstract type TransductiveConformalModel <: ConformalModel end
+export ConformalModel, InductiveConformalModel, TransductiveConformalModel
 
 include("conformal_models.jl")
 
-include("regression.jl")
-export NaiveConformalRegressor
+include("inductive_regression.jl")
+include("transductive_regression.jl")
+export NaiveRegressor, SimpleInductiveRegressor
 
-include("classification.jl")
-export LABELConformalClassifier
+include("inductive_classification.jl")
+include("transductive_classification.jl")
+export NaiveClassifier, SimpleInductiveClassifier
 
 "A container listing all available methods for conformal prediction."
 const available_models = Dict(
     :regression => Dict(
-        :naive => NaiveConformalRegressor,
+        :transductive => Dict(
+            :naive => NaiveRegressor,
+        ),
+        :inductive => Dict(
+            :simple => SimpleInductiveRegressor,
+        ),
     ),
     :classification => Dict(
-        :label => LABELConformalClassifier,
+        :transductive => Dict(
+            :naive => NaiveClassifier,
+        ),
+        :inductive => Dict(
+            :simple => SimpleInductiveClassifier,
+        ),
     )
 )
+export available_models
 
 # Other general methods:
 export score, prediction_region
