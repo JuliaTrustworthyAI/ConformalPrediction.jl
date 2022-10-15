@@ -11,8 +11,11 @@ theme(:wong)
 
 This package is in its very early stages of development. In fact, I've built this package largely to gain a better understanding of the topic myself. So far only the most simple approaches have been implemented:
 
-- Naive method for regression.
-- LABEL approach for classification [@sadinle2019least].
+- Inductive Conformal Regression
+- Inductive Conformal Classification:  LABEL approach for classification [@sadinle2019least].
+- Naive Transductive Regression
+- Naive Transductive Classification
+- Jackknife Regression
 
 I have only tested it for a few of the supervised models offered by [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/).
 
