@@ -30,7 +30,7 @@ using Pkg
 Pkg.add(url="https://github.com/pat-alt/ConformalPrediction.jl")
 ```
 
-## Usage Example - Regression 🔍
+## Usage Example - Inductive Conformal Regression 🔍
 
 To illustrate the intended use of the package, let’s have a quick look at a simple regression problem. Using [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) we first generate some synthetic data and then determine indices for our training, calibration and test data:
 
@@ -40,35 +40,47 @@ X, y = MLJ.make_regression(1000, 2)
 train, calibration, test = partition(eachindex(y), 0.4, 0.4)
 ```
 
-We then train a boosted tree ([EvoTrees](https://github.com/Evovest/EvoTrees.jl)) and follow the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) training procedure.
+We then train a decision tree ([DecisionTree](https://github.com/Evovest/DecisionTree.jl)) and follow the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) training procedure.
 
 ``` julia
-EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
-model = EvoTreeRegressor() 
-mach = machine(model, X, y)
-fit!(mach, rows=train)
+DecisionTreeRegressor = @load DecisionTreeRegressor pkg=DecisionTree
+model = DecisionTreeRegressor() 
 ```
 
-To turn our conventional machine into a conformal machine, we just need to declare it as such and then calibrate it using our calibration data:
+To turn our conventional machine into a conformal model, we just need to declare it as such by using `conformal_model` wrapper function. The generated conformal model instance can wrapped in data to create a *machine* following standard MLJ convention. By default that function instantiates a `SimpleInductiveRegressor`.
+
+Fitting Inductive Conformal Predictors using `fit!` trains the underlying machine learning model, but it does not compute nonconformity scores. That is because Inductive Conformal Predictors rely on a separate set of calibration data. Consequently, conformal models of type `InductiveConformalModel <: ConformalModel` require a separate calibration step to be trained for conformal prediction. This can be implemented by calling the generic `calibrate!` method on the model instance.
 
 ``` julia
 using ConformalPrediction
-conf_mach = conformal_machine(mach)
-calibrate!(conf_mach, selectrows(X, calibration), y[calibration])
+conf_model = conformal_model(model)
+mach = machine(conf_model, X, y)
+fit!(mach, rows=train)
+calibrate!(conf_model, selectrows(X, calibration), y[calibration])
 ```
 
 Predictions can then be computed using the generic `predict` method. The code below produces predictions a random subset of test samples:
 
 ``` julia
-predict(conf_mach, selectrows(X, rand(test,5)))
+predict(conf_model, selectrows(X, rand(test,5)))
 ```
 
-    5-element Vector{Vector{Pair{String, Vector{Float64}}}}:
-     ["lower" => [-2.5656268495995658], "upper" => [1.4558014252276577]]
-     ["lower" => [-2.5656268495995658], "upper" => [1.4558014252276577]]
-     ["lower" => [-2.5656268495995658], "upper" => [1.4558014252276577]]
-     ["lower" => [-3.906072026876036], "upper" => [0.11535624795118737]]
-     ["lower" => [-1.9725646439635294], "upper" => [2.048863630863694]]
+    ╭────────────────────────────────────────────────────────────────────╮
+    │                                                                    │
+    │      (1)   ["lower" => [0.3963962694045419], "upper" =>            │
+    │  [1.0933093154587168]]                                             │
+    │      (2)   ["lower" => [0.819397821856154], "upper" =>             │
+    │  [1.516310867910329]]                                              │
+    │      (3)   ["lower" => [-0.6332868767933615], "upper" =>           │
+    │  [0.06362616926081349]]                                            │
+    │      (4)   ["lower" => [0.7215947047552422], "upper" =>            │
+    │  [1.4185077508094173]]                                             │
+    │      (5)   ["lower" => [2.0323107892753947], "upper" =>            │
+    │  [2.7292238353295697]]                                             │
+    │                                                                    │
+    │                                                                    │
+    │                                                                    │
+    ╰──────────────────────────────────────────────────────── 5 items ───╯
 
 ## Contribute 🛠
 

@@ -37,37 +37,37 @@ X, y = MLJ.make_moons(1000)
 train, calibration, test = partition(eachindex(y), 0.4, 0.4)
 ```
 
-Following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure, we train a boosted tree for the classification task:
+Following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure, we train a decision tree for the classification task:
 
 ```{julia}
-EvoTreeClassifier = @load EvoTreeClassifier pkg=EvoTrees
-model = EvoTreeClassifier() 
+DecisionTreeClassifier = @load DecisionTreeClassifier pkg=DecisionTree
+model = DecisionTreeClassifier() 
 mach = machine(model, X, y)
 fit!(mach, rows=train)
 ```
 
-Next we instantiate our conformal machine and calibrate using the calibration data:
+Next we instantiate our conformal model and calibrate using the calibration data:
 
 ```{julia}
 using ConformalPrediction
-conf_mach = conformal_machine(mach)
-calibrate!(conf_mach, selectrows(X, calibration), y[calibration])
+conf_model = conformal_model(model)
+calibrate!(conf_model, selectrows(X, calibration), y[calibration])
 ```
 
 Using the generic `predict` method we can generate prediction sets like so:
 
 ```{julia}
 #| output: true
-predict(conf_mach, selectrows(X, rand(test,5)))
+predict(conf_model, selectrows(X, rand(test,5)))
 ```
 
 ```{julia}
 coverage = 0.90
 X_lim = map(i -> extrema(X[i]), eachindex(X))
 X_grid = collect(map(x_lim -> range(x_lim..., length=30), X_lim))
-label_grid = [Int.(predict_mode(conf_mach.mach, [x1 x2]).refs) for x1 in X_grid[1], x2 in X_grid[2]]
-p_grid = [MLJ.pdf.(predict(conf_mach.mach, [x1 x2]), 1) for x1 in X_grid[1], x2 in X_grid[2]]
-C_grid = [sum([!ismissing(val) for (key,val) in predict(conf_mach, [x1 x2],coverage)[1]]) for x1 in X_grid[1], x2 in X_grid[2]]
+label_grid = [Int.(predict_mode(conf_model.model, [x1 x2]).refs) for x1 in X_grid[1], x2 in X_grid[2]]
+p_grid = [MLJ.pdf.(predict(conf_model.model, [x1 x2]), 1) for x1 in X_grid[1], x2 in X_grid[2]]
+C_grid = [sum([!ismissing(val) for (key,val) in predict(conf_model, [x1 x2],coverage)[1]]) for x1 in X_grid[1], x2 in X_grid[2]]
 ```
 
 ```{julia}

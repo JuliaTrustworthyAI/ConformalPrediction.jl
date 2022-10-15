@@ -1,0 +1,5 @@
+format: 
+  commonmark:
+    variant: -raw_html
+    wrap: none
+    self-contained: true

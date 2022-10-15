@@ -4,17 +4,15 @@ format:
     variant: -raw_html
     wrap: none
     self-contained: true
+execute: 
+  freeze: auto
+  echo: true
+  eval: true
+  output: false
 crossref:
   fig-prefix: Figure
   tbl-prefix: Table
 bibliography: https://raw.githubusercontent.com/pat-alt/bib/main/bib.bib
-output: asis
-execute: 
-  eval: true
-  echo: true
-  output: false
-  freeze: auto  # re-render only when source changes
-jupyter: julia-1.7
 ---
 
 # ConformalPrediction
