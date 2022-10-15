@@ -55,8 +55,8 @@ To turn our conventional machine into a conformal model, we just need to declare
 
 ```{julia}
 using ConformalPrediction
-conf_model = conformal_model(model)
-calibrate!(conf_model, selectrows(X, calibration), y[calibration])
+conf_model = conformal_model(model; method=:jackknife)
+fit(conf_model, 1, selectrows(X, train), y[train])
 ```
 
 Predictions can then be computed using the generic `predict` method. The code below produces predictions a random subset of test samples:

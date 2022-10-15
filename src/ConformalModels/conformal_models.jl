@@ -9,7 +9,7 @@ function conformal_model(model::Supervised; method::Union{Nothing, Symbol}=nothi
     is_classifier = target_scitype(model) <: AbstractVector{<:Finite}
 
     if isnothing(method)
-        _method = is_classifier ? SimpleInductiveClassifier : NaiveRegressor
+        _method = is_classifier ? SimpleInductiveClassifier : SimpleInductiveRegressor
     else
         if is_classifier
             classification_methods = merge(values(available_models[:classification])...)
@@ -110,7 +110,7 @@ end
 """
     score(conf_model::ConformalModel, Xcal, ycal)
 
-Generic method for computing non-conformity scores for any conformal model using calibration data.
+Generic method for computing non-conformity scores for any conformal model using calibration (inductive) or training (transductive) data.
 """
 function score(conf_model::ConformalModel, Xcal, ycal)
     # pass

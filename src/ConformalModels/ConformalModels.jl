@@ -15,7 +15,7 @@ include("conformal_models.jl")
 
 include("inductive_regression.jl")
 include("transductive_regression.jl")
-export NaiveRegressor, SimpleInductiveRegressor
+export NaiveRegressor, SimpleInductiveRegressor, JackknifeRegressor
 
 include("inductive_classification.jl")
 include("transductive_classification.jl")
@@ -26,6 +26,7 @@ const available_models = Dict(
     :regression => Dict(
         :transductive => Dict(
             :naive => NaiveRegressor,
+            :jackknife => JackknifeRegressor,
         ),
         :inductive => Dict(
             :simple => SimpleInductiveRegressor,

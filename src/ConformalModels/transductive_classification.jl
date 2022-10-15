@@ -2,7 +2,7 @@
 abstract type TransductiveConformalClassifier <: TransductiveConformalModel end
 
 # Simple
-"The `NaiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset."
+"The `NaiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated trainibration dataset."
 mutable struct NaiveClassifier{Model <: Supervised} <: TransductiveConformalClassifier
     model::Model
     fitresult::Any
@@ -14,8 +14,8 @@ function NaiveClassifier(model::Supervised, fitresult=nothing)
 end
 
 
-function score(conf_model::NaiveClassifier, Xcal, ycal)
-    ŷ = pdf.(MMI.predict(conf_model.model, conf_model.fitresult, Xcal),ycal)
+function score(conf_model::NaiveClassifier, Xtrain, ytrain)
+    ŷ = pdf.(MMI.predict(conf_model.model, conf_model.fitresult, Xtrain),ytrain)
     return @.(1.0 - ŷ)
 end
 
