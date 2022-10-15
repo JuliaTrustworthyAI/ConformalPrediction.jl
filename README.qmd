@@ -1,3 +1,16 @@
+---
+format: 
+  commonmark:
+    variant: -raw_html
+    wrap: none
+    self-contained: true
+execute: 
+  freeze: auto
+  echo: true
+  eval: true
+  output: false
+---
+
 # ConformalPrediction
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/stable/)
