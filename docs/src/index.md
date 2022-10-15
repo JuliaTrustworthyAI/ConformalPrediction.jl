@@ -44,27 +44,27 @@ X, y = MLJ.make_regression(1000, 2)
 train, calibration, test = partition(eachindex(y), 0.4, 0.4)
 ```
 
-We then train a boosted tree ([EvoTrees](https://github.com/Evovest/EvoTrees.jl)) and follow the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) training procedure.
+We then train a decision tree ([DecisionTree](https://github.com/Evovest/DecisionTree.jl)) and follow the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) training procedure.
 
 ``` julia
-EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
-model = EvoTreeRegressor() 
+DecisionTreeRegressor = @load DecisionTreeRegressor pkg=DecisionTree
+model = DecisionTreeRegressor() 
 mach = machine(model, X, y)
 fit!(mach, rows=train)
 ```
 
-To turn our conventional machine into a conformal machine, we just need to declare it as such and then calibrate it using our calibration data:
+To turn our conventional machine into a conformal model, we just need to declare it as such and then calibrate it using our calibration data:
 
 ``` julia
 using ConformalPrediction
-conf_mach = conformal_machine(mach)
-calibrate!(conf_mach, selectrows(X, calibration), y[calibration])
+conf_model = conformal_model(model)
+calibrate!(conf_model, selectrows(X, calibration), y[calibration])
 ```
 
 Predictions can then be computed using the generic `predict` method. The code below produces predictions a random subset of test samples:
 
 ``` julia
-predict(conf_mach, selectrows(X, rand(test,5)))
+predict(conf_model, selectrows(X, rand(test,5)))
 ```
 
 ## Contribute 🛠

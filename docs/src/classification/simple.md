@@ -11,27 +11,27 @@ X, y = MLJ.make_blobs(1000, 2, centers=3, cluster_std=2)
 train, calibration, test = partition(eachindex(y), 0.4, 0.4)
 ```
 
-Following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure, we train a boosted tree for the classification task:
+Following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure, we train a decision tree for the classification task:
 
 ``` julia
-EvoTreeClassifier = @load EvoTreeClassifier pkg=EvoTrees
-model = EvoTreeClassifier() 
+DecisionTreeClassifier = @load DecisionTreeClassifier pkg=DecisionTree
+model = DecisionTreeClassifier() 
 mach = machine(model, X, y)
 fit!(mach, rows=train)
 ```
 
-Next we instantiate our conformal machine and calibrate using the calibration data:
+Next we instantiate our conformal model and calibrate using the calibration data:
 
 ``` julia
 using ConformalPrediction
-conf_mach = conformal_machine(mach)
-calibrate!(conf_mach, selectrows(X, calibration), y[calibration])
+conf_model = conformal_model(model)
+calibrate!(conf_model, selectrows(X, calibration), y[calibration])
 ```
 
 Using the generic `predict` method we can generate prediction sets like so:
 
 ``` julia
-predict(conf_mach, selectrows(X, rand(test,5)))
+predict(conf_model, selectrows(X, rand(test,5)))
 ```
 
     ╭──────────────────────────────────────────────────────────────────────────╮
