@@ -1,20 +1,3 @@
----
-format: 
-  commonmark:
-    variant: -raw_html
-    wrap: none
-    self-contained: true
-crossref:
-  fig-prefix: Figure
-  tbl-prefix: Table
-bibliography: https://raw.githubusercontent.com/pat-alt/bib/main/bib.bib
-output: asis
-execute: 
-  eval: false
-  echo: true
-jupyter: julia-1.7
----
-
 ```@meta
 CurrentModule = ConformalPrediction
 ```
