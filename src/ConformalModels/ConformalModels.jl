@@ -3,7 +3,6 @@ module ConformalModels
 using MLJ
 import MLJModelInterface as MMI
 import MLJModelInterface: predict, fit, save, restore
-import MLJBase 
 
 "An abstract base type for conformal models."
 abstract type ConformalModel <: MMI.Model end
