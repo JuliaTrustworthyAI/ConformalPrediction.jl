@@ -3,6 +3,18 @@ using MLJ
 "A base type for Transductive Conformal Regressors."
 abstract type TransductiveConformalRegressor <: TransductiveConformalModel end
 
+"""
+    predict_region(conf_model::TransductiveConformalRegressor, Xnew, coverage::AbstractFloat=0.95)
+
+Generic method to compute prediction region for given quantile `q̂` for Transductive Conformal Regressors. 
+"""
+function predict_region(conf_model::TransductiveConformalRegressor, Xnew, coverage::AbstractFloat=0.95)
+    q̂ = empirical_quantile(conf_model, coverage)
+    ŷnew = MMI.predict(conf_model.model, conf_model.fitresult, Xnew)
+    ŷnew = map(x -> ["lower" => x .- q̂, "upper" => x .+ q̂],eachrow(ŷnew))
+    return ŷnew 
+end
+
 # Naive
 "The `NaiveRegressor` for conformal prediction is the simplest approach to conformal regression. It computes nonconformity scores by simply using the training data."
 mutable struct NaiveRegressor{Model <: Supervised} <: TransductiveConformalRegressor
@@ -18,12 +30,6 @@ end
 function score(conf_model::NaiveRegressor, Xtrain, ytrain)
     ŷ = MMI.predict(conf_model.model, conf_model.fitresult, Xtrain)
     return @.(abs(ŷ - ytrain))
-end
-
-function prediction_region(conf_model::NaiveRegressor, Xnew, q̂::Real)
-    ŷnew = MMI.predict(conf_model.model, conf_model.fitresult, Xnew)
-    ŷnew = map(x -> ["lower" => x .- q̂, "upper" => x .+ q̂],eachrow(ŷnew))
-    return ŷnew 
 end
 
 # Jackknife
@@ -53,11 +59,7 @@ function score(conf_model::JackknifeRegressor, Xtrain, ytrain)
     return scores
 end
 
-function prediction_region(conf_model::JackknifeRegressor, Xnew, q̂::Real)
-    ŷnew = MMI.predict(conf_model.model, conf_model.fitresult, Xnew)
-    ŷnew = map(x -> ["lower" => x .- q̂, "upper" => x .+ q̂],eachrow(ŷnew))
-    return ŷnew 
-end
+
 
 
 

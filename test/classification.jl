@@ -31,8 +31,10 @@ available_models = ConformalPrediction.ConformalModels.available_models[:classif
                 fit!(_mach, rows=train)
                 calibrate!(conf_model, selectrows(X, calibration), y[calibration])
             
+                # Prediction:
                 @test !isnothing(conf_model.scores)
-                predict(conf_model, selectrows(X, test))
+                predict(_mach, selectrows(X, test))                 # point predictions
+                predict_region(conf_model, selectrows(X, test))     # prediction region
             end
         end
     end
@@ -53,8 +55,10 @@ available_models = ConformalPrediction.ConformalModels.available_models[:classif
                 _mach = machine(conf_model, X, y)
                 fit!(_mach, rows=train)
             
+                # Prediction:
                 @test !isnothing(conf_model.scores)
-                predict(conf_model, selectrows(X, test))
+                predict(_mach, selectrows(X, test))                 # point predictions
+                predict_region(conf_model, selectrows(X, test))     # prediction region
             end
         end
 
