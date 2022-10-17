@@ -29,12 +29,16 @@ function NaiveRegressor(model::Supervised, fitresult=nothing)
     return NaiveRegressor(model, fitresult, nothing)
 end
 
-"""
+@doc raw"""
     score(conf_model::NaiveRegressor, Xtrain, ytrain)
 
-The [`NaiveRegressor`](@ref) computes nonconformity scores by simply using the training data: |Y₁-μ̂(X₁)|,...,|Yₙ-μ̂(Xₙ)|. Prediction regions are then computed as follows:
+For the [`NaiveRegressor`](@ref) prediction intervals are computed as follows:
 
-μ̂(Xₙ₊₁) ± (the (1-α) quantile of |Y₁-μ̂(X₁)|,...,|Yₙ-μ̂(Xₙ)|)
+``
+\begin{aligned}
+\hat{C}_{n,\alpha}(X_{n+1}) &= \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu(X_i)| \}, \ i \in \mathcal{D}_{\text{train}}
+\end{aligned}
+``
 
 The naive approach typically produces prediction regions that undercover due to overfitting.
 
@@ -60,14 +64,18 @@ function JackknifeRegressor(model::Supervised, fitresult=nothing)
     return JackknifeRegressor(model, fitresult, nothing)
 end
 
-"""
+@doc raw"""
     score(conf_model::JackknifeRegressor, Xtrain, ytrain)
 
-For the [`JackknifeRegressor`](@ref) nonconformity scores correspond to leave-one-out residuals of each sample: |Y₁-μ̂₋₁(X₁)|,...,|Yₙ-μ̂₋ₙ(Xₙ)| where μ̂₋ᵢ denotes the model fitted on training data with the ``i``th point removed. Prediction regions are then computed as follows:
+For the [`JackknifeRegressor`](@ref) prediction intervals are computed as follows,
 
-μ̂(Xₙ₊₁) ± (the (1-α) quantile of |Y₁-μ̂₋₁(X₁)|,...,|Yₙ-μ̂₋ₙ(Xₙ)|)
+``
+\begin{aligned}
+\hat{C}_{n,\alpha}(X_{n+1}) &= \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu_{-i}(X_i)|\}, \ i \in \mathcal{D}_{\text{train}}
+\end{aligned}
+``
 
-The jackknife procedure addresses the overfitting issue associated with the [`NaiveRegressor`](@ref).
+where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife procedure addresses the overfitting issue associated with the [`NaiveRegressor`](@ref).
 
 ```julia
 conf_model = conformal_model(model; method=:jackknife)
@@ -75,6 +83,52 @@ score(conf_model, X, y)
 ```
 """
 function score(conf_model::JackknifeRegressor, Xtrain, ytrain)
+    T = size(ytrain, 1)
+    scores = []
+    for t in 1:T
+        loo_ids = 1:T .!= t
+        y₋ᵢ = ytrain[loo_ids]                
+        X₋ᵢ = MLJ.matrix(Xtrain)[loo_ids,:]
+        yᵢ = ytrain[t]
+        Xᵢ = selectrows(Xtrain, t)
+        μ̂₋ᵢ, = MMI.fit(conf_model.model, 0, X₋ᵢ, y₋ᵢ)
+        ŷᵢ = MMI.predict(conf_model.model, μ̂₋ᵢ, Xᵢ)
+        push!(scores,@.(abs(yᵢ - ŷᵢ))...)
+    end
+    return scores
+end
+
+# Jackknife+
+"Constructor for `JackknifePlusRegressor`."
+mutable struct JackknifePlusRegressor{Model <: Supervised} <: TransductiveConformalRegressor
+    model::Model
+    fitresult::Any
+    scores::Union{Nothing,AbstractArray}
+end
+
+function JackknifePlusRegressor(model::Supervised, fitresult=nothing)
+    return JackknifePlusRegressor(model, fitresult, nothing)
+end
+
+@doc raw"""
+    score(conf_model::JackknifePlusRegressor, Xtrain, ytrain)
+
+For the [`JackknifePlusRegressor`](@ref) prediction intervals are computed as follows,
+
+``
+\begin{aligned}
+\hat{C}_{n,\alpha}(X_{n+1}) &= \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu_{-i}(X_i)|\}, \ i \in \mathcal{D}_{\text{train}}
+\end{aligned}
+``
+
+where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife procedure addresses the overfitting issue associated with the [`NaiveRegressor`](@ref).
+
+```julia
+conf_model = conformal_model(model; method=:jackknife)
+score(conf_model, X, y)
+```
+"""
+function score(conf_model::JackknifePlusRegressor, Xtrain, ytrain)
     T = size(ytrain, 1)
     scores = []
     for t in 1:T

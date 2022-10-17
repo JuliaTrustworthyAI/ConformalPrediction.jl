@@ -1,3 +1,6 @@
+
+using Statistics
+
 # Main API call to wrap model:
 """
     conformal_model(model::Supervised; method::Union{Nothing, Symbol}=nothing)
@@ -65,7 +68,6 @@ function calibrate!(conf_model::InductiveConformalModel, Xcal, ycal)
     conf_model.scores = sort(ConformalModels.score(conf_model, Xcal, ycal), rev=true) # non-conformity scores
 end
 
-using Statistics
 """
     empirical_quantile(conf_model::ConformalModel, coverage::AbstractFloat=0.95)
 

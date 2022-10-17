@@ -6,8 +6,17 @@ import MLJModelInterface: predict, fit, save, restore
 
 "An abstract base type for conformal models."
 abstract type ConformalModel <: MMI.Model end
+
+@doc raw"""
+An abstract base time of Inductive Conformal Models. These models rely on data splitting. In particular, we partition the training data as ``\{1,...,n\}=\mathcal{D}_{\text{train}} \cup \mathcal{D}_{\text{calibration}}``.
+"""
 abstract type InductiveConformalModel <: ConformalModel end
+
+@doc raw"""
+An abstract base time of Transductive Conformal Models. These models do not rely on data splitting. In particular, nonconformity scores are computed using the entire trainign data set ``\{1,...,n\}=\mathcal{D}_{\text{train}}``.
+"""
 abstract type TransductiveConformalModel <: ConformalModel end
+
 export ConformalModel, InductiveConformalModel, TransductiveConformalModel
 
 include("conformal_models.jl")
@@ -43,6 +52,6 @@ const available_models = Dict(
 export available_models
 
 # Other general methods:
-export conformal_model, empirical_quantile, calibrate!, predict_region, score
+export conformal_model, empirical_quantiles, calibrate!, predict_region, score
     
 end

@@ -27,7 +27,26 @@ function SimpleInductiveClassifier(model::Supervised, fitresult=nothing)
     return SimpleInductiveClassifier(model, fitresult, nothing)
 end
 
+@doc raw"""
+    score(conf_model::SimpleInductiveClassifier, Xtrain, ytrain)
 
+For the [`SimpleInductiveClassifier`](@ref) prediction sets are computed as follows,
+
+``
+\begin{aligned}
+\hat{C}_{n,\alpha}(X_{n+1}) &= \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu(X_i) |\} \right\}, \ i \in \mathcal{D}_{\text{calibration}}
+\end{aligned}
+``
+
+where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``.
+
+# Examples
+
+```julia
+conf_model = conformal_model(model; method=:simple)
+score(conf_model, X, y)
+```
+"""
 function score(conf_model::SimpleInductiveClassifier, Xcal, ycal)
     ŷ = pdf.(MMI.predict(conf_model.model, conf_model.fitresult, Xcal),ycal)
     return @.(1.0 - ŷ)
