@@ -64,11 +64,20 @@ fit!(mach, rows=train)
 calibrate!(conf_model, selectrows(X, calibration), y[calibration])
 ```
 
-Predictions can then be computed using the generic `predict` method. The code below produces predictions a random subset of test samples:
+Point predictions for the underlying machine learning model can be computed as always using the generic `predict` method. The code below produces predictions a random subset of test samples:
 
 ```{julia}
 #| output: true
-predict(conf_model, selectrows(X, rand(test,5)))
+Xtest = selectrows(X, rand(test,5))
+predict(mach, Xtest)
+```
+
+Conformal prediction regions can be computed using the `predict_region` method:
+
+```{julia}
+#| output: true
+coverage = .90
+predict_region(conf_model, Xtest, coverage)
 ```
 
 ## Contribute 🛠
