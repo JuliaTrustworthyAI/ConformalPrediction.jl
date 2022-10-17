@@ -98,48 +98,48 @@ function score(conf_model::JackknifeRegressor, Xtrain, ytrain)
     return scores
 end
 
-# Jackknife+
-"Constructor for `JackknifePlusRegressor`."
-mutable struct JackknifePlusRegressor{Model <: Supervised} <: TransductiveConformalRegressor
-    model::Model
-    fitresult::Any
-    scores::Union{Nothing,AbstractArray}
-end
+# # Jackknife+
+# "Constructor for `JackknifePlusRegressor`."
+# mutable struct JackknifePlusRegressor{Model <: Supervised} <: TransductiveConformalRegressor
+#     model::Model
+#     fitresult::Any
+#     scores::Union{Nothing,AbstractArray}
+# end
 
-function JackknifePlusRegressor(model::Supervised, fitresult=nothing)
-    return JackknifePlusRegressor(model, fitresult, nothing)
-end
+# function JackknifePlusRegressor(model::Supervised, fitresult=nothing)
+#     return JackknifePlusRegressor(model, fitresult, nothing)
+# end
 
-@doc raw"""
-    score(conf_model::JackknifePlusRegressor, Xtrain, ytrain)
+# @doc raw"""
+#     score(conf_model::JackknifePlusRegressor, Xtrain, ytrain)
 
-For the [`JackknifePlusRegressor`](@ref) prediction intervals are computed as follows,
+# For the [`JackknifePlusRegressor`](@ref) prediction intervals are computed as follows,
 
-``
-\begin{aligned}
-\hat{C}_{n,\alpha}(X_{n+1}) &= \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu_{-i}(X_i)|\}, \ i \in \mathcal{D}_{\text{train}}
-\end{aligned}
-``
+# ``
+# \begin{aligned}
+# \hat{C}_{n,\alpha}(X_{n+1}) &= \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu_{-i}(X_i)|\}, \ i \in \mathcal{D}_{\text{train}}
+# \end{aligned}
+# ``
 
-where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife procedure addresses the overfitting issue associated with the [`NaiveRegressor`](@ref).
+# where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife procedure addresses the overfitting issue associated with the [`NaiveRegressor`](@ref).
 
-```julia
-conf_model = conformal_model(model; method=:jackknife)
-score(conf_model, X, y)
-```
-"""
-function score(conf_model::JackknifePlusRegressor, Xtrain, ytrain)
-    T = size(ytrain, 1)
-    scores = []
-    for t in 1:T
-        loo_ids = 1:T .!= t
-        y₋ᵢ = ytrain[loo_ids]                
-        X₋ᵢ = MLJ.matrix(Xtrain)[loo_ids,:]
-        yᵢ = ytrain[t]
-        Xᵢ = selectrows(Xtrain, t)
-        μ̂₋ᵢ, = MMI.fit(conf_model.model, 0, X₋ᵢ, y₋ᵢ)
-        ŷᵢ = MMI.predict(conf_model.model, μ̂₋ᵢ, Xᵢ)
-        push!(scores,@.(abs(yᵢ - ŷᵢ))...)
-    end
-    return scores
-end
+# ```julia
+# conf_model = conformal_model(model; method=:jackknife)
+# score(conf_model, X, y)
+# ```
+# """
+# function score(conf_model::JackknifePlusRegressor, Xtrain, ytrain)
+#     T = size(ytrain, 1)
+#     scores = []
+#     for t in 1:T
+#         loo_ids = 1:T .!= t
+#         y₋ᵢ = ytrain[loo_ids]                
+#         X₋ᵢ = MLJ.matrix(Xtrain)[loo_ids,:]
+#         yᵢ = ytrain[t]
+#         Xᵢ = selectrows(Xtrain, t)
+#         μ̂₋ᵢ, = MMI.fit(conf_model.model, 0, X₋ᵢ, y₋ᵢ)
+#         ŷᵢ = MMI.predict(conf_model.model, μ̂₋ᵢ, Xᵢ)
+#         push!(scores,@.(abs(yᵢ - ŷᵢ))...)
+#     end
+#     return scores
+# end
