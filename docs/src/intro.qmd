@@ -80,6 +80,28 @@ coverage = .90
 predict_region(conf_model, Xtest, coverage)
 ```
 
+## Usage Example - Transductive Conformal Regression 🔍
+
+### Naive
+
+```{julia}
+conf_model = conformal_model(model; method=:naive)
+mach = machine(conf_model, X, y)
+fit!(mach, rows=train)
+predict_region(conf_model, Xtest, coverage)
+```
+
+### Jackknife
+
+```{julia}
+conf_model = conformal_model(model; method=:jackknife)
+mach = machine(conf_model, X, y)
+fit!(mach, rows=train)
+predict_region(conf_model, Xtest, coverage)
+```
+
+
+
 ## Contribute 🛠
 
 Contributions are welcome! Please follow the [SciML ColPrac guide](https://github.com/SciML/ColPrac).
