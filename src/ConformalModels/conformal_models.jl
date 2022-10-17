@@ -1,3 +1,6 @@
+
+using Statistics
+
 # Main API call to wrap model:
 """
     conformal_model(model::Supervised; method::Union{Nothing, Symbol}=nothing)
@@ -53,7 +56,6 @@ function MMI.fit(conf_model::InductiveConformalModel, verbosity, X, y)
     conf_model.fitresult = fitresult
     return (fitresult, cache, report)
 end
-export fit
 
 # Calibration
 """
@@ -66,9 +68,6 @@ function calibrate!(conf_model::InductiveConformalModel, Xcal, ycal)
     conf_model.scores = sort(ConformalModels.score(conf_model, Xcal, ycal), rev=true) # non-conformity scores
 end
 
-export calibrate!
-
-using Statistics
 """
     empirical_quantile(conf_model::ConformalModel, coverage::AbstractFloat=0.95)
 
@@ -83,7 +82,6 @@ function empirical_quantile(conf_model::ConformalModel, coverage::AbstractFloat=
     q̂ = Statistics.quantile(conf_model.scores, p̂)
     return q̂
 end
-export empirical_quantile
 
 # Prediction
 """
@@ -96,17 +94,6 @@ function MMI.predict(conf_model::ConformalModel, fitresult, Xnew)
     return yhat
 end
 
-# Conformal prediction through dispatch:
-"""
-    MMI.predict(conf_model::ConformalModel, Xnew, coverage::AbstractFloat=0.95)
-
-Computes the conformal prediction for any calibrated conformal model and new data `Xnew`. The default coverage ratio `(1-α)` is set to 95%.
-"""
-function MMI.predict(conf_model::ConformalModel, Xnew, coverage::AbstractFloat=0.95)
-    q̂ = empirical_quantile(conf_model, coverage)
-    return ConformalModels.prediction_region(conf_model, Xnew, q̂)
-end
-
 """
     score(conf_model::ConformalModel, Xcal, ycal)
 
@@ -117,10 +104,10 @@ function score(conf_model::ConformalModel, Xcal, ycal)
 end
 
 """
-    prediction_region(conf_model::ConformalModel, Xnew, q̂::Real)
+    predict_region(conf_model::ConformalModel, Xnew, coverage::AbstractFloat=0.95)
 
 Generic method for generating prediction regions from a calibrated conformal model for a given quantile.
 """
-function prediction_region(conf_model::ConformalModel, Xnew, q̂::Real)
+function predict_region(conf_model::ConformalModel, Xnew, coverage::AbstractFloat=0.95)
     # pass
 end

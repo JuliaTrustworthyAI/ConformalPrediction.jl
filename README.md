@@ -62,28 +62,67 @@ fit!(mach, rows=train)
 calibrate!(conf_model, selectrows(X, calibration), y[calibration])
 ```
 
-Predictions can then be computed using the generic `predict` method. The code below produces predictions a random subset of test samples:
+Point predictions for the underlying machine learning model can be computed as always using the generic `predict` method. The code below produces predictions a random subset of test samples:
 
 ``` julia
-predict(conf_model, selectrows(X, rand(test,5)))
+Xtest = selectrows(X, rand(test,5))
+predict(mach, Xtest)
+```
+
+    ╭─────────────────────────────────────╮
+    │                                     │
+    │      (1)   -1.0050905309033087      │
+    │      (2)   -0.23642599520220936     │
+    │      (3)   1.6393777848575657       │
+    │      (4)   1.5664549343517382       │
+    │      (5)   0.5938501955098372       │
+    │                                     │
+    │                                     │
+    ╰───────────────────────── 5 items ───╯
+
+Conformal prediction regions can be computed using the `predict_region` method:
+
+``` julia
+coverage = .90
+predict_region(conf_model, Xtest, coverage)
 ```
 
     ╭────────────────────────────────────────────────────────────────────╮
     │                                                                    │
-    │      (1)   ["lower" => [-2.4540021623386696], "upper" =>           │
-    │  [-0.2590979574572725]]                                            │
-    │      (2)   ["lower" => [-2.8636411155824604], "upper" =>           │
-    │  [-0.6687369107010628]]                                            │
-    │      (3)   ["lower" => [-2.4547720016566648], "upper" =>           │
-    │  [-0.2598677967752674]]                                            │
-    │      (4)   ["lower" => [-0.8259868093914366], "upper" =>           │
-    │  [1.3689173954899607]]                                             │
-    │      (5)   ["lower" => [-0.7367893623688548], "upper" =>           │
-    │  [1.4581148425125425]]                                             │
+    │      (1)   ["lower" => [-1.3498727395442067], "upper" =>           │
+    │  [-0.6603083222624107]]                                            │
+    │      (2)   ["lower" => [-0.5812082038431075], "upper" =>           │
+    │  [0.10835621343868873]]                                            │
+    │      (3)   ["lower" => [1.2945955762166677], "upper" =>            │
+    │  [1.9841599934984637]]                                             │
+    │      (4)   ["lower" => [1.2216727257108402], "upper" =>            │
+    │  [1.9112371429926363]]                                             │
+    │      (5)   ["lower" => [0.2490679868689391], "upper" =>            │
+    │  [0.9386324041507352]]                                             │
     │                                                                    │
     │                                                                    │
     │                                                                    │
     ╰──────────────────────────────────────────────────────── 5 items ───╯
+
+## Usage Example - Transductive Conformal Regression 🔍
+
+### Naive
+
+``` julia
+conf_model = conformal_model(model; method=:naive)
+mach = machine(conf_model, X, y)
+fit!(mach, rows=train)
+predict_region(conf_model, Xtest, coverage)
+```
+
+### Jackknife
+
+``` julia
+conf_model = conformal_model(model; method=:jackknife)
+mach = machine(conf_model, X, y)
+fit!(mach, rows=train)
+predict_region(conf_model, Xtest, coverage)
+```
 
 ## Contribute 🛠
 

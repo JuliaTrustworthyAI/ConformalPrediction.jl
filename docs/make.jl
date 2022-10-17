@@ -1,7 +1,21 @@
 using ConformalPrediction
 using Documenter
 
-DocMeta.setdocmeta!(ConformalPrediction, :DocTestSetup, :(using ConformalPrediction); recursive=true)
+ex_meta = quote
+    # Import module:
+    using ConformalPrediction
+
+    # Data:
+    using MLJ
+    X, y = MLJ.make_regression(1000, 2)
+    train, calibration, test = partition(eachindex(y), 0.4, 0.4)
+
+    # Model:
+    DecisionTreeRegressor = @load DecisionTreeRegressor pkg=DecisionTree
+    model = DecisionTreeRegressor()   
+end
+
+DocMeta.setdocmeta!(ConformalPrediction, :DocTestSetup, ex_meta; recursive=true)
 
 makedocs(;
     modules=[ConformalPrediction],
