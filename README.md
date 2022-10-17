@@ -62,24 +62,43 @@ fit!(mach, rows=train)
 calibrate!(conf_model, selectrows(X, calibration), y[calibration])
 ```
 
-Predictions can then be computed using the generic `predict` method. The code below produces predictions a random subset of test samples:
+Point predictions for the underlying machine learning model can be computed as always using the generic `predict` method. The code below produces predictions a random subset of test samples:
 
 ``` julia
-predict(conf_model, selectrows(X, rand(test,5)))
+Xtest = selectrows(X, rand(test,5))
+predict(mach, Xtest)
+```
+
+    ╭────────────────────────────────────╮
+    │                                    │
+    │      (1)   -1.4024500912559206     │
+    │      (2)   -1.437220052507551      │
+    │      (3)   -1.437220052507551      │
+    │      (4)   -0.652676622253909      │
+    │      (5)   -1.3419936560335732     │
+    │                                    │
+    │                                    │
+    ╰──────────────────────── 5 items ───╯
+
+Conformal prediction regions can be computed using the `predict_region` method:
+
+``` julia
+coverage = .90
+predict_region(conf_model, Xtest, coverage)
 ```
 
     ╭────────────────────────────────────────────────────────────────────╮
     │                                                                    │
-    │      (1)   ["lower" => [-2.4540021623386696], "upper" =>           │
-    │  [-0.2590979574572725]]                                            │
-    │      (2)   ["lower" => [-2.8636411155824604], "upper" =>           │
-    │  [-0.6687369107010628]]                                            │
-    │      (3)   ["lower" => [-2.4547720016566648], "upper" =>           │
-    │  [-0.2598677967752674]]                                            │
-    │      (4)   ["lower" => [-0.8259868093914366], "upper" =>           │
-    │  [1.3689173954899607]]                                             │
-    │      (5)   ["lower" => [-0.7367893623688548], "upper" =>           │
-    │  [1.4581148425125425]]                                             │
+    │      (1)   ["lower" => [-1.6231510267950047], "upper" =>           │
+    │  [-1.1817491557168365]]                                            │
+    │      (2)   ["lower" => [-1.657920988046635], "upper" =>            │
+    │  [-1.2165191169684668]]                                            │
+    │      (3)   ["lower" => [-1.657920988046635], "upper" =>            │
+    │  [-1.2165191169684668]]                                            │
+    │      (4)   ["lower" => [-0.8733775577929931], "upper" =>           │
+    │  [-0.4319756867148249]]                                            │
+    │      (5)   ["lower" => [-1.5626945915726573], "upper" =>           │
+    │  [-1.1212927204944891]]                                            │
     │                                                                    │
     │                                                                    │
     │                                                                    │
