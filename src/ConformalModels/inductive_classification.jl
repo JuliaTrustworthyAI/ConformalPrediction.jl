@@ -33,7 +33,7 @@ function MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...)
 
     # Nonconformity Scores:
-    ŷ = MMI.predict(conf_model.model, fitresult, Xcal)
+    ŷ = pdf.(MMI.predict(conf_model.model, fitresult, Xcal), ycal)
     conf_model.scores = @.(conf_model.heuristic(ycal, ŷ))
 
     return (fitresult, cache, report)
@@ -59,6 +59,6 @@ function MMI.predict(conf_model::SimpleInductiveClassifier, fitresult, Xnew)
     v = conf_model.scores
     q̂ = qplus(v, conf_model)
     ŷ = map(x -> collect(key => 1.0-val <= q̂ ? val : missing for (key,val) in zip(L,x)),eachrow(ŷ))
-    return 
+    return ŷ
 end
 

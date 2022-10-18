@@ -57,6 +57,6 @@ function MMI.predict(conf_model::SimpleInductiveRegressor, fitresult, Xnew)
     v = conf_model.scores
     q̂ = qplus(v, conf_model)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
-    return 
+    return ŷ
 end
 

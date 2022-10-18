@@ -25,7 +25,7 @@ function MMI.fit(conf_model::NaiveClassifier, verbosity, X, y)
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, X, y)...)
 
     # Nonconformity Scores:
-    ŷ = MMI.predict(conf_model.model, fitresult, X)
+    ŷ = pdf.(MMI.predict(conf_model.model, fitresult, X),y)
     conf_model.scores = @.(conf_model.heuristic(y, ŷ))
 
     return (fitresult, cache, report)
@@ -46,9 +46,11 @@ For the [`NaiveClassifier`](@ref) prediction sets are computed as follows:
 The naive approach typically produces prediction regions that undercover due to overfitting.
 """
 function MMI.predict(conf_model::NaiveClassifier, fitresult, Xnew)
-    ŷ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
+    p̂ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
+    L = p̂.decoder.classes
+    ŷ = pdf(p̂, L)
     v = conf_model.scores
     q̂ = qplus(v, conf_model)
     ŷ = map(x -> collect(key => 1.0-val <= q̂ ? val : missing for (key,val) in zip(L,x)),eachrow(ŷ))
-    return 
+    return ŷ
 end

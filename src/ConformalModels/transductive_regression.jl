@@ -55,7 +55,7 @@ function MMI.predict(conf_model::NaiveRegressor, fitresult, Xnew)
     v = conf_model.scores
     q̂ = qplus(v, conf_model)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
-    return 
+    return ŷ
 end
 
 # Jackknife
@@ -82,7 +82,6 @@ function MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, X, y)...)
 
     # Nonconformity Scores:
-    conf_model.scores = @.(conf_model.heuristic(y, ŷ))
     T = size(y, 1)
     scores = []
     for t in 1:T
@@ -98,12 +97,11 @@ function MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
     conf_model.scores = scores
 
     return (fitresult, cache, report)
-
 end
 
 # Prediction
 @doc raw"""
-    MMI.predict(conf_model::NaiveRegressor, fitresult, Xnew)
+    MMI.predict(conf_model::JackknifeRegressor, fitresult, Xnew)
 
 For the [`JackknifeRegressor`](@ref) prediction intervals are computed as follows,
 
@@ -115,10 +113,10 @@ For the [`JackknifeRegressor`](@ref) prediction intervals are computed as follow
 
 where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife procedure addresses the overfitting issue associated with the [`NaiveRegressor`](@ref).
 """
-function MMI.predict(conf_model::NaiveRegressor, fitresult, Xnew)
+function MMI.predict(conf_model::JackknifeRegressor, fitresult, Xnew)
     ŷ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     v = conf_model.scores
     q̂ = qplus(v, conf_model)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
-    return 
+    return ŷ
 end

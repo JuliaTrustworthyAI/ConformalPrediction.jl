@@ -24,7 +24,7 @@ function conformal_model(model::Supervised; method::Union{Nothing, Symbol}=nothi
         end
     end
 
-    conf_model = _method(model, nothing)
+    conf_model = _method(model)
 
     return conf_model
     

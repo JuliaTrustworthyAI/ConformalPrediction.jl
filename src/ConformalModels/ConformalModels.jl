@@ -21,13 +21,24 @@ export ConformalModel, InductiveConformalModel, TransductiveConformalModel
 
 include("conformal_models.jl")
 
+# Regression Models:
 include("inductive_regression.jl")
+export InductiveConformalRegressor
+export SimpleInductiveRegressor
 include("transductive_regression.jl")
-export NaiveRegressor, SimpleInductiveRegressor, JackknifeRegressor
+export TransductiveConformalRegressor
+export NaiveRegressor, JackknifeRegressor
 
+# Classification Models
 include("inductive_classification.jl")
+export InductiveConformalClassifier
+export SimpleInductiveClassifier
 include("transductive_classification.jl")
-export NaiveClassifier, SimpleInductiveClassifier
+export TransductiveConformalClassifier
+export NaiveClassifier
+
+const ConformalClassifier = Union{InductiveConformalClassifier, TransductiveConformalClassifier}
+const ConformalRegressor = Union{InductiveConformalRegressor, TransductiveConformalRegressor}
 
 "A container listing all available methods for conformal prediction."
 const available_models = Dict(
@@ -37,7 +48,7 @@ const available_models = Dict(
             :jackknife => JackknifeRegressor,
         ),
         :inductive => Dict(
-            :simple => SimpleInductiveRegressor,
+            :simple_inductive => SimpleInductiveRegressor,
         ),
     ),
     :classification => Dict(
@@ -45,7 +56,7 @@ const available_models = Dict(
             :naive => NaiveClassifier,
         ),
         :inductive => Dict(
-            :simple => SimpleInductiveClassifier,
+            :simple_inductive => SimpleInductiveClassifier,
         ),
     )
 )
