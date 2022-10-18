@@ -21,7 +21,7 @@ The `NaiveRegressor` for conformal prediction is the simplest approach to confor
 """
 mutable struct NaiveRegressor{Model <: Supervised} <: TransductiveConformalRegressor
     model::Model
-    fitresult::Any
+    coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
 end
 
@@ -56,7 +56,7 @@ end
 "Constructor for `JackknifeRegressor`."
 mutable struct JackknifeRegressor{Model <: Supervised} <: TransductiveConformalRegressor
     model::Model
-    fitresult::Any
+    coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
 end
 
@@ -102,7 +102,7 @@ end
 # "Constructor for `JackknifePlusRegressor`."
 # mutable struct JackknifePlusRegressor{Model <: Supervised} <: TransductiveConformalRegressor
 #     model::Model
-#     fitresult::Any
+#     coverage::AbstractFloat
 #     scores::Union{Nothing,AbstractArray}
 # end
 

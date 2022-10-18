@@ -19,7 +19,7 @@ end
 "The `SimpleInductiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset."
 mutable struct SimpleInductiveClassifier{Model <: Supervised} <: InductiveConformalClassifier
     model::Model
-    fitresult::Any
+    coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
 end
 
