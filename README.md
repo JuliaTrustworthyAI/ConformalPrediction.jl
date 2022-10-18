@@ -72,6 +72,7 @@ p1 = plot(
     reduce(vcat, map(x -> hcat(x[1],x[2]), yhat)), c=:orange, label="", 
     title=string(typeof(conf_model).name.name)
 )
+display(p1)
 ```
 
 ![](README_files/figure-commonmark/cell-6-output-1.svg)
@@ -105,8 +106,11 @@ p3 = plot(
 ```
 
 ``` julia
-plot(p1, p2, p3)
+plt = plot(p1, p2, p3)
+display(plt)
 ```
+
+![](README_files/figure-commonmark/cell-9-output-1.svg)
 
 ## Contribute 🛠
 
