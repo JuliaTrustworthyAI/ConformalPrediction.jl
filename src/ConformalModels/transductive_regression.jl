@@ -3,18 +3,6 @@ using MLJ
 "A base type for Transductive Conformal Regressors."
 abstract type TransductiveConformalRegressor <: TransductiveConformalModel end
 
-"""
-    predict_region(conf_model::TransductiveConformalRegressor, Xnew, coverage::AbstractFloat=0.95)
-
-Generic method to compute prediction region for given quantile `q̂` for Transductive Conformal Regressors. 
-"""
-function predict_region(conf_model::TransductiveConformalRegressor, Xnew, coverage::AbstractFloat=0.95)
-    q̂ = empirical_quantile(conf_model, coverage)
-    ŷnew = MMI.predict(conf_model.model, conf_model.fitresult, Xnew)
-    ŷnew = map(x -> ["lower" => x .- q̂, "upper" => x .+ q̂],eachrow(ŷnew))
-    return ŷnew 
-end
-
 # Naive
 """
 The `NaiveRegressor` for conformal prediction is the simplest approach to conformal regression.
@@ -23,14 +11,34 @@ mutable struct NaiveRegressor{Model <: Supervised} <: TransductiveConformalRegre
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
+    heuristic::Function
 end
 
-function NaiveRegressor(model::Supervised, fitresult=nothing)
-    return NaiveRegressor(model, fitresult, nothing)
+function NaiveRegressor(model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=f(y,ŷ)=abs(y-ŷ))
+    return NaiveRegressor(model, coverage, nothing, heuristic)
 end
 
 @doc raw"""
-    score(conf_model::NaiveRegressor, Xtrain, ytrain)
+    MMI.fit(conf_model::NaiveRegressor, verbosity, X, y)
+
+Wrapper function to fit the underlying MLJ model. For Inductive Conformal Prediction the underlying model is fitted on the *proper training set*. The `fitresult` is assigned to the model instance. Computation of nonconformity scores requires a separate calibration step involving a *calibration data set* (see [`calibrate!`](@ref)). 
+"""
+function MMI.fit(conf_model::NaiveRegressor, verbosity, X, y)
+    
+    # Training: 
+    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, X, y)...)
+
+    # Nonconformity Scores:
+    ŷ = MMI.predict(conf_model.model, fitresult, X)
+    conf_model.scores = @.(conf_model.heuristic(y, ŷ))
+
+    return (fitresult, cache, report)
+
+end
+
+# Prediction
+@doc raw"""
+    MMI.predict(conf_model::NaiveRegressor, fitresult, Xnew)
 
 For the [`NaiveRegressor`](@ref) prediction intervals are computed as follows:
 
@@ -41,15 +49,13 @@ For the [`NaiveRegressor`](@ref) prediction intervals are computed as follows:
 ``
 
 The naive approach typically produces prediction regions that undercover due to overfitting.
-
-```julia
-conf_model = conformal_model(model; method=:naive)
-score(conf_model, X, y)
-```
 """
-function score(conf_model::NaiveRegressor, Xtrain, ytrain)
-    ŷ = MMI.predict(conf_model.model, conf_model.fitresult, Xtrain)
-    return @.(abs(ŷ - ytrain))
+function MMI.predict(conf_model::NaiveRegressor, fitresult, Xnew)
+    ŷ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
+    v = conf_model.scores
+    q̂ = qplus(v, conf_model)
+    ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
+    return 
 end
 
 # Jackknife
@@ -58,14 +64,46 @@ mutable struct JackknifeRegressor{Model <: Supervised} <: TransductiveConformalR
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
+    heuristic::Function
 end
 
-function JackknifeRegressor(model::Supervised, fitresult=nothing)
-    return JackknifeRegressor(model, fitresult, nothing)
+function JackknifeRegressor(model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=f(y,ŷ)=abs(y-ŷ))
+    return JackknifeRegressor(model, coverage, nothing, heuristic)
 end
 
 @doc raw"""
-    score(conf_model::JackknifeRegressor, Xtrain, ytrain)
+    MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
+
+Wrapper function to fit the underlying MLJ model. For Inductive Conformal Prediction the underlying model is fitted on the *proper training set*. The `fitresult` is assigned to the model instance. Computation of nonconformity scores requires a separate calibration step involving a *calibration data set* (see [`calibrate!`](@ref)). 
+"""
+function MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
+    
+    # Training: 
+    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, X, y)...)
+
+    # Nonconformity Scores:
+    conf_model.scores = @.(conf_model.heuristic(y, ŷ))
+    T = size(y, 1)
+    scores = []
+    for t in 1:T
+        loo_ids = 1:T .!= t
+        y₋ᵢ = y[loo_ids]                
+        X₋ᵢ = MLJ.matrix(X)[loo_ids,:]
+        yᵢ = y[t]
+        Xᵢ = selectrows(X, t)
+        μ̂₋ᵢ, = MMI.fit(conf_model.model, 0, MMI.reformat(conf_model.model, X₋ᵢ, y₋ᵢ)...)
+        ŷᵢ = MMI.predict(conf_model.model, μ̂₋ᵢ, Xᵢ)
+        push!(scores,@.(conf_model.heuristic(yᵢ, ŷᵢ))...)
+    end
+    conf_model.scores = scores
+
+    return (fitresult, cache, report)
+
+end
+
+# Prediction
+@doc raw"""
+    MMI.predict(conf_model::NaiveRegressor, fitresult, Xnew)
 
 For the [`JackknifeRegressor`](@ref) prediction intervals are computed as follows,
 
@@ -76,70 +114,11 @@ For the [`JackknifeRegressor`](@ref) prediction intervals are computed as follow
 ``
 
 where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife procedure addresses the overfitting issue associated with the [`NaiveRegressor`](@ref).
-
-```julia
-conf_model = conformal_model(model; method=:jackknife)
-score(conf_model, X, y)
-```
 """
-function score(conf_model::JackknifeRegressor, Xtrain, ytrain)
-    T = size(ytrain, 1)
-    scores = []
-    for t in 1:T
-        loo_ids = 1:T .!= t
-        y₋ᵢ = ytrain[loo_ids]                
-        X₋ᵢ = MLJ.matrix(Xtrain)[loo_ids,:]
-        yᵢ = ytrain[t]
-        Xᵢ = selectrows(Xtrain, t)
-        μ̂₋ᵢ, = MMI.fit(conf_model.model, 0, X₋ᵢ, y₋ᵢ)
-        ŷᵢ = MMI.predict(conf_model.model, μ̂₋ᵢ, Xᵢ)
-        push!(scores,@.(abs(yᵢ - ŷᵢ))...)
-    end
-    return scores
+function MMI.predict(conf_model::NaiveRegressor, fitresult, Xnew)
+    ŷ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
+    v = conf_model.scores
+    q̂ = qplus(v, conf_model)
+    ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
+    return 
 end
-
-# # Jackknife+
-# "Constructor for `JackknifePlusRegressor`."
-# mutable struct JackknifePlusRegressor{Model <: Supervised} <: TransductiveConformalRegressor
-#     model::Model
-#     coverage::AbstractFloat
-#     scores::Union{Nothing,AbstractArray}
-# end
-
-# function JackknifePlusRegressor(model::Supervised, fitresult=nothing)
-#     return JackknifePlusRegressor(model, fitresult, nothing)
-# end
-
-# @doc raw"""
-#     score(conf_model::JackknifePlusRegressor, Xtrain, ytrain)
-
-# For the [`JackknifePlusRegressor`](@ref) prediction intervals are computed as follows,
-
-# ``
-# \begin{aligned}
-# \hat{C}_{n,\alpha}(X_{n+1}) &= \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu_{-i}(X_i)|\}, \ i \in \mathcal{D}_{\text{train}}
-# \end{aligned}
-# ``
-
-# where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife procedure addresses the overfitting issue associated with the [`NaiveRegressor`](@ref).
-
-# ```julia
-# conf_model = conformal_model(model; method=:jackknife)
-# score(conf_model, X, y)
-# ```
-# """
-# function score(conf_model::JackknifePlusRegressor, Xtrain, ytrain)
-#     T = size(ytrain, 1)
-#     scores = []
-#     for t in 1:T
-#         loo_ids = 1:T .!= t
-#         y₋ᵢ = ytrain[loo_ids]                
-#         X₋ᵢ = MLJ.matrix(Xtrain)[loo_ids,:]
-#         yᵢ = ytrain[t]
-#         Xᵢ = selectrows(Xtrain, t)
-#         μ̂₋ᵢ, = MMI.fit(conf_model.model, 0, X₋ᵢ, y₋ᵢ)
-#         ŷᵢ = MMI.predict(conf_model.model, μ̂₋ᵢ, Xᵢ)
-#         push!(scores,@.(abs(yᵢ - ŷᵢ))...)
-#     end
-#     return scores
-# end

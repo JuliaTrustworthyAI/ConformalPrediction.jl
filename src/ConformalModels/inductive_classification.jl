@@ -11,7 +11,7 @@ mutable struct SimpleInductiveClassifier{Model <: Supervised} <: InductiveConfor
     train_ratio::AbstractFloat
 end
 
-function SimpleInductiveClassifier(model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=f(ŷ)=1.0-ŷ, train_ratio::AbstractFloat=0.5)
+function SimpleInductiveClassifier(model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=f(y, ŷ)=1.0-ŷ, train_ratio::AbstractFloat=0.5)
     return SimpleInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
 end
 
