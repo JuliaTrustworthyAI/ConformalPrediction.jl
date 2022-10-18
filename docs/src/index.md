@@ -44,7 +44,7 @@ To illustrate the intended use of the package, let’s have a quick look at a si
 ``` julia
 using MLJ
 X, y = MLJ.make_regression(1000, 2)
-train, calibration, test = partition(eachindex(y), 0.4, 0.4)
+train, test = partition(eachindex(y), 0.4, 0.4)
 ```
 
 We then train a decision tree ([DecisionTree](https://github.com/Evovest/DecisionTree.jl)) and follow the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) training procedure.
@@ -63,50 +63,22 @@ using ConformalPrediction
 conf_model = conformal_model(model)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
-calibrate!(conf_model, selectrows(X, calibration), y[calibration])
 ```
 
 Point predictions for the underlying machine learning model can be computed as always using the generic `predict` method. The code below produces predictions a random subset of test samples:
 
 ``` julia
-Xtest = selectrows(X, rand(test,5))
-predict(mach, Xtest)
+n = 10
+Xtest = selectrows(X, first(test,n))
+ytest = y[first(test,n)]
+yhat = predict(mach, Xtest)
+p1 = plot(
+    reduce(vcat, map(x -> hcat(x[1],x[2]), yhat)), c=:orange, label="", 
+    title=string(typeof(conf_model).name.name)
+)
 ```
 
-    ╭────────────────────────────────────╮
-    │                                    │
-    │      (1)   0.487041919606731       │
-    │      (2)   1.156996084490427       │
-    │      (3)   0.2944027447212445      │
-    │      (4)   -0.5897879862659916     │
-    │      (5)   0.037577444230686       │
-    │                                    │
-    │                                    │
-    ╰──────────────────────── 5 items ───╯
-
-Conformal prediction regions can be computed using the `predict_region` method:
-
-``` julia
-coverage = .90
-predict_region(conf_model, Xtest, coverage)
-```
-
-    ╭────────────────────────────────────────────────────────────────────╮
-    │                                                                    │
-    │      (1)   ["lower" => [0.11529245641527913], "upper" =>           │
-    │  [0.8587913827981828]]                                             │
-    │      (2)   ["lower" => [0.7852466212989752], "upper" =>            │
-    │  [1.5287455476818788]]                                             │
-    │      (3)   ["lower" => [-0.07734671847020735], "upper" =>          │
-    │  [0.6661522079126964]]                                             │
-    │      (4)   ["lower" => [-0.9615374494574435], "upper" =>           │
-    │  [-0.21803852307453975]]                                           │
-    │      (5)   ["lower" => [-0.33417201896076587], "upper" =>          │
-    │  [0.40932690742213784]]                                            │
-    │                                                                    │
-    │                                                                    │
-    │                                                                    │
-    ╰──────────────────────────────────────────────────────── 5 items ───╯
+![](index_files/figure-commonmark/cell-6-output-1.svg)
 
 ## Usage Example - Transductive Conformal Regression 🔍
 
@@ -116,7 +88,11 @@ predict_region(conf_model, Xtest, coverage)
 conf_model = conformal_model(model; method=:naive)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
-predict_region(conf_model, Xtest, coverage)
+yhat = predict(mach, Xtest)
+p2 = plot(
+    reduce(vcat, map(x -> hcat(x[1],x[2]), yhat)), c=:orange, label="", 
+    title=string(typeof(conf_model).name.name)
+)
 ```
 
 ### Jackknife
@@ -125,7 +101,15 @@ predict_region(conf_model, Xtest, coverage)
 conf_model = conformal_model(model; method=:jackknife)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
-predict_region(conf_model, Xtest, coverage)
+yhat = predict(mach, Xtest)
+p3 = plot(
+    reduce(vcat, map(x -> hcat(x[1],x[2]), yhat)), c=:orange, label="", 
+    title=string(typeof(conf_model).name.name)
+)
+```
+
+``` julia
+plot(p1, p2, p3)
 ```
 
 ## Contribute 🛠

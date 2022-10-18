@@ -67,8 +67,14 @@ Point predictions for the underlying machine learning model can be computed as a
 
 ```{julia}
 #| output: true
-Xtest = selectrows(X, rand(test,5))
-predict(mach, Xtest)
+n = 10
+Xtest = selectrows(X, first(test,n))
+ytest = y[first(test,n)]
+yhat = predict(mach, Xtest)
+p1 = plot(
+    reduce(vcat, map(x -> hcat(x[1],x[2]), yhat)), c=:orange, label="", 
+    title=string(typeof(conf_model).name.name)
+)
 ```
 
 ## Usage Example - Transductive Conformal Regression 🔍
@@ -79,7 +85,11 @@ predict(mach, Xtest)
 conf_model = conformal_model(model; method=:naive)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
-predict(mach, Xtest)
+yhat = predict(mach, Xtest)
+p2 = plot(
+    reduce(vcat, map(x -> hcat(x[1],x[2]), yhat)), c=:orange, label="", 
+    title=string(typeof(conf_model).name.name)
+)
 ```
 
 ### Jackknife
@@ -88,9 +98,16 @@ predict(mach, Xtest)
 conf_model = conformal_model(model; method=:jackknife)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
-predict(mach, Xtest)
+yhat = predict(mach, Xtest)
+p3 = plot(
+    reduce(vcat, map(x -> hcat(x[1],x[2]), yhat)), c=:orange, label="", 
+    title=string(typeof(conf_model).name.name)
+)
 ```
 
+```{julia}
+plot(p1, p2, p3)
+```
 
 
 ## Contribute 🛠
