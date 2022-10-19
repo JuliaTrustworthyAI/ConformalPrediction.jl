@@ -22,7 +22,7 @@ end
 @doc raw"""
     MMI.fit(conf_model::NaiveRegressor, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model. For Inductive Conformal Prediction the underlying model is fitted on the *proper training set*. The `fitresult` is assigned to the model instance. Computation of nonconformity scores requires a separate calibration step involving a *calibration data set* (see [`calibrate!`](@ref)). 
+Wrapper function to fit the underlying MLJ model.
 """
 function MMI.fit(conf_model::NaiveRegressor, verbosity, X, y)
     
@@ -44,9 +44,7 @@ end
 For the [`NaiveRegressor`](@ref) prediction intervals are computed as follows:
 
 ``
-\begin{aligned}
-\hat{C}_{n,\alpha}(X_{n+1}) &= \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu(X_i)| \}, \ i \in \mathcal{D}_{\text{train}}
-\end{aligned}
+\hat{C}_{n,\alpha}(X_{n+1}) = \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu(X_i)| \}, \ i \in \mathcal{D}_{\text{train}}
 ``
 
 The naive approach typically produces prediction regions that undercover due to overfitting.
@@ -75,7 +73,7 @@ end
 @doc raw"""
     MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model. For Inductive Conformal Prediction the underlying model is fitted on the *proper training set*. The `fitresult` is assigned to the model instance. Computation of nonconformity scores requires a separate calibration step involving a *calibration data set* (see [`calibrate!`](@ref)). 
+Wrapper function to fit the underlying MLJ model.
 """
 function MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
     
@@ -107,9 +105,7 @@ end
 For the [`JackknifeRegressor`](@ref) prediction intervals are computed as follows,
 
 ``
-\begin{aligned}
-\hat{C}_{n,\alpha}(X_{n+1}) &= \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu_{-i}(X_i)|\}, \ i \in \mathcal{D}_{\text{train}}
-\end{aligned}
+\hat{C}_{n,\alpha}(X_{n+1}) = \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu_{-i}(X_i)|\}, \ i \in \mathcal{D}_{\text{train}}
 ``
 
 where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife procedure addresses the overfitting issue associated with the [`NaiveRegressor`](@ref).
@@ -138,7 +134,7 @@ end
 @doc raw"""
     MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model. For Inductive Conformal Prediction the underlying model is fitted on the *proper training set*. The `fitresult` is assigned to the model instance. Computation of nonconformity scores requires a separate calibration step involving a *calibration data set* (see [`calibrate!`](@ref)). 
+Wrapper function to fit the underlying MLJ model.
 """
 function MMI.fit(conf_model::JackknifePlusRegressor, verbosity, X, y)
     
@@ -170,15 +166,18 @@ end
 
 # Prediction
 @doc raw"""
-    MMI.predict(conf_model::JJackknifePlusRegressor, fitresult, Xnew)
+    MMI.predict(conf_model::JackknifePlusRegressor, fitresult, Xnew)
 
 For the [`JackknifePlusRegressor`](@ref) prediction intervals are computed as follows,
 
 ``
-\begin{aligned}
-\hat{C}_{n,\alpha}(X_{n+1}) &= \left[ \hat{q}_{n, \alpha}^{-} \{\hat\mu_{-i}(X_{N+1}) - R_i^{\text{LOO}} \}, \hat{q}_{n, \alpha}^{+} \{\hat\mu_{-i}(X_{N+1}) + R_i^{\text{LOO}}\} \right] , & i \in \mathcal{D}_{\text{train}} \\
-R_i^{\text{LOO}}&=|Y_i - \hat\mu_{-i}(X_i)|, & i \in \mathcal{D}_{\text{train}}
-\end{aligned}
+\hat{C}_{n,\alpha}(X_{n+1}) = \left[ \hat{q}_{n, \alpha}^{-} \{\hat\mu_{-i}(X_{n+1}) - R_i^{\text{LOO}} \}, \hat{q}_{n, \alpha}^{+} \{\hat\mu_{-i}(X_{n+1}) + R_i^{\text{LOO}}\} \right] , i \in \mathcal{D}_{\text{train}}
+``
+
+with
+
+``
+R_i^{\text{LOO}}=|Y_i - \hat\mu_{-i}(X_i)|
 ``
 
 where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife``+`` procedure is more stable than the [`JackknifeRegressor`](@ref).
@@ -211,9 +210,9 @@ function JackknifeMinMaxRegressor(model::Supervised; coverage::AbstractFloat=0.9
 end
 
 @doc raw"""
-    MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
+    MMI.fit(conf_model::JackknifeMinMaxRegressor, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model. For Inductive Conformal Prediction the underlying model is fitted on the *proper training set*. The `fitresult` is assigned to the model instance. Computation of nonconformity scores requires a separate calibration step involving a *calibration data set* (see [`calibrate!`](@ref)). 
+Wrapper function to fit the underlying MLJ model.
 """
 function MMI.fit(conf_model::JackknifeMinMaxRegressor, verbosity, X, y)
     
@@ -250,13 +249,16 @@ end
 For the [`JackknifeMinMaxRegressor`](@ref) prediction intervals are computed as follows,
 
 ``
-\begin{aligned}
-\hat{C}_{n,\alpha}(X_{n+1}) &= \left[ \hat{q}_{n, \alpha}^{-} \{\hat\mu_{-i}(X_{N+1}) - R_i^{\text{LOO}} \}, \hat{q}_{n, \alpha}^{+} \{\hat\mu_{-i}(X_{N+1}) + R_i^{\text{LOO}}\} \right] , & i \in \mathcal{D}_{\text{train}} \\
-R_i^{\text{LOO}}&=|Y_i - \hat\mu_{-i}(X_i)|, & i \in \mathcal{D}_{\text{train}}
-\end{aligned}
+\hat{C}_{n,\alpha}(X_{n+1}) = \left[ \min_{i=1,...,n} \hat\mu_{-i}(X_{n+1}) -  \hat{q}_{n, \alpha}^{+} \{R_i^{\text{LOO}} \}, \max_{i=1,...,n} \hat\mu_{-i}(X_{n+1}) + \hat{q}_{n, \alpha}^{+} \{ R_i^{\text{LOO}}\} \right] ,  i \in \mathcal{D}_{\text{train}}
 ``
 
-where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife``+`` procedure is more stable than the [`JackknifeRegressor`](@ref).
+with 
+
+``
+R_i^{\text{LOO}}=|Y_i - \hat\mu_{-i}(X_i)|
+``
+
+where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife-minmax procedure is more conservative than the [`JackknifePlusRegressor`](@ref).
 """
 function MMI.predict(conf_model::JackknifeMinMaxRegressor, fitresult, Xnew)
     # Get all LOO predictions for each Xnew:
@@ -291,7 +293,7 @@ end
 @doc raw"""
     MMI.fit(conf_model::CVPlusRegressor, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model. For Inductive Conformal Prediction the underlying model is fitted on the *proper training set*. The `fitresult` is assigned to the model instance. Computation of nonconformity scores requires a separate calibration step involving a *calibration data set* (see [`calibrate!`](@ref)). 
+Wrapper function to fit the underlying MLJ model. 
 """
 function MMI.fit(conf_model::CVPlusRegressor, verbosity, X, y)
 
@@ -336,13 +338,16 @@ end
 For the [`CVPlusRegressor`](@ref) prediction intervals are computed as follows,
 
 ``
-\begin{aligned}
-\hat{C}_{n,\alpha}(X_{n+1}) &= \left[ \hat{q}_{n, \alpha}^{-} \{\hat\mu_{-i}(X_{N+1}) - R_i^{\text{LOO}} \}, \hat{q}_{n, \alpha}^{+} \{\hat\mu_{-i}(X_{N+1}) + R_i^{\text{LOO}}\} \right] , & i \in \mathcal{D}_{\text{train}} \\
-R_i^{\text{LOO}}&=|Y_i - \hat\mu_{-i}(X_i)|, & i \in \mathcal{D}_{\text{train}}
-\end{aligned}
+\hat{C}_{n,\alpha}(X_{n+1}) = \left[ \hat{q}_{n, \alpha}^{-} \{\hat\mu_{-\mathcal{D}_{k(i)}}(X_{n+1}) - R_i^{\text{CV}} \}, \hat{q}_{n, \alpha}^{+} \{\hat\mu_{-\mathcal{D}_{k(i)}}(X_{n+1}) + R_i^{\text{CV}}\} \right] , \ i \in \mathcal{D}_{\text{train}} 
 ``
 
-where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife``+`` procedure is more stable than the [`JackknifeRegressor`](@ref).
+with 
+
+``
+R_i^{\text{CV}}=|Y_i - \hat\mu_{-\mathcal{D}_{k(i)}}(X_i)|
+``
+
+where ``\hat\mu_{-\mathcal{D}_{k(i)}}`` denotes the model fitted on training data with subset ``\mathcal{D}_{k(i)}`` that contains the ``i`` th point removed.
 """
 function MMI.predict(conf_model::CVPlusRegressor, fitresult, Xnew)
     # Get all LOO predictions for each Xnew:
@@ -379,7 +384,7 @@ end
 @doc raw"""
     MMI.fit(conf_model::CVMinMaxRegressor, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model. For Inductive Conformal Prediction the underlying model is fitted on the *proper training set*. The `fitresult` is assigned to the model instance. Computation of nonconformity scores requires a separate calibration step involving a *calibration data set* (see [`calibrate!`](@ref)). 
+Wrapper function to fit the underlying MLJ model.
 """
 function MMI.fit(conf_model::CVMinMaxRegressor, verbosity, X, y)
 
@@ -425,13 +430,16 @@ end
 For the [`CVMinMaxRegressor`](@ref) prediction intervals are computed as follows,
 
 ``
-\begin{aligned}
-\hat{C}_{n,\alpha}(X_{n+1}) &= \left[ \hat{q}_{n, \alpha}^{-} \{\hat\mu_{-i}(X_{N+1}) - R_i^{\text{LOO}} \}, \hat{q}_{n, \alpha}^{+} \{\hat\mu_{-i}(X_{N+1}) + R_i^{\text{LOO}}\} \right] , & i \in \mathcal{D}_{\text{train}} \\
-R_i^{\text{LOO}}&=|Y_i - \hat\mu_{-i}(X_i)|, & i \in \mathcal{D}_{\text{train}}
-\end{aligned}
+\hat{C}_{n,\alpha}(X_{n+1}) = \left[ \min_{i=1,...,n} \hat\mu_{-\mathcal{D}_{k(i)}}(X_{n+1}) -  \hat{q}_{n, \alpha}^{+} \{R_i^{\text{CV}} \}, \max_{i=1,...,n} \hat\mu_{-\mathcal{D}_{k(i)}}(X_{n+1}) + \hat{q}_{n, \alpha}^{+} \{ R_i^{\text{CV}}\} \right] , i \in \mathcal{D}_{\text{train}}
 ``
 
-where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife``+`` procedure is more stable than the [`JackknifeRegressor`](@ref).
+with 
+
+``
+R_i^{\text{CV}}=|Y_i - \hat\mu_{-\mathcal{D}_{k(i)}}(X_i)|
+``
+
+where ``\hat\mu_{-\mathcal{D}_{k(i)}}`` denotes the model fitted on training data with subset ``\mathcal{D}_{k(i)}`` that contains the ``i`` th point removed.
 """
 function MMI.predict(conf_model::CVMinMaxRegressor, fitresult, Xnew)
     # Get all LOO predictions for each Xnew:

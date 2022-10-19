@@ -17,7 +17,7 @@ end
 @doc raw"""
     MMI.fit(conf_model::SimpleInductiveRegressor, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model. For Inductive Conformal Prediction the underlying model is fitted on the *proper training set*. The `fitresult` is assigned to the model instance. Computation of nonconformity scores requires a separate calibration step involving a *calibration data set* (see [`calibrate!`](@ref)). 
+Wrapper function to fit the underlying MLJ model.
 """
 function MMI.fit(conf_model::SimpleInductiveRegressor, verbosity, X, y)
     
@@ -45,9 +45,7 @@ end
 For the [`SimpleInductiveRegressor`](@ref) prediction intervals are computed as follows,
 
 ``
-\begin{aligned}
-\hat{C}_{n,\alpha}(X_{n+1}) &= \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu(X_i)| \}, \ i \in \mathcal{D}_{\text{calibration}}
-\end{aligned}
+\hat{C}_{n,\alpha}(X_{n+1}) = \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu(X_i)| \}, \ i \in \mathcal{D}_{\text{calibration}}
 ``
 
 where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``.

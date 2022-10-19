@@ -18,7 +18,7 @@ end
 @doc raw"""
     MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model. For Inductive Conformal Prediction the underlying model is fitted on the *proper training set*. The `fitresult` is assigned to the model instance. Computation of nonconformity scores requires a separate calibration step involving a *calibration data set* (see [`calibrate!`](@ref)). 
+Wrapper function to fit the underlying MLJ model.
 """
 function MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
     
@@ -45,9 +45,7 @@ end
 For the [`SimpleInductiveClassifier`](@ref) prediction sets are computed as follows,
 
 ``
-\begin{aligned}
-\hat{C}_{n,\alpha}(X_{n+1}) &= \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu(X_i) |\} \right\}, \ i \in \mathcal{D}_{\text{calibration}}
-\end{aligned}
+\hat{C}_{n,\alpha}(X_{n+1}) = \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{1 - \hat\mu(X_i)\} \right\}, \ i \in \mathcal{D}_{\text{calibration}}
 ``
 
 where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``.
@@ -79,7 +77,7 @@ end
 @doc raw"""
     MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model. For Inductive Conformal Prediction the underlying model is fitted on the *proper training set*. The `fitresult` is assigned to the model instance. Computation of nonconformity scores requires a separate calibration step involving a *calibration data set* (see [`calibrate!`](@ref)). 
+Wrapper function to fit the underlying MLJ model.
 """
 function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
     
@@ -111,12 +109,16 @@ end
 @doc raw"""
     MMI.predict(conf_model::AdaptiveInductiveClassifier, fitresult, Xnew)
 
-For the [`AdaptiveInductiveClassifier`](@ref) prediction sets are computed as follows,
+For the [`AdaptiveInductiveClassifier`](@ref) nonconformity scores are computed by cumulatively summing the ranked scores of each label in descending order until reaching the true label ``y_i``:
 
 ``
-\begin{aligned}
-\hat{C}_{n,\alpha}(X_{n+1}) &= \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu(X_i) |\} \right\}, \ i \in \mathcal{D}_{\text{calibration}}
-\end{aligned}
+s_i(X_i,y_i) = \sum_{j=1}^k  \hat\mu(X_i)_{\pi_j} \ \text{where } \ y_i=\pi_k,  i \in \mathcal{D}_{\text{calibration}}
+``
+
+Prediction sets are then computed as follows,
+
+``
+\hat{C}_{n,\alpha}(X_{n+1}) = \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{s_i(X_i,y_i)\} \right\},  i \in \mathcal{D}_{\text{calibration}}
 ``
 
 where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``.

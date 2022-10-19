@@ -17,7 +17,7 @@ end
 @doc raw"""
     MMI.fit(conf_model::NaiveClassifier, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model. For Inductive Conformal Prediction the underlying model is fitted on the *proper training set*. The `fitresult` is assigned to the model instance. Computation of nonconformity scores requires a separate calibration step involving a *calibration data set* (see [`calibrate!`](@ref)). 
+Wrapper function to fit the underlying MLJ model. 
 """
 function MMI.fit(conf_model::NaiveClassifier, verbosity, X, y)
     
@@ -38,9 +38,7 @@ end
 For the [`NaiveClassifier`](@ref) prediction sets are computed as follows:
 
 ``
-\begin{aligned}
-\hat{C}_{n,\alpha}(X_{n+1}) &= \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu(X_i) |\} \right\}, \ i \in \mathcal{D}_{\text{train}}
-\end{aligned}
+\hat{C}_{n,\alpha}(X_{n+1}) = \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{1 - \hat\mu(X_i) \} \right\}, \ i \in \mathcal{D}_{\text{train}}
 ``
 
 The naive approach typically produces prediction regions that undercover due to overfitting.

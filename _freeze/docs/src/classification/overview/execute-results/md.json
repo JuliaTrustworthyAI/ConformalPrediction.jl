@@ -1,0 +1,10 @@
+{
+  "hash": "02d7e118b4e378655a58957d30bf707d",
+  "result": {
+    "markdown": "\n\n```@index\n```\n\n# Overview of Methods\n\n## Inductive Classifiers\n\n### Simple Inductive Classifier\n\n```@docs\nConformalPrediction.ConformalModels.SimpleInductiveClassifier\n```\n\n```@docs\npredict(conf_model::SimpleInductiveClassifier, fitresult, Xnew)\n```\n\n## Transductive Classifiers\n\n",
+    "supporting": [
+      "overview_files"
+    ],
+    "filters": []
+  }
+}
