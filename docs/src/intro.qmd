@@ -112,6 +112,13 @@ plt = plot(p1, p2, p3)
 display(plt)
 ```
 
+$$
+\begin{aligned}
+\hat{C}_{n,\alpha}(X_{n+1}) &= \left[ \hat{q}_{n, \alpha}^{-} \{\hat\mu_{-i}(X_{N+1}) - R_i^{\text{LOO}} \}, \hat{q}_{n, \alpha}^{+} \{\hat\mu_{-i}(X_{N+1}) + R_i^{\text{LOO}}\} \right] , & i \in \mathcal{D}_{\text{train}} \\
+R_i^{\text{LOO}}&=|Y_i - \hat\mu_{-i}(X_i)|, & i \in \mathcal{D}_{\text{train}}
+\end{aligned}
+$$
+
 
 ## Contribute 🛠
 
