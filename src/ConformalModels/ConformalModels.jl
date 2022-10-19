@@ -32,7 +32,7 @@ export NaiveRegressor, JackknifeRegressor, JackknifePlusRegressor, JackknifeMinM
 # Classification Models
 include("inductive_classification.jl")
 export InductiveConformalClassifier
-export SimpleInductiveClassifier
+export SimpleInductiveClassifier, AdaptiveInductiveClassifier
 include("transductive_classification.jl")
 export TransductiveConformalClassifier
 export NaiveClassifier
@@ -61,6 +61,7 @@ const available_models = Dict(
         ),
         :inductive => Dict(
             :simple_inductive => SimpleInductiveClassifier,
+            :adaptive_inductive => AdaptiveInductiveClassifier,
         ),
     )
 )
