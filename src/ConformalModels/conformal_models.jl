@@ -2,9 +2,9 @@ using Statistics
 
 # Main API call to wrap model:
 """
-    conformal_model(model::Supervised; method::Union{Nothing, Symbol}=nothing)
+    conformal_model(model::Supervised; method::Union{Nothing, Symbol}=nothing, kwargs...)
 
-A simple wrapper function that turns any `modeline{<:Supervised}` into a conformal model. It accepts an optional key argument that can be used to specify the desired method for conformal prediction.
+A simple wrapper function that turns a `model::Supervised` into a conformal model. It accepts an optional key argument that can be used to specify the desired `method` for conformal prediction as well as additinal `kwargs...` specific to the `method`.
 """
 function conformal_model(model::Supervised; method::Union{Nothing, Symbol}=nothing, kwargs...)
 
@@ -32,9 +32,9 @@ end
 
 # Training
 """
-    fit(conf_model::ConformalModel, verbosity, X, y)
+    MMI.fit(conf_model::ConformalModel, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model.
+Generic `fit` method used to train conformal models. If no specific `fit` method is dispatched for `conf_model::ConformalModel`, calling `fit` defaults to simply fitting the underling atomic model.
 """
 function MMI.fit(conf_model::ConformalModel, verbosity, X, y)
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, X, y)...)
@@ -45,23 +45,11 @@ end
 """
     MMI.predict(conf_model::ConformalModel, fitresult, Xnew)
 
-Compulsory generic `predict` method of MMI. Simply wraps the underlying model and apply generic method to underlying model.
+Generic `MMI.predict` method used to predict from a conformal model given a `fitresult` and data `Xnew`. If no specific `predict` method is dispatched for `conf_model::ConformalModel`, calling `predict` defaults to simply predicting from the underlying atomic model.
 """
 function MMI.predict(conf_model::ConformalModel, fitresult, Xnew)
     yhat = predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     return yhat
 end
 
-"""
-    qplus(v::AbstractArray, conf_model::ConformalModel)
-
-Computes the empirical quantile `q̂` of the calibrated conformal scores for a user chosen coverage rate `(1-α)`.
-"""
-function qplus(v::AbstractArray, conf_model::ConformalModel)
-    n = length(v)
-    p̂ = ceil(((n+1) * conf_model.coverage)) / n
-    p̂ = clamp(p̂, 0.0, 1.0)
-    q̂ = Statistics.quantile(v, p̂)
-    return q̂
-end
 

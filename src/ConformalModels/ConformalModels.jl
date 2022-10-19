@@ -68,6 +68,6 @@ const available_models = Dict(
 export available_models
 
 # Other general methods:
-export conformal_model, empirical_quantiles, calibrate!, predict_region, score
+export conformal_model, qplus
     
 end

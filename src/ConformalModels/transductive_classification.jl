@@ -50,7 +50,7 @@ function MMI.predict(conf_model::NaiveClassifier, fitresult, Xnew)
     L = p̂.decoder.classes
     ŷ = pdf(p̂, L)
     v = conf_model.scores
-    q̂ = qplus(v, conf_model)
+    q̂ = Statistics.quantile(v, conf_model.coverage)
     ŷ = map(x -> collect(key => 1.0-val <= q̂ ? val : missing for (key,val) in zip(L,x)),eachrow(ŷ))
     return ŷ
 end

@@ -54,7 +54,7 @@ The naive approach typically produces prediction regions that undercover due to 
 function MMI.predict(conf_model::NaiveRegressor, fitresult, Xnew)
     ŷ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     v = conf_model.scores
-    q̂ = qplus(v, conf_model)
+    q̂ = Statistics.quantile(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
     return ŷ
 end
@@ -117,7 +117,7 @@ where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th po
 function MMI.predict(conf_model::JackknifeRegressor, fitresult, Xnew)
     ŷ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     v = conf_model.scores
-    q̂ = qplus(v, conf_model)
+    q̂ = Statistics.quantile(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
     return ŷ
 end
@@ -189,10 +189,13 @@ function MMI.predict(conf_model::JackknifePlusRegressor, fitresult, Xnew)
     # All LOO predictions across columns for each Xnew across rows:
     ŷ = reduce(hcat, ŷ)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
-    ŷ = map(yᵢ -> (-qplus(-yᵢ .+ conf_model.scores, conf_model), qplus(yᵢ .+ conf_model.scores, conf_model)), eachrow(ŷ))
+    ŷ = map(eachrow(ŷ)) do yᵢ
+        lb = - Statistics.quantile(.- yᵢ .+ conf_model.scores, conf_model.coverage)
+        ub = Statistics.quantile(yᵢ .+ conf_model.scores, conf_model.coverage)
+        return (lb, ub)
+    end
     return ŷ
 end
-
 
 # Jackknife-minmax
 "Constructor for `JackknifeMinMaxRegressor`."
@@ -262,7 +265,7 @@ function MMI.predict(conf_model::JackknifeMinMaxRegressor, fitresult, Xnew)
     ŷ = reduce(hcat, ŷ)
     # Get all LOO residuals:
     v = conf_model.scores
-    q̂ = qplus(v, conf_model)
+    q̂ = Statistics.quantile(v, conf_model.coverage)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
     ŷ = map(yᵢ -> (minimum(yᵢ .- q̂), maximum(yᵢ .+ q̂)), eachrow(ŷ))
     return ŷ
@@ -347,7 +350,11 @@ function MMI.predict(conf_model::CVPlusRegressor, fitresult, Xnew)
     # All LOO predictions across columns for each Xnew across rows:
     ŷ = reduce(hcat, ŷ)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
-    ŷ = map(yᵢ -> (-qplus(-yᵢ .+ conf_model.scores, conf_model), qplus(yᵢ .+ conf_model.scores, conf_model)), eachrow(ŷ))
+    ŷ = map(eachrow(ŷ)) do yᵢ
+        lb = - Statistics.quantile(.- yᵢ .+ conf_model.scores, conf_model.coverage)
+        ub = Statistics.quantile(yᵢ .+ conf_model.scores, conf_model.coverage)
+        return (lb, ub)
+    end
     return ŷ
 end
 
@@ -433,7 +440,7 @@ function MMI.predict(conf_model::CVMinMaxRegressor, fitresult, Xnew)
     ŷ = reduce(hcat, ŷ)
     # Get all LOO residuals:
     v = conf_model.scores
-    q̂ = qplus(v, conf_model)
+    q̂ = Statistics.quantile(v, conf_model.coverage)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
     ŷ = map(yᵢ -> (minimum(yᵢ .- q̂), maximum(yᵢ .+ q̂)), eachrow(ŷ))
     return ŷ

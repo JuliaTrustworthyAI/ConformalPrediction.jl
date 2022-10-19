@@ -55,7 +55,7 @@ where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration da
 function MMI.predict(conf_model::SimpleInductiveRegressor, fitresult, Xnew)
     ŷ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     v = conf_model.scores
-    q̂ = qplus(v, conf_model)
+    q̂ = Statistics.quantile(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
     return ŷ
 end
