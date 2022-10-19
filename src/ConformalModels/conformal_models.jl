@@ -6,7 +6,7 @@ using Statistics
 
 A simple wrapper function that turns any `modeline{<:Supervised}` into a conformal model. It accepts an optional key argument that can be used to specify the desired method for conformal prediction.
 """
-function conformal_model(model::Supervised; method::Union{Nothing, Symbol}=nothing)
+function conformal_model(model::Supervised; method::Union{Nothing, Symbol}=nothing, kwargs...)
 
     is_classifier = target_scitype(model) <: AbstractVector{<:Finite}
 
@@ -24,7 +24,7 @@ function conformal_model(model::Supervised; method::Union{Nothing, Symbol}=nothi
         end
     end
 
-    conf_model = _method(model)
+    conf_model = _method(model; kwargs...)
 
     return conf_model
     

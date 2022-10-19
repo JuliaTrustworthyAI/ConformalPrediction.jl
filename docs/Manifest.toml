@@ -2,7 +2,7 @@
 
 julia_version = "1.8.1"
 manifest_format = "2.0"
-project_hash = "1d05f595d1632319176bcf67b3addd9baba5ef1e"
+project_hash = "9f3db68ff535b141bf92e2e3a6ac483ef835a792"
 
 [[deps.ANSIColoredPrinters]]
 git-tree-sha1 = "574baf8110975760d391c710b6341da1afa48d8c"
@@ -217,7 +217,7 @@ uuid = "ed09eef8-17a6-5b46-8889-db040fac31e3"
 version = "0.3.2"
 
 [[deps.ConformalPrediction]]
-deps = ["MLJ", "MLJModelInterface", "Statistics"]
+deps = ["MLJ", "MLJBase", "MLJModelInterface", "Statistics"]
 path = ".."
 uuid = "98bfc277-1877-43dc-819b-a3e38c30242f"
 version = "0.1.0"
@@ -781,9 +781,9 @@ version = "0.18.5"
 
 [[deps.MLJBase]]
 deps = ["CategoricalArrays", "CategoricalDistributions", "ComputationalResources", "Dates", "DelimitedFiles", "Distributed", "Distributions", "InteractiveUtils", "InvertedIndices", "LinearAlgebra", "LossFunctions", "MLJModelInterface", "Missings", "OrderedCollections", "Parameters", "PrettyTables", "ProgressMeter", "Random", "ScientificTypes", "Serialization", "StatisticalTraits", "Statistics", "StatsBase", "Tables"]
-git-tree-sha1 = "f68deea1f25727f24a4afa9f941763e6fc44f5af"
+git-tree-sha1 = "ace5668bc6c4fd46f3e6af67ead3778804f23e5b"
 uuid = "a7f614a8-145f-11e9-1d2a-a57a1082229d"
-version = "0.20.19"
+version = "0.20.20"
 
 [[deps.MLJDecisionTreeInterface]]
 deps = ["DecisionTree", "MLJModelInterface", "Random", "Tables"]

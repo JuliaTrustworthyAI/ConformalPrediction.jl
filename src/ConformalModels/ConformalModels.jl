@@ -27,7 +27,7 @@ export InductiveConformalRegressor
 export SimpleInductiveRegressor
 include("transductive_regression.jl")
 export TransductiveConformalRegressor
-export NaiveRegressor, JackknifeRegressor, JackknifePlusRegressor, JackknifeMinMaxRegressor
+export NaiveRegressor, JackknifeRegressor, JackknifePlusRegressor, JackknifeMinMaxRegressor, CVPlusRegressor, CVMinMaxRegressor
 
 # Classification Models
 include("inductive_classification.jl")
@@ -48,6 +48,8 @@ const available_models = Dict(
             :jackknife => JackknifeRegressor,
             :jackknife_plus => JackknifePlusRegressor,
             :jackknife_minmax => JackknifeMinMaxRegressor,
+            :cv_plus => CVPlusRegressor,
+            :cv_minmax => CVMinMaxRegressor,
         ),
         :inductive => Dict(
             :simple_inductive => SimpleInductiveRegressor,

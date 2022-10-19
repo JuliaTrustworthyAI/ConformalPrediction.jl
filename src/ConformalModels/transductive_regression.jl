@@ -1,4 +1,5 @@
 using MLJ
+using MLJBase
 
 "A base type for Transductive Conformal Regressors."
 abstract type TransductiveConformalRegressor <: TransductiveConformalModel end
@@ -213,10 +214,10 @@ Wrapper function to fit the underlying MLJ model. For Inductive Conformal Predic
 """
 function MMI.fit(conf_model::JackknifeMinMaxRegressor, verbosity, X, y)
     
-    # Training: 
+    # Pre-allocate: 
     fitresult, cache, report = ([],[],[])
 
-    # Nonconformity Scores:
+    # Training and Nonconformity Scores:
     T = size(y, 1)
     scores = []
     for t in 1:T
@@ -255,6 +256,177 @@ R_i^{\text{LOO}}&=|Y_i - \hat\mu_{-i}(X_i)|, & i \in \mathcal{D}_{\text{train}}
 where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife``+`` procedure is more stable than the [`JackknifeRegressor`](@ref).
 """
 function MMI.predict(conf_model::JackknifeMinMaxRegressor, fitresult, Xnew)
+    # Get all LOO predictions for each Xnew:
+    ŷ = [MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...) for μ̂₋ᵢ in fitresult] 
+    # All LOO predictions across columns for each Xnew across rows:
+    ŷ = reduce(hcat, ŷ)
+    # Get all LOO residuals:
+    v = conf_model.scores
+    q̂ = qplus(v, conf_model)
+    # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
+    ŷ = map(yᵢ -> (minimum(yᵢ .- q̂), maximum(yᵢ .+ q̂)), eachrow(ŷ))
+    return ŷ
+end
+
+# CV+
+"Constructor for `CVPlusRegressor`."
+mutable struct CVPlusRegressor{Model <: Supervised} <: TransductiveConformalRegressor
+    model::Model
+    coverage::AbstractFloat
+    scores::Union{Nothing,AbstractArray}
+    heuristic::Function
+    cv::MLJ.CV
+end
+
+function CVPlusRegressor(
+    model::Supervised; 
+    coverage::AbstractFloat=0.95, heuristic::Function=f(y,ŷ)=abs(y-ŷ), cv::MLJ.CV=MLJ.CV()
+)
+    return CVPlusRegressor(model, coverage, nothing, heuristic, cv)
+end
+
+@doc raw"""
+    MMI.fit(conf_model::CVPlusRegressor, verbosity, X, y)
+
+Wrapper function to fit the underlying MLJ model. For Inductive Conformal Prediction the underlying model is fitted on the *proper training set*. The `fitresult` is assigned to the model instance. Computation of nonconformity scores requires a separate calibration step involving a *calibration data set* (see [`calibrate!`](@ref)). 
+"""
+function MMI.fit(conf_model::CVPlusRegressor, verbosity, X, y)
+
+    # 𝐾-fold training:
+    T = size(y, 1)
+    cv_indices = MLJBase.train_test_pairs(conf_model.cv, 1:T)
+    cv_fitted = map(cv_indices) do (train, test)
+        ytrain = y[train]                
+        Xtrain = MLJ.matrix(X)[train,:]
+        μ̂ₖ, cache, report = MMI.fit(conf_model.model, 0, MMI.reformat(conf_model.model, Xtrain, ytrain)...)
+        Dict(:fitresult => μ̂ₖ, :test => test, :cache => cache, :report => report)
+    end
+
+    # Pre-allocate: 
+    fitresult, cache, report = ([],[],[])
+
+    # Nonconformity Scores:
+    scores = []
+    for t in 1:T
+        yᵢ = y[t]
+        Xᵢ = selectrows(X, t)
+        resultsᵢ = [(x[:fitresult], x[:cache], x[:report]) for x in cv_fitted if t in x[:test]]
+        @assert length(resultsᵢ) == 1 "Expected each individual to be contained in only one subset."
+        μ̂ᵢ, cacheᵢ, reportᵢ = resultsᵢ[1]
+        # Store individual CV fitresults
+        push!(fitresult, μ̂ᵢ)
+        push!(cache, cacheᵢ)
+        push!(report, reportᵢ)
+        # Store LOO score:
+        ŷᵢ = MMI.predict(conf_model.model, μ̂ᵢ, Xᵢ)
+        push!(scores,@.(conf_model.heuristic(yᵢ, ŷᵢ))...)
+    end
+    conf_model.scores = scores
+
+    return (fitresult, cache, report)
+end
+
+# Prediction
+@doc raw"""
+    MMI.predict(conf_model::CVPlusRegressor, fitresult, Xnew)
+
+For the [`CVPlusRegressor`](@ref) prediction intervals are computed as follows,
+
+``
+\begin{aligned}
+\hat{C}_{n,\alpha}(X_{n+1}) &= \left[ \hat{q}_{n, \alpha}^{-} \{\hat\mu_{-i}(X_{N+1}) - R_i^{\text{LOO}} \}, \hat{q}_{n, \alpha}^{+} \{\hat\mu_{-i}(X_{N+1}) + R_i^{\text{LOO}}\} \right] , & i \in \mathcal{D}_{\text{train}} \\
+R_i^{\text{LOO}}&=|Y_i - \hat\mu_{-i}(X_i)|, & i \in \mathcal{D}_{\text{train}}
+\end{aligned}
+``
+
+where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife``+`` procedure is more stable than the [`JackknifeRegressor`](@ref).
+"""
+function MMI.predict(conf_model::CVPlusRegressor, fitresult, Xnew)
+    # Get all LOO predictions for each Xnew:
+    ŷ = [MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...) for μ̂₋ᵢ in fitresult] 
+    # All LOO predictions across columns for each Xnew across rows:
+    ŷ = reduce(hcat, ŷ)
+    # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
+    ŷ = map(yᵢ -> (-qplus(-yᵢ .+ conf_model.scores, conf_model), qplus(yᵢ .+ conf_model.scores, conf_model)), eachrow(ŷ))
+    return ŷ
+end
+
+
+# CV MinMax
+"Constructor for `CVMinMaxRegressor`."
+mutable struct CVMinMaxRegressor{Model <: Supervised} <: TransductiveConformalRegressor
+    model::Model
+    coverage::AbstractFloat
+    scores::Union{Nothing,AbstractArray}
+    heuristic::Function
+    cv::MLJ.CV
+end
+
+function CVMinMaxRegressor(
+    model::Supervised; 
+    coverage::AbstractFloat=0.95, heuristic::Function=f(y,ŷ)=abs(y-ŷ), cv::MLJ.CV=MLJ.CV()
+)
+    return CVMinMaxRegressor(model, coverage, nothing, heuristic, cv)
+end
+
+@doc raw"""
+    MMI.fit(conf_model::CVMinMaxRegressor, verbosity, X, y)
+
+Wrapper function to fit the underlying MLJ model. For Inductive Conformal Prediction the underlying model is fitted on the *proper training set*. The `fitresult` is assigned to the model instance. Computation of nonconformity scores requires a separate calibration step involving a *calibration data set* (see [`calibrate!`](@ref)). 
+"""
+function MMI.fit(conf_model::CVMinMaxRegressor, verbosity, X, y)
+
+    # 𝐾-fold training:
+    T = size(y, 1)
+    cv_indices = MLJBase.train_test_pairs(conf_model.cv, 1:T)
+    cv_fitted = map(cv_indices) do (train, test)
+        ytrain = y[train]                
+        Xtrain = MLJ.matrix(X)[train,:]
+        μ̂ₖ, cache, report = MMI.fit(conf_model.model, 0, MMI.reformat(conf_model.model, Xtrain, ytrain)...)
+        Dict(:fitresult => μ̂ₖ, :test => test, :cache => cache, :report => report)
+    end
+
+    # Pre-allocate: 
+    fitresult, cache, report = ([],[],[])
+
+    # Nonconformity Scores:
+    scores = []
+    for t in 1:T
+        yᵢ = y[t]
+        Xᵢ = selectrows(X, t)
+        resultsᵢ = [(x[:fitresult], x[:cache], x[:report]) for x in cv_fitted if t in x[:test]]
+        @assert length(resultsᵢ) == 1 "Expected each individual to be contained in only one subset."
+        μ̂ᵢ, cacheᵢ, reportᵢ = resultsᵢ[1]
+        # Store individual CV fitresults
+        push!(fitresult, μ̂ᵢ)
+        push!(cache, cacheᵢ)
+        push!(report, reportᵢ)
+        # Store LOO score:
+        ŷᵢ = MMI.predict(conf_model.model, μ̂ᵢ, Xᵢ)
+        push!(scores,@.(conf_model.heuristic(yᵢ, ŷᵢ))...)
+    end
+    conf_model.scores = scores
+
+    return (fitresult, cache, report)
+end
+
+
+# Prediction
+@doc raw"""
+    MMI.predict(conf_model::CVMinMaxRegressor, fitresult, Xnew)
+
+For the [`CVMinMaxRegressor`](@ref) prediction intervals are computed as follows,
+
+``
+\begin{aligned}
+\hat{C}_{n,\alpha}(X_{n+1}) &= \left[ \hat{q}_{n, \alpha}^{-} \{\hat\mu_{-i}(X_{N+1}) - R_i^{\text{LOO}} \}, \hat{q}_{n, \alpha}^{+} \{\hat\mu_{-i}(X_{N+1}) + R_i^{\text{LOO}}\} \right] , & i \in \mathcal{D}_{\text{train}} \\
+R_i^{\text{LOO}}&=|Y_i - \hat\mu_{-i}(X_i)|, & i \in \mathcal{D}_{\text{train}}
+\end{aligned}
+``
+
+where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife``+`` procedure is more stable than the [`JackknifeRegressor`](@ref).
+"""
+function MMI.predict(conf_model::CVMinMaxRegressor, fitresult, Xnew)
     # Get all LOO predictions for each Xnew:
     ŷ = [MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...) for μ̂₋ᵢ in fitresult] 
     # All LOO predictions across columns for each Xnew across rows:
