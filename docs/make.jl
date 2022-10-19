@@ -30,9 +30,6 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
-        "Classification" => [
-            "Tutorial" => "classification/simple.md"
-        ],
         "Reference" => "reference.md",
     ],
 )

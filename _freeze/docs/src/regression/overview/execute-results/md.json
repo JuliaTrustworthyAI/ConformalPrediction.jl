@@ -1,0 +1,10 @@
+{
+  "hash": "b3adfbc68f602345e9efbf0351b45465",
+  "result": {
+    "markdown": "\n\n```@index\n```\n\n# Overview of Methods\n\n## Inductive Regressors\n\n### Simple Inductive Regressor\n\n```@docs\nConformalPrediction.ConformalModels.SimpleInductiveRegressor\n```\n\n```@docs\npredict(conf_model::SimpleInductiveRegressor, fitresult, Xnew)\n```\n\n## Transductive Regressors\n\n",
+    "supporting": [
+      "overview_files"
+    ],
+    "filters": []
+  }
+}

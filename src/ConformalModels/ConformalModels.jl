@@ -21,13 +21,24 @@ export ConformalModel, InductiveConformalModel, TransductiveConformalModel
 
 include("conformal_models.jl")
 
+# Regression Models:
 include("inductive_regression.jl")
+export InductiveConformalRegressor
+export SimpleInductiveRegressor
 include("transductive_regression.jl")
-export NaiveRegressor, SimpleInductiveRegressor, JackknifeRegressor
+export TransductiveConformalRegressor
+export NaiveRegressor, JackknifeRegressor, JackknifePlusRegressor, JackknifeMinMaxRegressor, CVPlusRegressor, CVMinMaxRegressor
 
+# Classification Models
 include("inductive_classification.jl")
+export InductiveConformalClassifier
+export SimpleInductiveClassifier, AdaptiveInductiveClassifier
 include("transductive_classification.jl")
-export NaiveClassifier, SimpleInductiveClassifier
+export TransductiveConformalClassifier
+export NaiveClassifier
+
+const ConformalClassifier = Union{InductiveConformalClassifier, TransductiveConformalClassifier}
+const ConformalRegressor = Union{InductiveConformalRegressor, TransductiveConformalRegressor}
 
 "A container listing all available methods for conformal prediction."
 const available_models = Dict(
@@ -35,9 +46,13 @@ const available_models = Dict(
         :transductive => Dict(
             :naive => NaiveRegressor,
             :jackknife => JackknifeRegressor,
+            :jackknife_plus => JackknifePlusRegressor,
+            :jackknife_minmax => JackknifeMinMaxRegressor,
+            :cv_plus => CVPlusRegressor,
+            :cv_minmax => CVMinMaxRegressor,
         ),
         :inductive => Dict(
-            :simple => SimpleInductiveRegressor,
+            :simple_inductive => SimpleInductiveRegressor,
         ),
     ),
     :classification => Dict(
@@ -45,13 +60,14 @@ const available_models = Dict(
             :naive => NaiveClassifier,
         ),
         :inductive => Dict(
-            :simple => SimpleInductiveClassifier,
+            :simple_inductive => SimpleInductiveClassifier,
+            :adaptive_inductive => AdaptiveInductiveClassifier,
         ),
     )
 )
 export available_models
 
 # Other general methods:
-export conformal_model, empirical_quantiles, calibrate!, predict_region, score
+export conformal_model, qplus
     
 end
