@@ -3,10 +3,6 @@
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/stable/) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/dev/) [![Build Status](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml?query=branch%3Amain) [![Coverage](https://codecov.io/gh/pat-alt/ConformalPrediction.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/pat-alt/ConformalPrediction.jl) [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle) [![ColPrac: Contributor’s Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet.png)](https://github.com/SciML/ColPrac)
 
-``` @meta
-CurrentModule = ConformalPrediction
-```
-
 `ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic.
 
 ## Installation 🚩
@@ -81,21 +77,21 @@ ytest = y[first(test,n)]
 predict(mach, Xtest)
 ```
 
-    ╭─────────────────────────────────────────────────────────────────╮
-    │                                                                 │
-    │       (1)   ([0.7116232055419431], [2.1106954717963022])        │
-    │       (2)   ([1.0323674097721656], [2.4314396760265247])        │
-    │       (3)   ([0.7116232055419431], [2.1106954717963022])        │
-    │       (4)   ([0.7116232055419431], [2.1106954717963022])        │
-    │       (5)   ([-0.913299018970936], [0.48577324728342325])       │
-    │       (6)   ([-1.4431019029002514], [-0.04402963664589221])     │
-    │       (7)   ([-1.0142374031079027], [0.38483486314645665])      │
-    │       (8)   ([-0.5888784742275913], [0.810193792026768])        │
-    │       (9)   ([-0.42543623570159533], [0.973636030552764])       │
-    │      (10)   ([-1.6389105116077647], [-0.23983824535340525])     │
-    │                                                                 │
-    │                                                                 │
-    ╰──────────────────────────────────────────────────── 10 items ───╯
+    ╭────────────────────────────────────────────────────────────────╮
+    │                                                                │
+    │       (1)   ([-1.755717205142032], [0.1336793920749545])       │
+    │       (2)   ([-2.725152276022311], [-0.8357556788053242])      │
+    │       (3)   ([1.7996228430066177], [3.6890194402236043])       │
+    │       (4)   ([-2.090812733251826], [-0.20141613603483965])     │
+    │       (5)   ([0.9599243814807339], [2.8493209786977207])       │
+    │       (6)   ([-0.6383470472809984], [1.2510495499359882])      │
+    │       (7)   ([1.6779292744150438], [3.5673258716320304])       │
+    │       (8)   ([0.08317330201878925], [1.9725698992357759])      │
+    │       (9)   ([-0.12150563172572815], [1.7678909654912585])     │
+    │      (10)   ([-1.1611481858237893], [0.7282484113931974])      │
+    │                                                                │
+    │                                                                │
+    ╰─────────────────────────────────────────────────── 10 items ───╯
 
 ## Contribute 🛠
 
