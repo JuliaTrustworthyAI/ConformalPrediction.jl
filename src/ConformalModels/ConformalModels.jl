@@ -31,6 +31,23 @@ export SimpleInductiveClassifier, AdaptiveInductiveClassifier
 include("transductive_classification.jl")
 export NaiveClassifier
 
+# Type unions:
+const InductiveModel = Union{
+    SimpleInductiveRegressor,
+    SimpleInductiveClassifier,
+    AdaptiveInductiveClassifier
+}
+
+const TransductiveModel = Union{
+    NaiveRegressor,
+    JackknifeRegressor,
+    JackknifePlusRegressor,
+    JackknifeMinMaxRegressor,
+    CVPlusRegressor,
+    CVMinMaxRegressor,
+    NaiveClassifier
+}
+
 "A container listing all available methods for conformal prediction."
 const available_models = Dict(
     :regression => Dict(
@@ -58,7 +75,9 @@ const available_models = Dict(
 )
 export available_models
 
+include("model_traits.jl")
+
 # Other general methods:
-export conformal_model, qplus
+export conformal_model, fit, predict
     
 end
