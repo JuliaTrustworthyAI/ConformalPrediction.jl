@@ -10,5 +10,6 @@ doctest(ConformalPrediction)
 
     include("classification.jl")
     include("regression.jl")
+    include("model_traits.jl")
     
 end

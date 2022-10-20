@@ -4,41 +4,49 @@ using MLJ
 import MLJModelInterface as MMI
 import MLJModelInterface: predict, fit, save, restore
 
-"An abstract base type for conformal models."
-abstract type ConformalModel <: MMI.Model end
+"An abstract base type for conformal models that produce interval-values predictions. This includes most conformal regression models."
+abstract type ConformalInterval <: MMI.Interval end
 
-@doc raw"""
-An abstract base time of Inductive Conformal Models. These models rely on data splitting. In particular, we partition the training data as ``\{1,...,n\}=\mathcal{D}_{\text{train}} \cup \mathcal{D}_{\text{calibration}}``.
-"""
-abstract type InductiveConformalModel <: ConformalModel end
+"An abstract base type for conformal models that produce set-values predictions. This includes most conformal classification models."
+abstract type ConformalSet <: MMI.Supervised end        # ideally we'd have MMI.Set
 
-@doc raw"""
-An abstract base time of Transductive Conformal Models. These models do not rely on data splitting. In particular, nonconformity scores are computed using the entire trainign data set ``\{1,...,n\}=\mathcal{D}_{\text{train}}``.
-"""
-abstract type TransductiveConformalModel <: ConformalModel end
+"An abstract base type for conformal models that produce probabilistic predictions. This includes some conformal classifier like Venn-ABERS."
+abstract type ConformalProbabilistic <: MMI.Probabilistic end
 
-export ConformalModel, InductiveConformalModel, TransductiveConformalModel
+const ConformalModel = Union{ConformalInterval, ConformalSet, ConformalProbabilistic}
+
+export ConformalInterval, ConformalSet, ConformalProbabilistic, ConformalModel
 
 include("conformal_models.jl")
 
 # Regression Models:
 include("inductive_regression.jl")
-export InductiveConformalRegressor
 export SimpleInductiveRegressor
 include("transductive_regression.jl")
-export TransductiveConformalRegressor
 export NaiveRegressor, JackknifeRegressor, JackknifePlusRegressor, JackknifeMinMaxRegressor, CVPlusRegressor, CVMinMaxRegressor
 
 # Classification Models
 include("inductive_classification.jl")
-export InductiveConformalClassifier
 export SimpleInductiveClassifier, AdaptiveInductiveClassifier
 include("transductive_classification.jl")
-export TransductiveConformalClassifier
 export NaiveClassifier
 
-const ConformalClassifier = Union{InductiveConformalClassifier, TransductiveConformalClassifier}
-const ConformalRegressor = Union{InductiveConformalRegressor, TransductiveConformalRegressor}
+# Type unions:
+const InductiveModel = Union{
+    SimpleInductiveRegressor,
+    SimpleInductiveClassifier,
+    AdaptiveInductiveClassifier
+}
+
+const TransductiveModel = Union{
+    NaiveRegressor,
+    JackknifeRegressor,
+    JackknifePlusRegressor,
+    JackknifeMinMaxRegressor,
+    CVPlusRegressor,
+    CVMinMaxRegressor,
+    NaiveClassifier
+}
 
 "A container listing all available methods for conformal prediction."
 const available_models = Dict(
@@ -67,7 +75,9 @@ const available_models = Dict(
 )
 export available_models
 
+include("model_traits.jl")
+
 # Other general methods:
-export conformal_model, qplus
+export conformal_model, fit, predict
     
 end

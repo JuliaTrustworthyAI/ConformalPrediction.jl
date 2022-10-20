@@ -1,14 +1,11 @@
 using MLJ
 using MLJBase
 
-"A base type for Transductive Conformal Regressors."
-abstract type TransductiveConformalRegressor <: TransductiveConformalModel end
-
 # Naive
 """
 The `NaiveRegressor` for conformal prediction is the simplest approach to conformal regression.
 """
-mutable struct NaiveRegressor{Model <: Supervised} <: TransductiveConformalRegressor
+mutable struct NaiveRegressor{Model <: Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -22,7 +19,13 @@ end
 @doc raw"""
     MMI.fit(conf_model::NaiveRegressor, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model.
+For the [`NaiveRegressor`](@ref) nonconformity scores are computed as follows:
+
+``
+S_i = s(X_i, Y_i) = h(X_i, Y_i), \ i \in \mathcal{D}_{\text{train}}
+``
+
+A typical choice for the heuristic function is ``h(X_i,Y_i)=|Y_i-\hat\mu(X_i)|`` where ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``.
 """
 function MMI.fit(conf_model::NaiveRegressor, verbosity, X, y)
     
@@ -44,7 +47,7 @@ end
 For the [`NaiveRegressor`](@ref) prediction intervals are computed as follows:
 
 ``
-\hat{C}_{n,\alpha}(X_{n+1}) = \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu(X_i)| \}, \ i \in \mathcal{D}_{\text{train}}
+\hat{C}_{n,\alpha}(X_{n+1}) = \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{S_i \}, \ i \in \mathcal{D}_{\text{train}}
 ``
 
 The naive approach typically produces prediction regions that undercover due to overfitting.
@@ -59,7 +62,7 @@ end
 
 # Jackknife
 "Constructor for `JackknifeRegressor`."
-mutable struct JackknifeRegressor{Model <: Supervised} <: TransductiveConformalRegressor
+mutable struct JackknifeRegressor{Model <: Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -120,7 +123,7 @@ end
 
 # Jackknife+
 "Constructor for `JackknifePlusRegressor`."
-mutable struct JackknifePlusRegressor{Model <: Supervised} <: TransductiveConformalRegressor
+mutable struct JackknifePlusRegressor{Model <: Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -198,7 +201,7 @@ end
 
 # Jackknife-minmax
 "Constructor for `JackknifeMinMaxRegressor`."
-mutable struct JackknifeMinMaxRegressor{Model <: Supervised} <: TransductiveConformalRegressor
+mutable struct JackknifeMinMaxRegressor{Model <: Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -275,7 +278,7 @@ end
 
 # CV+
 "Constructor for `CVPlusRegressor`."
-mutable struct CVPlusRegressor{Model <: Supervised} <: TransductiveConformalRegressor
+mutable struct CVPlusRegressor{Model <: Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -366,7 +369,7 @@ end
 
 # CV MinMax
 "Constructor for `CVMinMaxRegressor`."
-mutable struct CVMinMaxRegressor{Model <: Supervised} <: TransductiveConformalRegressor
+mutable struct CVMinMaxRegressor{Model <: Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}

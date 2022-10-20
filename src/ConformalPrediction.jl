@@ -4,9 +4,7 @@ module ConformalPrediction
 include("ConformalModels/ConformalModels.jl")
 using .ConformalModels
 export ConformalModel
-export conformal_model, qplus
-export NaiveRegressor, SimpleInductiveRegressor, JackknifeRegressor
-export NaiveClassifier, SimpleInductiveClassifier
+export conformal_model, fit, predict
 export available_models
 
 end
