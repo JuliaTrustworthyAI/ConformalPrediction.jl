@@ -2,11 +2,13 @@
 CurrentModule = ConformalPrediction
 ```
 
+## Content
+
 ```@contents
 Pages = ["reference.md"]
 ```
 
-## All functions and types
+## Index
 
 ```@index
 ```

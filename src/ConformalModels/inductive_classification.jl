@@ -15,7 +15,13 @@ end
 @doc raw"""
     MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model.
+For the [`SimpleInductiveClassifier`](@ref) nonconformity scores are computed as follows:
+
+``
+S_i = s(X_i, Y_i) = h(X_i, Y_i), \ i \in \mathcal{D}_{\text{calibration}}
+``
+
+A typical choice for the heuristic function is ``h(X_i,Y_i)=1-\hat\mu(X_i)_{Y_i}`` where ``\hat\mu(X_i)_{Y_i}`` denotes the softmax output of the true class and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``. The simple approach only takes the softmax probability of the true label into account.
 """
 function MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
     
@@ -42,10 +48,10 @@ end
 For the [`SimpleInductiveClassifier`](@ref) prediction sets are computed as follows,
 
 ``
-\hat{C}_{n,\alpha}(X_{n+1}) = \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{1 - \hat\mu(X_i)\} \right\}, \ i \in \mathcal{D}_{\text{calibration}}
+\hat{C}_{n,\alpha}(X_{n+1}) = \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{S_i\} \right\}, \ i \in \mathcal{D}_{\text{calibration}}
 ``
 
-where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``.
+where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
 """
 function MMI.predict(conf_model::SimpleInductiveClassifier, fitresult, Xnew)
     p̂ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
@@ -58,7 +64,7 @@ function MMI.predict(conf_model::SimpleInductiveClassifier, fitresult, Xnew)
 end
 
 # Adaptive
-"The `AdaptiveInductiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset."
+"The `AdaptiveInductiveClassifier` is an improvement to the [`SimpleInductiveClassifier`](@ref) and the [`NaiveClassifier`](@ref). Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset like the [`SimpleInductiveClassifier`](@ref). Contrary to the [`SimpleInductiveClassifier`](@ref) it utilizes the softmax output of all classes."
 mutable struct AdaptiveInductiveClassifier{Model <: Supervised} <: ConformalSet
     model::Model
     coverage::AbstractFloat
@@ -74,7 +80,11 @@ end
 @doc raw"""
     MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model.
+For the [`AdaptiveInductiveClassifier`](@ref) nonconformity scores are computed by cumulatively summing the ranked scores of each label in descending order until reaching the true label ``Y_i``:
+
+``
+S_i = s(X_i,Y_i) = \sum_{j=1}^k  \hat\mu(X_i)_{\pi_j} \ \text{where } \ Y_i=\pi_k,  i \in \mathcal{D}_{\text{calibration}}
+``
 """
 function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
     
@@ -106,19 +116,13 @@ end
 @doc raw"""
     MMI.predict(conf_model::AdaptiveInductiveClassifier, fitresult, Xnew)
 
-For the [`AdaptiveInductiveClassifier`](@ref) nonconformity scores are computed by cumulatively summing the ranked scores of each label in descending order until reaching the true label ``y_i``:
+For the [`AdaptiveInductiveClassifier`](@ref) prediction sets are computed as follows,
 
 ``
-s_i(X_i,y_i) = \sum_{j=1}^k  \hat\mu(X_i)_{\pi_j} \ \text{where } \ y_i=\pi_k,  i \in \mathcal{D}_{\text{calibration}}
+\hat{C}_{n,\alpha}(X_{n+1}) = \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{S_i\} \right\},  i \in \mathcal{D}_{\text{calibration}}
 ``
 
-Prediction sets are then computed as follows,
-
-``
-\hat{C}_{n,\alpha}(X_{n+1}) = \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{s_i(X_i,y_i)\} \right\},  i \in \mathcal{D}_{\text{calibration}}
-``
-
-where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``.
+where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
 """
 function MMI.predict(conf_model::AdaptiveInductiveClassifier, fitresult, Xnew)
     p̂ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)

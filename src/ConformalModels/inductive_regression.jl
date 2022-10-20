@@ -14,7 +14,13 @@ end
 @doc raw"""
     MMI.fit(conf_model::SimpleInductiveRegressor, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model.
+For the [`SimpleInductiveRegressor`](@ref) nonconformity scores are computed as follows:
+
+``
+S_i = s(X_i, Y_i) = h(X_i, Y_i), \ i \in \mathcal{D}_{\text{calibration}}
+``
+
+A typical choice for the heuristic function is ``h(X_i,Y_i)=|Y_i-\hat\mu(X_i)|`` where ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``.
 """
 function MMI.fit(conf_model::SimpleInductiveRegressor, verbosity, X, y)
     
@@ -42,10 +48,10 @@ end
 For the [`SimpleInductiveRegressor`](@ref) prediction intervals are computed as follows,
 
 ``
-\hat{C}_{n,\alpha}(X_{n+1}) = \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu(X_i)| \}, \ i \in \mathcal{D}_{\text{calibration}}
+\hat{C}_{n,\alpha}(X_{n+1}) = \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{S_i \}, \ i \in \mathcal{D}_{\text{calibration}}
 ``
 
-where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``.
+where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
 """
 function MMI.predict(conf_model::SimpleInductiveRegressor, fitresult, Xnew)
     ŷ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)

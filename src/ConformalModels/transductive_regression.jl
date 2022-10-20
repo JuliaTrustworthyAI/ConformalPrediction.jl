@@ -19,7 +19,13 @@ end
 @doc raw"""
     MMI.fit(conf_model::NaiveRegressor, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model.
+For the [`NaiveRegressor`](@ref) nonconformity scores are computed as follows:
+
+``
+S_i = s(X_i, Y_i) = h(X_i, Y_i), \ i \in \mathcal{D}_{\text{train}}
+``
+
+A typical choice for the heuristic function is ``h(X_i,Y_i)=|Y_i-\hat\mu(X_i)|`` where ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``.
 """
 function MMI.fit(conf_model::NaiveRegressor, verbosity, X, y)
     
@@ -41,7 +47,7 @@ end
 For the [`NaiveRegressor`](@ref) prediction intervals are computed as follows:
 
 ``
-\hat{C}_{n,\alpha}(X_{n+1}) = \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu(X_i)| \}, \ i \in \mathcal{D}_{\text{train}}
+\hat{C}_{n,\alpha}(X_{n+1}) = \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{S_i \}, \ i \in \mathcal{D}_{\text{train}}
 ``
 
 The naive approach typically produces prediction regions that undercover due to overfitting.

@@ -38,12 +38,12 @@ ConformalProbabilistic
 
 The `fit` and `predict` methods are compulsory in order to prepare models for general use with MLJ. They also serve us to implement the logic underlying the various approaches to conformal prediction.
 
-To understand how this currently works, let’s look at the [`JackknifeRegressor`](@ref) as an example. Below are the two docstrings documenting both methods. Hovering over the bottom-right corner will reveal buttons that take
+To understand how this currently works, let’s look at the [`AdaptiveInductiveClassifier`](@ref) as an example. Below are the two docstrings documenting both methods. Hovering over the bottom-right corner will reveal buttons that take
 
 ``` @docs
-fit(conf_model::JackknifeRegressor, verbosity, X, y)
+fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
 ```
 
 ``` @docs
-predict(conf_model::JackknifeRegressor, fitresult, Xnew)
+predict(conf_model::AdaptiveInductiveClassifier, fitresult, Xnew)
 ```
