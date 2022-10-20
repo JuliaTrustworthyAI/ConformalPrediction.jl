@@ -1,8 +1,5 @@
-"A base type for Inductive Conformal Regressors."
-abstract type InductiveConformalRegressor <: InductiveConformalModel end
-
 "The `SimpleInductiveRegressor` is the simplest approach to Inductive Conformal Regression. Contrary to the [`NaiveRegressor`](@ref) it computes nonconformity scores using a designated calibration dataset."
-mutable struct SimpleInductiveRegressor{Model <: Supervised} <: InductiveConformalRegressor
+mutable struct SimpleInductiveRegressor{Model <: Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}

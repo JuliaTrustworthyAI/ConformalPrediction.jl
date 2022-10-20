@@ -1,14 +1,11 @@
 using MLJ
 using MLJBase
 
-"A base type for Transductive Conformal Regressors."
-abstract type TransductiveConformalRegressor <: TransductiveConformalModel end
-
 # Naive
 """
 The `NaiveRegressor` for conformal prediction is the simplest approach to conformal regression.
 """
-mutable struct NaiveRegressor{Model <: Supervised} <: TransductiveConformalRegressor
+mutable struct NaiveRegressor{Model <: Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -59,7 +56,7 @@ end
 
 # Jackknife
 "Constructor for `JackknifeRegressor`."
-mutable struct JackknifeRegressor{Model <: Supervised} <: TransductiveConformalRegressor
+mutable struct JackknifeRegressor{Model <: Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -120,7 +117,7 @@ end
 
 # Jackknife+
 "Constructor for `JackknifePlusRegressor`."
-mutable struct JackknifePlusRegressor{Model <: Supervised} <: TransductiveConformalRegressor
+mutable struct JackknifePlusRegressor{Model <: Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -198,7 +195,7 @@ end
 
 # Jackknife-minmax
 "Constructor for `JackknifeMinMaxRegressor`."
-mutable struct JackknifeMinMaxRegressor{Model <: Supervised} <: TransductiveConformalRegressor
+mutable struct JackknifeMinMaxRegressor{Model <: Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -275,7 +272,7 @@ end
 
 # CV+
 "Constructor for `CVPlusRegressor`."
-mutable struct CVPlusRegressor{Model <: Supervised} <: TransductiveConformalRegressor
+mutable struct CVPlusRegressor{Model <: Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -366,7 +363,7 @@ end
 
 # CV MinMax
 "Constructor for `CVMinMaxRegressor`."
-mutable struct CVMinMaxRegressor{Model <: Supervised} <: TransductiveConformalRegressor
+mutable struct CVMinMaxRegressor{Model <: Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}

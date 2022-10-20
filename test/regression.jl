@@ -13,7 +13,6 @@ models = merge(values(available_models[:regression])...)
             conf_model = conformal_model(model; method=_method)
             conf_model = models[_method](model)
             @test isnothing(conf_model.scores)
-            @test typeof(conf_model) <: ConformalPrediction.ConformalModels.ConformalRegressor
             
             # Fit/Predict:
             mach = machine(conf_model, X, y)

@@ -1,9 +1,6 @@
-"A base type for Inductive Conformal Classifiers."
-abstract type InductiveConformalClassifier <: InductiveConformalModel end
-
 # Simple
 "The `SimpleInductiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset."
-mutable struct SimpleInductiveClassifier{Model <: Supervised} <: InductiveConformalClassifier
+mutable struct SimpleInductiveClassifier{Model <: Supervised} <: ConformalSet
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -62,7 +59,7 @@ end
 
 # Adaptive
 "The `AdaptiveInductiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset."
-mutable struct AdaptiveInductiveClassifier{Model <: Supervised} <: InductiveConformalClassifier
+mutable struct AdaptiveInductiveClassifier{Model <: Supervised} <: ConformalSet
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
