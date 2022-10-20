@@ -14,7 +14,13 @@ end
 @doc raw"""
     MMI.fit(conf_model::NaiveClassifier, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model. 
+For the [`NaiveClassifier`](@ref) nonconformity scores are computed in-sample as follows:
+
+``
+S_i^{\text{IS}} = s(X_i, Y_i) = h(\hat\mu(X_i), Y_i), \ i \in \mathcal{D}_{\text{calibration}}
+``
+
+A typical choice for the heuristic function is ``h(\hat\mu(X_i), Y_i)=1-\hat\mu(X_i)_{Y_i}`` where ``\hat\mu(X_i)_{Y_i}`` denotes the softmax output of the true class and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``. 
 """
 function MMI.fit(conf_model::NaiveClassifier, verbosity, X, y)
     
@@ -35,7 +41,7 @@ end
 For the [`NaiveClassifier`](@ref) prediction sets are computed as follows:
 
 ``
-\hat{C}_{n,\alpha}(X_{n+1}) = \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{1 - \hat\mu(X_i) \} \right\}, \ i \in \mathcal{D}_{\text{train}}
+\hat{C}_{n,\alpha}(X_{n+1}) = \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{S_i^{\text{IS}} \} \right\}, \ i \in \mathcal{D}_{\text{train}}
 ``
 
 The naive approach typically produces prediction regions that undercover due to overfitting.
