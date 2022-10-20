@@ -2,12 +2,18 @@
 CurrentModule = ConformalPrediction
 ```
 
-# All functions and types
+## Content
+
+```@contents
+Pages = ["reference.md"]
+```
+
+## Index
 
 ```@index
 ```
 
-## Exported functions
+## Public Interface
 
 ```@autodocs
 Modules = [

@@ -1,9 +1,6 @@
-"A base type for Transductive Conformal Classifiers."
-abstract type TransductiveConformalClassifier <: TransductiveConformalModel end
-
 # Simple
 "The `NaiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated trainibration dataset."
-mutable struct NaiveClassifier{Model <: Supervised} <: TransductiveConformalClassifier
+mutable struct NaiveClassifier{Model <: Supervised} <: ConformalSet
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}

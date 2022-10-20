@@ -2,11 +2,13 @@ using ConformalPrediction
 using Documenter
 
 ex_meta = quote
-    # Import module:
+    # Import module(s):
     using ConformalPrediction
+    using MLJ
+    using MLJModelInterface
+    const MMI = MLJModelInterface
 
     # Data:
-    using MLJ
     X, y = MLJ.make_regression(1000, 2)
     train, calibration, test = partition(eachindex(y), 0.4, 0.4)
 
@@ -29,8 +31,9 @@ makedocs(;
         assets=String[],
     ),
     pages=[
-        "Home" => "index.md",
-        "Reference" => "reference.md",
+        "🏠 Home" => "index.md",
+        "🛠 Contribute" => "contribute.md",
+        "📖 Library" => "reference.md",
     ],
 )
 
