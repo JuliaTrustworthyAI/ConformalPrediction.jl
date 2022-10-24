@@ -19,13 +19,13 @@ end
 @doc raw"""
     MMI.fit(conf_model::NaiveRegressor, verbosity, X, y)
 
-For the [`NaiveRegressor`](@ref) nonconformity scores are computed as follows:
+For the [`NaiveRegressor`](@ref) nonconformity scores are computed in-sample as follows:
 
 ``
-S_i = s(X_i, Y_i) = h(X_i, Y_i), \ i \in \mathcal{D}_{\text{train}}
+S_i^{\text{IS}} = s(X_i, Y_i) = h(\hat\mu(X_i), Y_i), \ i \in \mathcal{D}_{\text{train}}
 ``
 
-A typical choice for the heuristic function is ``h(X_i,Y_i)=|Y_i-\hat\mu(X_i)|`` where ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``.
+A typical choice for the heuristic function is ``h(\hat\mu(X_i),Y_i)=|Y_i-\hat\mu(X_i)|`` where ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``.
 """
 function MMI.fit(conf_model::NaiveRegressor, verbosity, X, y)
     
@@ -47,7 +47,7 @@ end
 For the [`NaiveRegressor`](@ref) prediction intervals are computed as follows:
 
 ``
-\hat{C}_{n,\alpha}(X_{n+1}) = \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{S_i \}, \ i \in \mathcal{D}_{\text{train}}
+\hat{C}_{n,\alpha}(X_{n+1}) = \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{S_i^{\text{IS}} \}, \ i \in \mathcal{D}_{\text{train}}
 ``
 
 The naive approach typically produces prediction regions that undercover due to overfitting.
@@ -76,7 +76,14 @@ end
 @doc raw"""
     MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model.
+For the [`JackknifeRegressor`](@ref) nonconformity scores are computed through a leave-one-out (LOO) procedure as follows,
+
+``
+S_i^{\text{LOO}} = s(X_i, Y_i) = h(\hat\mu_{-i}(X_i), Y_i), \ i \in \mathcal{D}_{\text{train}}
+``
+
+where ``\hat\mu_{-i}(X_i)`` denotes the leave-one-out prediction for ``X_i``. In other words, for each training instance ``i=1,...,n`` the model is trained on all training data excluding ``i``. The fitted model is then used to predict out-of-sample from ``X_i``. The corresponding nonconformity score is then computed by applying a heuristic uncertainty measure ``h(\cdot)`` to the fitted value ``\hat\mu_{-i}(X_i)`` and the true value ``Y_i``.
+
 """
 function MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
     
@@ -108,10 +115,10 @@ end
 For the [`JackknifeRegressor`](@ref) prediction intervals are computed as follows,
 
 ``
-\hat{C}_{n,\alpha}(X_{n+1}) = \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{|Y_i - \hat\mu_{-i}(X_i)|\}, \ i \in \mathcal{D}_{\text{train}}
+\hat{C}_{n,\alpha}(X_{n+1}) = \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{S_i^{\text{LOO}}\}, \ i \in \mathcal{D}_{\text{train}}
 ``
 
-where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife procedure addresses the overfitting issue associated with the [`NaiveRegressor`](@ref).
+where ``S_i^{\text{LOO}}`` denotes the nonconformity that is generated as explained in [`fit(conf_model::JackknifeRegressor, verbosity, X, y)`](@ref). The jackknife procedure addresses the overfitting issue associated with the [`NaiveRegressor`](@ref).
 """
 function MMI.predict(conf_model::JackknifeRegressor, fitresult, Xnew)
     ŷ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
@@ -135,9 +142,15 @@ function JackknifePlusRegressor(model::Supervised; coverage::AbstractFloat=0.95,
 end
 
 @doc raw"""
-    MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
+    MMI.fit(conf_model::JackknifePlusRegressor, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model.
+For the [`JackknifePlusRegressor`](@ref) nonconformity scores are computed in the same way as for the [`JackknifeRegressor`](@ref). Specifically, we have,
+
+``
+S_i^{\text{LOO}} = s(X_i, Y_i) = h(\hat\mu_{-i}(X_i), Y_i), \ i \in \mathcal{D}_{\text{train}}
+``
+
+where ``\hat\mu_{-i}(X_i)`` denotes the leave-one-out prediction for ``X_i``. In other words, for each training instance ``i=1,...,n`` the model is trained on all training data excluding ``i``. The fitted model is then used to predict out-of-sample from ``X_i``. The corresponding nonconformity score is then computed by applying a heuristic uncertainty measure ``h(\cdot)`` to the fitted value ``\hat\mu_{-i}(X_i)`` and the true value ``Y_i``.
 """
 function MMI.fit(conf_model::JackknifePlusRegressor, verbosity, X, y)
     
@@ -174,13 +187,7 @@ end
 For the [`JackknifePlusRegressor`](@ref) prediction intervals are computed as follows,
 
 ``
-\hat{C}_{n,\alpha}(X_{n+1}) = \left[ \hat{q}_{n, \alpha}^{-} \{\hat\mu_{-i}(X_{n+1}) - R_i^{\text{LOO}} \}, \hat{q}_{n, \alpha}^{+} \{\hat\mu_{-i}(X_{n+1}) + R_i^{\text{LOO}}\} \right] , i \in \mathcal{D}_{\text{train}}
-``
-
-with
-
-``
-R_i^{\text{LOO}}=|Y_i - \hat\mu_{-i}(X_i)|
+\hat{C}_{n,\alpha}(X_{n+1}) = \left[ \hat{q}_{n, \alpha}^{-} \{\hat\mu_{-i}(X_{n+1}) - S_i^{\text{LOO}} \}, \hat{q}_{n, \alpha}^{+} \{\hat\mu_{-i}(X_{n+1}) + S_i^{\text{LOO}}\} \right] , i \in \mathcal{D}_{\text{train}}
 ``
 
 where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife``+`` procedure is more stable than the [`JackknifeRegressor`](@ref).
@@ -215,7 +222,13 @@ end
 @doc raw"""
     MMI.fit(conf_model::JackknifeMinMaxRegressor, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model.
+For the [`JackknifeMinMaxRegressor`](@ref) nonconformity scores are computed in the same way as for the [`JackknifeRegressor`](@ref). Specifically, we have,
+
+``
+S_i^{\text{LOO}} = s(X_i, Y_i) = h(\hat\mu_{-i}(X_i), Y_i), \ i \in \mathcal{D}_{\text{train}}
+``
+
+where ``\hat\mu_{-i}(X_i)`` denotes the leave-one-out prediction for ``X_i``. In other words, for each training instance ``i=1,...,n`` the model is trained on all training data excluding ``i``. The fitted model is then used to predict out-of-sample from ``X_i``. The corresponding nonconformity score is then computed by applying a heuristic uncertainty measure ``h(\cdot)`` to the fitted value ``\hat\mu_{-i}(X_i)`` and the true value ``Y_i``.
 """
 function MMI.fit(conf_model::JackknifeMinMaxRegressor, verbosity, X, y)
     
@@ -252,13 +265,7 @@ end
 For the [`JackknifeMinMaxRegressor`](@ref) prediction intervals are computed as follows,
 
 ``
-\hat{C}_{n,\alpha}(X_{n+1}) = \left[ \min_{i=1,...,n} \hat\mu_{-i}(X_{n+1}) -  \hat{q}_{n, \alpha}^{+} \{R_i^{\text{LOO}} \}, \max_{i=1,...,n} \hat\mu_{-i}(X_{n+1}) + \hat{q}_{n, \alpha}^{+} \{ R_i^{\text{LOO}}\} \right] ,  i \in \mathcal{D}_{\text{train}}
-``
-
-with 
-
-``
-R_i^{\text{LOO}}=|Y_i - \hat\mu_{-i}(X_i)|
+\hat{C}_{n,\alpha}(X_{n+1}) = \left[ \min_{i=1,...,n} \hat\mu_{-i}(X_{n+1}) -  \hat{q}_{n, \alpha}^{+} \{S_i^{\text{LOO}} \}, \max_{i=1,...,n} \hat\mu_{-i}(X_{n+1}) + \hat{q}_{n, \alpha}^{+} \{S_i^{\text{LOO}}\} \right] ,  i \in \mathcal{D}_{\text{train}}
 ``
 
 where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife-minmax procedure is more conservative than the [`JackknifePlusRegressor`](@ref).
@@ -296,7 +303,13 @@ end
 @doc raw"""
     MMI.fit(conf_model::CVPlusRegressor, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model. 
+For the [`CVPlusRegressor`](@ref) nonconformity scores are computed though cross-validation (CV) as follows,
+
+``
+S_i^{\text{CV}} = s(X_i, Y_i) = h(\hat\mu_{-\mathcal{D}_{k(i)}}(X_i), Y_i), \ i \in \mathcal{D}_{\text{train}}
+``
+
+where ``\hat\mu_{-\mathcal{D}_{k(i)}}(X_i)`` denotes the CV prediction for ``X_i``. In other words, for each CV fold ``k=1,...,K`` and each training instance ``i=1,...,n`` the model is trained on all training data excluding the fold containing ``i``. The fitted model is then used to predict out-of-sample from ``X_i``. The corresponding nonconformity score is then computed by applying a heuristic uncertainty measure ``h(\cdot)`` to the fitted value ``\hat\mu_{-\mathcal{D}_{k(i)}}(X_i)`` and the true value ``Y_i``.
 """
 function MMI.fit(conf_model::CVPlusRegressor, verbosity, X, y)
 
@@ -338,19 +351,15 @@ end
 @doc raw"""
     MMI.predict(conf_model::CVPlusRegressor, fitresult, Xnew)
 
-For the [`CVPlusRegressor`](@ref) prediction intervals are computed as follows,
+For the [`CVPlusRegressor`](@ref) prediction intervals are computed in much same way as for the [`JackknifePlusRegressor`](@ref). Specifically, we have,
 
 ``
-\hat{C}_{n,\alpha}(X_{n+1}) = \left[ \hat{q}_{n, \alpha}^{-} \{\hat\mu_{-\mathcal{D}_{k(i)}}(X_{n+1}) - R_i^{\text{CV}} \}, \hat{q}_{n, \alpha}^{+} \{\hat\mu_{-\mathcal{D}_{k(i)}}(X_{n+1}) + R_i^{\text{CV}}\} \right] , \ i \in \mathcal{D}_{\text{train}} 
+\hat{C}_{n,\alpha}(X_{n+1}) = \left[ \hat{q}_{n, \alpha}^{-} \{\hat\mu_{-\mathcal{D}_{k(i)}}(X_{n+1}) - S_i^{\text{CV}} \}, \hat{q}_{n, \alpha}^{+} \{\hat\mu_{-\mathcal{D}_{k(i)}}(X_{n+1}) + S_i^{\text{CV}}\} \right] , \ i \in \mathcal{D}_{\text{train}} 
 ``
 
-with 
+where ``\hat\mu_{-\mathcal{D}_{k(i)}}`` denotes the model fitted on training data with fold ``\mathcal{D}_{k(i)}`` that contains the ``i`` th point removed. 
 
-``
-R_i^{\text{CV}}=|Y_i - \hat\mu_{-\mathcal{D}_{k(i)}}(X_i)|
-``
-
-where ``\hat\mu_{-\mathcal{D}_{k(i)}}`` denotes the model fitted on training data with subset ``\mathcal{D}_{k(i)}`` that contains the ``i`` th point removed.
+The [`JackknifePlusRegressor`](@ref) is a special case of the [`CVPlusRegressor`](@ref) for which ``K=n``.
 """
 function MMI.predict(conf_model::CVPlusRegressor, fitresult, Xnew)
     # Get all LOO predictions for each Xnew:
@@ -387,7 +396,13 @@ end
 @doc raw"""
     MMI.fit(conf_model::CVMinMaxRegressor, verbosity, X, y)
 
-Wrapper function to fit the underlying MLJ model.
+For the [`CVMinMaxRegressor`](@ref) nonconformity scores are computed in the same way as for the [`CVPlusRegressor`](@ref). Specifically, we have,
+
+``
+S_i^{\text{CV}} = s(X_i, Y_i) = h(\hat\mu_{-\mathcal{D}_{k(i)}}(X_i), Y_i), \ i \in \mathcal{D}_{\text{train}}
+``
+
+where ``\hat\mu_{-\mathcal{D}_{k(i)}}(X_i)`` denotes the CV prediction for ``X_i``. In other words, for each CV fold ``k=1,...,K`` and each training instance ``i=1,...,n`` the model is trained on all training data excluding the fold containing ``i``. The fitted model is then used to predict out-of-sample from ``X_i``. The corresponding nonconformity score is then computed by applying a heuristic uncertainty measure ``h(\cdot)`` to the fitted value ``\hat\mu_{-\mathcal{D}_{k(i)}}(X_i)`` and the true value ``Y_i``.
 """
 function MMI.fit(conf_model::CVMinMaxRegressor, verbosity, X, y)
 
@@ -433,13 +448,7 @@ end
 For the [`CVMinMaxRegressor`](@ref) prediction intervals are computed as follows,
 
 ``
-\hat{C}_{n,\alpha}(X_{n+1}) = \left[ \min_{i=1,...,n} \hat\mu_{-\mathcal{D}_{k(i)}}(X_{n+1}) -  \hat{q}_{n, \alpha}^{+} \{R_i^{\text{CV}} \}, \max_{i=1,...,n} \hat\mu_{-\mathcal{D}_{k(i)}}(X_{n+1}) + \hat{q}_{n, \alpha}^{+} \{ R_i^{\text{CV}}\} \right] , i \in \mathcal{D}_{\text{train}}
-``
-
-with 
-
-``
-R_i^{\text{CV}}=|Y_i - \hat\mu_{-\mathcal{D}_{k(i)}}(X_i)|
+\hat{C}_{n,\alpha}(X_{n+1}) = \left[ \min_{i=1,...,n} \hat\mu_{-\mathcal{D}_{k(i)}}(X_{n+1}) -  \hat{q}_{n, \alpha}^{+} \{S_i^{\text{CV}} \}, \max_{i=1,...,n} \hat\mu_{-\mathcal{D}_{k(i)}}(X_{n+1}) + \hat{q}_{n, \alpha}^{+} \{ S_i^{\text{CV}}\} \right] , i \in \mathcal{D}_{\text{train}}
 ``
 
 where ``\hat\mu_{-\mathcal{D}_{k(i)}}`` denotes the model fitted on training data with subset ``\mathcal{D}_{k(i)}`` that contains the ``i`` th point removed.

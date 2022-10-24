@@ -18,10 +18,10 @@ end
 For the [`SimpleInductiveClassifier`](@ref) nonconformity scores are computed as follows:
 
 ``
-S_i = s(X_i, Y_i) = h(X_i, Y_i), \ i \in \mathcal{D}_{\text{calibration}}
+S_i^{\text{CAL}} = s(X_i, Y_i) = h(\hat\mu(X_i), Y_i), \ i \in \mathcal{D}_{\text{calibration}}
 ``
 
-A typical choice for the heuristic function is ``h(X_i,Y_i)=1-\hat\mu(X_i)_{Y_i}`` where ``\hat\mu(X_i)_{Y_i}`` denotes the softmax output of the true class and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``. The simple approach only takes the softmax probability of the true label into account.
+A typical choice for the heuristic function is ``h(\hat\mu(X_i), Y_i)=1-\hat\mu(X_i)_{Y_i}`` where ``\hat\mu(X_i)_{Y_i}`` denotes the softmax output of the true class and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``. The simple approach only takes the softmax probability of the true label into account.
 """
 function MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
     
@@ -48,7 +48,7 @@ end
 For the [`SimpleInductiveClassifier`](@ref) prediction sets are computed as follows,
 
 ``
-\hat{C}_{n,\alpha}(X_{n+1}) = \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{S_i\} \right\}, \ i \in \mathcal{D}_{\text{calibration}}
+\hat{C}_{n,\alpha}(X_{n+1}) = \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{S_i^{\text{CAL}}\} \right\}, \ i \in \mathcal{D}_{\text{calibration}}
 ``
 
 where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
@@ -83,7 +83,7 @@ end
 For the [`AdaptiveInductiveClassifier`](@ref) nonconformity scores are computed by cumulatively summing the ranked scores of each label in descending order until reaching the true label ``Y_i``:
 
 ``
-S_i = s(X_i,Y_i) = \sum_{j=1}^k  \hat\mu(X_i)_{\pi_j} \ \text{where } \ Y_i=\pi_k,  i \in \mathcal{D}_{\text{calibration}}
+S_i^{\text{CAL}} = s(X_i,Y_i) = \sum_{j=1}^k  \hat\mu(X_i)_{\pi_j} \ \text{where } \ Y_i=\pi_k,  i \in \mathcal{D}_{\text{calibration}}
 ``
 """
 function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
@@ -119,7 +119,7 @@ end
 For the [`AdaptiveInductiveClassifier`](@ref) prediction sets are computed as follows,
 
 ``
-\hat{C}_{n,\alpha}(X_{n+1}) = \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{S_i\} \right\},  i \in \mathcal{D}_{\text{calibration}}
+\hat{C}_{n,\alpha}(X_{n+1}) = \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{S_i^{\text{CAL}}\} \right\},  i \in \mathcal{D}_{\text{calibration}}
 ``
 
 where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
