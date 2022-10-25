@@ -1,7 +1,7 @@
 ```{julia}
 #| echo: false
 using Pkg; Pkg.activate("docs")
-using Plots, PlotThemes
+using Plots
 theme(:wong)
 ```
 

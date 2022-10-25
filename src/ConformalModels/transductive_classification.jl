@@ -48,10 +48,18 @@ The naive approach typically produces prediction regions that undercover due to 
 """
 function MMI.predict(conf_model::NaiveClassifier, fitresult, Xnew)
     p̂ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
-    L = p̂.decoder.classes
-    ŷ = pdf(p̂, L)
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
-    ŷ = map(x -> collect(key => 1.0-val <= q̂ ? val : missing for (key,val) in zip(L,x)),eachrow(ŷ))
-    return ŷ
+    p̂ = map(p̂) do pp
+        L = p̂.decoder.classes
+        probas = pdf.(pp, L)
+        is_in_set = 1.0 .- probas .<= q̂
+        if !all(is_in_set .== false)
+            pp = UnivariateFinite(L[is_in_set], probas[is_in_set])
+        else
+            pp = missing
+        end
+        return pp
+    end
+    return p̂
 end

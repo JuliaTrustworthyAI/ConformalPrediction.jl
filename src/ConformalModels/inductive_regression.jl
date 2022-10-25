@@ -26,10 +26,12 @@ function MMI.fit(conf_model::SimpleInductiveRegressor, verbosity, X, y)
     
     # Data Splitting:
     train, calibration = partition(eachindex(y), conf_model.train_ratio)
-    Xtrain = MLJ.matrix(X)[train,:]
+    Xtrain = selectrows(X, train)
     ytrain = y[train]
-    Xcal = MLJ.matrix(X)[calibration,:]
+    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
+    Xcal = selectrows(X, calibration)
     ycal = y[calibration]
+    Xcal, ycal = MMI.reformat(conf_model.model, Xcal, ycal)
 
     # Training: 
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...)
