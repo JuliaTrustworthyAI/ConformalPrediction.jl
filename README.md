@@ -1,7 +1,12 @@
 
 # ConformalPrediction
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/stable/) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/dev/) [![Build Status](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml?query=branch%3Amain) [![Coverage](https://codecov.io/gh/pat-alt/ConformalPrediction.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/pat-alt/ConformalPrediction.jl) [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle) [![ColPrac: Contributor’s Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet.png)](https://github.com/SciML/ColPrac)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/stable/)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/dev/)
+[![Build Status](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Coverage](https://codecov.io/gh/pat-alt/ConformalPrediction.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/pat-alt/ConformalPrediction.jl)
+[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
+[![ColPrac: Contributor’s Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet.png)](https://github.com/SciML/ColPrac)
 
 `ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic.
 
@@ -52,11 +57,11 @@ X, y = MLJ.make_regression(1000, 2)
 train, test = partition(eachindex(y), 0.4, 0.4)
 ```
 
-We then import a decision tree ([DecisionTree](https://github.com/Evovest/DecisionTree.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
+We then import a decision tree ([`EvoTrees.jl`](https://github.com/Evovest/EvoTrees.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
 
 ``` julia
-DecisionTreeRegressor = @load DecisionTreeRegressor pkg=DecisionTree
-model = DecisionTreeRegressor() 
+EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
+model = EvoTreeRegressor() 
 ```
 
 To turn our conventional model into a conformal model, we just need to declare it as such by using `conformal_model` wrapper function. The generated conformal model instance can wrapped in data to create a *machine*. Finally, we proceed by fitting the machine on training data using the generic `fit!` method:
@@ -79,16 +84,16 @@ predict(mach, Xtest)
 
     ╭────────────────────────────────────────────────────────────────╮
     │                                                                │
-    │       (1)   ([-1.755717205142032], [0.1336793920749545])       │
-    │       (2)   ([-2.725152276022311], [-0.8357556788053242])      │
-    │       (3)   ([1.7996228430066177], [3.6890194402236043])       │
-    │       (4)   ([-2.090812733251826], [-0.20141613603483965])     │
-    │       (5)   ([0.9599243814807339], [2.8493209786977207])       │
-    │       (6)   ([-0.6383470472809984], [1.2510495499359882])      │
-    │       (7)   ([1.6779292744150438], [3.5673258716320304])       │
-    │       (8)   ([0.08317330201878925], [1.9725698992357759])      │
-    │       (9)   ([-0.12150563172572815], [1.7678909654912585])     │
-    │      (10)   ([-1.1611481858237893], [0.7282484113931974])      │
+    │       (1)   ([-1.2770102703063693], [1.2687795265976687])      │
+    │       (2)   ([-0.8159532425691807], [1.7298365543348573])      │
+    │       (3)   ([-3.5090344986764457], [-0.9632447017724077])     │
+    │       (4)   ([-3.151573263298577], [-0.6057834663945392])      │
+    │       (5)   ([-3.182445463551006], [-0.6366556666469678])      │
+    │       (6)   ([-2.346904056119665], [0.19888574078437316])      │
+    │       (7)   ([-3.0752201863797906], [-0.5294303894757526])     │
+    │       (8)   ([-1.2770102703063693], [1.2687795265976687])      │
+    │       (9)   ([-3.2658510619977466], [-0.7200612650937086])     │
+    │      (10)   ([-1.998680957711935], [0.5471088391921028])       │
     │                                                                │
     │                                                                │
     ╰─────────────────────────────────────────────────── 10 items ───╯

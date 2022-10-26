@@ -2,7 +2,7 @@
 format: 
   commonmark:
     variant: -raw_html
-    wrap: none
+    wrap: preserve
     self-contained: true
 execute: 
   freeze: auto
@@ -13,6 +13,7 @@ crossref:
   fig-prefix: Figure
   tbl-prefix: Table
 bibliography: https://raw.githubusercontent.com/pat-alt/bib/main/bib.bib
+jupyter: julia-1.8
 ---
 
 # ConformalPrediction
