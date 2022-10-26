@@ -27,13 +27,15 @@ function MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
     
     # Data Splitting:
     train, calibration = partition(eachindex(y), conf_model.train_ratio)
-    Xtrain = MLJ.matrix(X)[train,:]
+    Xtrain = selectrows(X, train)
     ytrain = y[train]
-    Xcal = MLJ.matrix(X)[calibration,:]
+    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
+    Xcal = selectrows(X, calibration)
     ycal = y[calibration]
+    Xcal, ycal = MMI.reformat(conf_model.model, Xcal, ycal)
 
     # Training: 
-    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...)
+    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
     # Nonconformity Scores:
     ŷ = pdf.(MMI.predict(conf_model.model, fitresult, Xcal), ycal)
@@ -55,12 +57,20 @@ where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration da
 """
 function MMI.predict(conf_model::SimpleInductiveClassifier, fitresult, Xnew)
     p̂ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
-    L = p̂.decoder.classes
-    ŷ = pdf(p̂, L)
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
-    ŷ = map(x -> collect(key => 1.0-val <= q̂ ? val : missing for (key,val) in zip(L,x)),eachrow(ŷ))
-    return ŷ
+    p̂ = map(p̂) do pp
+        L = p̂.decoder.classes
+        probas = pdf.(pp, L)
+        is_in_set = 1.0 .- probas .<= q̂
+        if !all(is_in_set .== false)
+            pp = UnivariateFinite(L[is_in_set], probas[is_in_set])
+        else
+            pp = missing
+        end
+        return pp
+    end
+    return p̂
 end
 
 # Adaptive
@@ -90,16 +100,18 @@ function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
     
     # Data Splitting:
     train, calibration = partition(eachindex(y), conf_model.train_ratio)
-    Xtrain = MLJ.matrix(X)[train,:]
+    Xtrain = selectrows(X, train)
     ytrain = y[train]
-    Xcal = MLJ.matrix(X)[calibration,:]
+    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
+    Xcal = selectrows(X, calibration)
     ycal = y[calibration]
+    Xcal, ycal = MMI.reformat(conf_model.model, Xcal, ycal)
 
     # Training: 
-    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...)
+    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
     # Nonconformity Scores:
-    p̂ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xcal)...)
+    p̂ = MMI.predict(conf_model.model, fitresult, Xcal)
     L = p̂.decoder.classes
     ŷ = pdf(p̂, L)                                           # compute probabilities for all classes
     scores = map(eachrow(ŷ),eachrow(ycal)) do ŷᵢ, ycalᵢ
@@ -126,11 +138,19 @@ where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration da
 """
 function MMI.predict(conf_model::AdaptiveInductiveClassifier, fitresult, Xnew)
     p̂ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
-    L = p̂.decoder.classes
-    ŷ = pdf(p̂, L)
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
-    ŷ = map(x -> collect(key => 1.0-val <= q̂ ? val : missing for (key,val) in zip(L,x)),eachrow(ŷ))
-    return ŷ
+    p̂ = map(p̂) do pp
+        L = p̂.decoder.classes
+        probas = pdf.(pp, L)
+        is_in_set = 1.0 .- probas .<= q̂
+        if !all(is_in_set .== false)
+            pp = UnivariateFinite(L[is_in_set], probas[is_in_set])
+        else
+            pp = missing
+        end
+        return pp
+    end
+    return p̂
 end
 

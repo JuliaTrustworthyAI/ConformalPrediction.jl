@@ -12,5 +12,5 @@ execute:
   echo: true
   eval: true
   output: false
-
+jupyter: julia-1.8
 
