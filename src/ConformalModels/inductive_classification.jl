@@ -108,10 +108,10 @@ function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
     Xcal, ycal = MMI.reformat(conf_model.model, Xcal, ycal)
 
     # Training: 
-    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...)
+    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
     # Nonconformity Scores:
-    p̂ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xcal)...)
+    p̂ = MMI.predict(conf_model.model, fitresult, Xcal)
     L = p̂.decoder.classes
     ŷ = pdf(p̂, L)                                           # compute probabilities for all classes
     scores = map(eachrow(ŷ),eachrow(ycal)) do ŷᵢ, ycalᵢ

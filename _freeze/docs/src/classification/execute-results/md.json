@@ -1,0 +1,10 @@
+{
+  "hash": "a5e7b7c00cea9c148884a97a62ddf49b",
+  "result": {
+    "markdown": "\n\n::: {.cell execution_count=2}\n``` {.julia .cell-code}\nusing MLJ\nX, y = MLJ.make_blobs(1000, 2; centers=3, cluster_std=1.0)\ntrain, test = partition(eachindex(y), 0.4, 0.4, shuffle=true)\n```\n:::\n\n\n::: {.cell execution_count=3}\n``` {.julia .cell-code}\nEvoTreeClassifier = @load EvoTreeClassifier pkg=EvoTrees\nmodel = EvoTreeClassifier() \n```\n:::\n\n\n::: {.cell execution_count=4}\n``` {.julia .cell-code}\nusing ConformalPrediction\nconf_model = conformal_model(model)\nmach = machine(conf_model, X, y)\nfit!(mach, rows=train)\n```\n:::\n\n\n::: {.cell execution_count=5}\n``` {.julia .cell-code}\nrows = rand(test, 10)\nXtest = selectrows(X, rows)\nytest = y[rows]\npredict(mach, Xtest)\n```\n\n::: {.cell-output .cell-output-display execution_count=6}\n```\n╭───────────────────────────────────────────────────────────────────╮\n│                                                                   │\n│       (1)   UnivariateFinite{Multiclass {#90CAF9}3} (1=>0.82{/#90CAF9})     │\n│       (2)   UnivariateFinite{Multiclass {#90CAF9}3} (3=>0.82{/#90CAF9})     │\n│       (3)   UnivariateFinite{Multiclass {#90CAF9}3} (1=>0.82{/#90CAF9})     │\n│       (4)   UnivariateFinite{Multiclass {#90CAF9}3} (1=>0.82{/#90CAF9})     │\n│       (5)   UnivariateFinite{Multiclass {#90CAF9}3} (1=>0.82{/#90CAF9})     │\n│       (6)   UnivariateFinite{Multiclass {#90CAF9}3} (3=>0.82{/#90CAF9})     │\n│       (7)   UnivariateFinite{Multiclass {#90CAF9}3} (3=>0.82{/#90CAF9})     │\n│       (8)   UnivariateFinite{Multiclass {#90CAF9}3} (2=>0.82{/#90CAF9})     │\n│       (9)   UnivariateFinite{Multiclass {#90CAF9}3} (1=>0.82{/#90CAF9})     │\n│      (10)   UnivariateFinite{Multiclass {#90CAF9}3} (3=>0.82{/#90CAF9})     │\n│                                                                   │\n│                                                                   │\n╰────────────────────────────────────────────────────── 10 items ───╯\n```\n:::\n:::\n\n\n",
+    "supporting": [
+      "classification_files"
+    ],
+    "filters": []
+  }
+}

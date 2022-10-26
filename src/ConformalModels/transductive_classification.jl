@@ -24,8 +24,11 @@ A typical choice for the heuristic function is ``h(\hat\mu(X_i), Y_i)=1-\hat\mu(
 """
 function MMI.fit(conf_model::NaiveClassifier, verbosity, X, y)
     
+    # Setup:
+    X, y = MMI.reformat(conf_model.model, X, y)
+
     # Training: 
-    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, X, y)...)
+    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, X, y)
 
     # Nonconformity Scores:
     ŷ = pdf.(MMI.predict(conf_model.model, fitresult, X),y)

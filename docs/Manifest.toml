@@ -226,7 +226,7 @@ version = "0.3.2"
 deps = ["MLJ", "MLJBase", "MLJModelInterface", "Statistics"]
 path = ".."
 uuid = "98bfc277-1877-43dc-819b-a3e38c30242f"
-version = "0.1.1"
+version = "0.1.2"
 
 [[deps.ConstructionBase]]
 deps = ["LinearAlgebra"]
@@ -357,9 +357,9 @@ version = "0.3.0"
 
 [[deps.EvoTrees]]
 deps = ["BSON", "CUDA", "CategoricalArrays", "Distributions", "LoopVectorization", "MLJModelInterface", "NetworkLayout", "Random", "RecipesBase", "Statistics", "StatsBase", "Tables"]
-git-tree-sha1 = "7b9a776e241fcd08c81dfae91b77b48325089d6a"
+git-tree-sha1 = "966e236ded10551a44b6e25ce4bbea4c12be1557"
 uuid = "f6006082-12f8-11e9-0c9c-0d5d367ab1e5"
-version = "0.12.2"
+version = "0.12.4"
 
 [[deps.Expat_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -488,9 +488,9 @@ version = "0.1.2"
 
 [[deps.GPUCompiler]]
 deps = ["ExprTools", "InteractiveUtils", "LLVM", "Libdl", "Logging", "TimerOutputs", "UUIDs"]
-git-tree-sha1 = "ebb892e1df16040a845e1d11087e4fbfe10323a8"
+git-tree-sha1 = "323949b0bbdf38c93d2ea1f7d3e68ff163c3f081"
 uuid = "61eb1bfa-7361-4325-ad38-22787b887f55"
-version = "0.16.4"
+version = "0.16.5"
 
 [[deps.GR]]
 deps = ["Base64", "DelimitedFiles", "GR_jll", "HTTP", "JSON", "Libdl", "LinearAlgebra", "Pkg", "Preferences", "Printf", "Random", "Serialization", "Sockets", "Test", "UUIDs"]

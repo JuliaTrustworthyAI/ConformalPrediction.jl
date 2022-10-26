@@ -34,7 +34,7 @@ function MMI.fit(conf_model::SimpleInductiveRegressor, verbosity, X, y)
     Xcal, ycal = MMI.reformat(conf_model.model, Xcal, ycal)
 
     # Training: 
-    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...)
+    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
     # Nonconformity Scores:
     ŷ = MMI.predict(conf_model.model, fitresult, Xcal)

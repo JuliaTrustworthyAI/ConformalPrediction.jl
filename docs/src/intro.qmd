@@ -11,14 +11,14 @@ theme(:wong)
 
 You can install the first stable release from the general registry:
 
-```julia
+```{.julia}
 using Pkg
 Pkg.add("ConformalPrediction")
 ```
 
 The development version can be installed as follows:
 
-```julia
+```{.julia}
 using Pkg
 Pkg.add(url="https://github.com/pat-alt/ConformalPrediction.jl")
 ```
@@ -54,11 +54,11 @@ X, y = MLJ.make_regression(1000, 2)
 train, test = partition(eachindex(y), 0.4, 0.4)
 ```
 
-We then import a decision tree ([DecisionTree](https://github.com/Evovest/DecisionTree.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
+We then import a decision tree ([`EvoTrees.jl`](https://github.com/Evovest/EvoTrees.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
 
 ```{julia}
-DecisionTreeRegressor = @load DecisionTreeRegressor pkg=DecisionTree
-model = DecisionTreeRegressor() 
+EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
+model = EvoTreeRegressor() 
 ```
 
 To turn our conventional model into a conformal model, we just need to declare it as such by using `conformal_model` wrapper function. The generated conformal model instance can wrapped in data to create a *machine*. Finally, we proceed by fitting the machine on training data using the generic `fit!` method:
