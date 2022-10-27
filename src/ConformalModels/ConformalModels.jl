@@ -85,14 +85,12 @@ const tested_atomic_models = Dict(
         :evo_tree => :(@load EvoTreeRegressor pkg=EvoTrees),
         :nearest_neighbor => :(@load KNNRegressor pkg=NearestNeighborModels),
         :light_gbm => :(@load LGBMRegressor pkg=LightGBM),
-        :sklearn => :(@load GaussianProcessRegressor pkg=ScikitLearn),
     ),
     :classification => Dict(
         :decision_tree => :(@load DecisionTreeClassifier pkg=DecisionTree),
         :evo_tree => :(@load EvoTreeClassifier pkg=EvoTrees),
         :nearest_neighbor => :(@load KNNClassifier pkg=NearestNeighborModels),
         :light_gbm => :(@load LGBMClassifier pkg=LightGBM),
-        :sklearn => :(@load GaussianProcessClassifier pkg=ScikitLearn),
     )
 )
 export tested_atomic_models

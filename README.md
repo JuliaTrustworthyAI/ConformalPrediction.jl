@@ -1,9 +1,15 @@
 
 # ConformalPrediction
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/stable/) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/dev/) [![Build Status](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml?query=branch%3Amain) [![Coverage](https://codecov.io/gh/pat-alt/ConformalPrediction.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/pat-alt/ConformalPrediction.jl) [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle) [![ColPrac: Contributor’s Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet.png)](https://github.com/SciML/ColPrac) [![Twitter Badge](https://img.shields.io/twitter/follow/paltmey?style=social.png)](https://twitter.com/paltmey)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/stable/)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/dev/)
+[![Build Status](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Coverage](https://codecov.io/gh/pat-alt/ConformalPrediction.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/pat-alt/ConformalPrediction.jl)
+[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
+[![ColPrac: Contributor’s Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet.png)](https://github.com/SciML/ColPrac)
+[![Twitter Badge](https://img.shields.io/twitter/follow/paltmey?style=social.png)](https://twitter.com/paltmey)
 
-`ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic.
+`ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) Blaom et al. (2020). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic.
 
 # 📖 Background
 
@@ -57,11 +63,23 @@ using ConformalPrediction
 keys(tested_atomic_models[:regression])
 ```
 
+    KeySet for a Dict{Symbol, Expr} with 4 entries. Keys:
+      :nearest_neighbor
+      :evo_tree
+      :light_gbm
+      :decision_tree
+
 **Classification**:
 
 ``` julia
 keys(tested_atomic_models[:classification])
 ```
+
+    KeySet for a Dict{Symbol, Expr} with 4 entries. Keys:
+      :nearest_neighbor
+      :evo_tree
+      :light_gbm
+      :decision_tree
 
 ## 🔍 Usage Example
 
@@ -98,26 +116,28 @@ ytest = y[first(test,n)]
 predict(mach, Xtest)
 ```
 
-    ╭──────────────────────────────────────────────────────────────────╮
-    │                                                                  │
-    │       (1)   ([-1.6222940237738053], [0.13968291770776242])       │
-    │       (2)   ([-1.690658497197263], [0.07131844428430478])        │
-    │       (3)   ([-1.2326768178821994], [0.5293001235993684])        │
-    │       (4)   ([-1.408944684371105], [0.3530322571104627])         │
-    │       (5)   ([-1.7978510280911284], [-0.035874086609560596])     │
-    │       (6)   ([-2.4606297492638616], [-0.6986528077822939])       │
-    │       (7)   ([-2.1314284877848504], [-0.3694515463032827])       │
-    │       (8)   ([-2.129566843603574], [-0.3675899021220065])        │
-    │       (9)   ([-1.6222940237738053], [0.13968291770776242])       │
-    │      (10)   ([-1.931029798154714], [-0.1690528566731463])        │
-    │                                                                  │
-    │                                                                  │
-    ╰───────────────────────────────────────────────────── 10 items ───╯
+    ╭────────────────────────────────────────────────────────────────╮
+    │                                                                │
+    │       (1)   ([-1.0398755385842378], [1.174649631946424])       │
+    │       (2)   ([-0.8812446360021866], [1.333280534528475])       │
+    │       (3)   ([-1.0186882105711579], [1.1958369599595038])      │
+    │       (4)   ([-1.8854818442600265], [0.32904332627063515])     │
+    │       (5)   ([-1.5473925987675485], [0.6671325717631131])      │
+    │       (6)   ([-1.7896211025024724], [0.42490406802818925])     │
+    │       (7)   ([-1.9246506093872306], [0.289874561143431])       │
+    │       (8)   ([-0.9791712385383624], [1.2353539319922993])      │
+    │       (9)   ([-1.7526388729209201], [0.4618862976097414])      │
+    │      (10)   ([-0.5015897849914924], [1.7129353855391694])      │
+    │                                                                │
+    │                                                                │
+    ╰─────────────────────────────────────────────────── 10 items ───╯
 
 ## 🛠 Contribute
 
 Contributions are welcome! Please follow the [SciML ColPrac guide](https://github.com/SciML/ColPrac).
 
 ## 🎓 References
+
+Blaom, Anthony D., Franz Kiraly, Thibaut Lienart, Yiannis Simillides, Diego Arenas, and Sebastian J. Vollmer. 2020. “MLJ: A Julia Package for Composable Machine Learning.” *Journal of Open Source Software* 5 (55): 2704. <https://doi.org/10.21105/joss.02704>.
 
 Sadinle, Mauricio, Jing Lei, and Larry Wasserman. 2019. “Least Ambiguous Set-Valued Classifiers with Bounded Error Levels.” *Journal of the American Statistical Association* 114 (525): 223–34.

@@ -7,7 +7,7 @@ CurrentModule = ConformalPrediction
 
 Documentation for [ConformalPrediction.jl](https://github.com/pat-alt/ConformalPrediction.jl).
 
-`ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic.
+`ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) Blaom et al. (2020). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic.
 
 # 📖 Background
 
@@ -61,11 +61,23 @@ using ConformalPrediction
 keys(tested_atomic_models[:regression])
 ```
 
+    KeySet for a Dict{Symbol, Expr} with 4 entries. Keys:
+      :nearest_neighbor
+      :evo_tree
+      :light_gbm
+      :decision_tree
+
 **Classification**:
 
 ``` julia
 keys(tested_atomic_models[:classification])
 ```
+
+    KeySet for a Dict{Symbol, Expr} with 4 entries. Keys:
+      :nearest_neighbor
+      :evo_tree
+      :light_gbm
+      :decision_tree
 
 ## 🔍 Usage Example
 
@@ -102,26 +114,28 @@ ytest = y[first(test,n)]
 predict(mach, Xtest)
 ```
 
-    ╭───────────────────────────────────────────────────────────────╮
-    │                                                               │
-    │       (1)   ([-2.084493521926009], [0.4969279285971252])      │
-    │       (2)   ([-1.5023568530401947], [1.0790645974829394])     │
-    │       (3)   ([-2.084493521926009], [0.4969279285971252])      │
-    │       (4)   ([-1.9184792682286391], [0.662942182294495])      │
-    │       (5)   ([-0.2150875566246131], [2.366333893898521])      │
-    │       (6)   ([-2.3403228023660336], [0.2410986481571007])     │
-    │       (7)   ([-1.5072539944280898], [1.0741674560950443])     │
-    │       (8)   ([-1.4575216187502464], [1.1238998317728877])     │
-    │       (9)   ([-1.8778138299256455], [0.7036076205974886])     │
-    │      (10)   ([-1.1141878838712487], [1.4672335666518854])     │
-    │                                                               │
-    │                                                               │
-    ╰────────────────────────────────────────────────── 10 items ───╯
+    ╭─────────────────────────────────────────────────────────────────╮
+    │                                                                 │
+    │       (1)   ([0.14395897640483468], [1.5537237281612537])       │
+    │       (2)   ([-0.539687877793372], [0.8700768739630471])        │
+    │       (3)   ([-0.46442052745067525], [0.9453442243057439])      │
+    │       (4)   ([0.010529843675146089], [1.420294595431565])       │
+    │       (5)   ([0.07301045762431613], [1.4827752093807351])       │
+    │       (6)   ([-0.012020120998203487], [1.3977446307582158])     │
+    │       (7)   ([0.5297045560243977], [1.9394693077808167])        │
+    │       (8)   ([-0.46442052745067525], [0.9453442243057439])      │
+    │       (9)   ([-0.09600489213468855], [1.3137598596217306])      │
+    │      (10)   ([0.010529843675146089], [1.420294595431565])       │
+    │                                                                 │
+    │                                                                 │
+    ╰──────────────────────────────────────────────────── 10 items ───╯
 
 ## 🛠 Contribute
 
 Contributions are welcome! Please follow the [SciML ColPrac guide](https://github.com/SciML/ColPrac).
 
 ## 🎓 References
+
+Blaom, Anthony D., Franz Kiraly, Thibaut Lienart, Yiannis Simillides, Diego Arenas, and Sebastian J. Vollmer. 2020. “MLJ: A Julia Package for Composable Machine Learning.” *Journal of Open Source Software* 5 (55): 2704. <https://doi.org/10.21105/joss.02704>.
 
 Sadinle, Mauricio, Jing Lei, and Larry Wasserman. 2019. “Least Ambiguous Set-Valued Classifiers with Bounded Error Levels.” *Journal of the American Statistical Association* 114 (525): 223–34.

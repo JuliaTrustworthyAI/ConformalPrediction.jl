@@ -5,7 +5,7 @@ using Plots
 theme(:wong)
 ```
 
-`ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic. 
+`ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) @blaom2020mlj. Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic. 
 
 # 📖 Background
 
@@ -55,6 +55,7 @@ The package has been tested for the following supervised models offered by [MLJ]
 **Regression**:
 
 ```{julia}
+#| output: true
 using ConformalPrediction
 keys(tested_atomic_models[:regression])
 ```
@@ -62,6 +63,7 @@ keys(tested_atomic_models[:regression])
 **Classification**:
 
 ```{julia}
+#| output: true
 keys(tested_atomic_models[:classification])
 ```
 

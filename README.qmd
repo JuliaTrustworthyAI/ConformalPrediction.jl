@@ -2,7 +2,7 @@
 format: 
   commonmark:
     variant: -raw_html
-    wrap: none
+    wrap: preserve
     self-contained: true
 execute: 
   freeze: auto
