@@ -14,6 +14,7 @@ Term = "22787eb5-b846-44ae-b979-8e399b8463ab"
 MLJ = "0.18"
 MLJBase = "0.20"
 MLJModelInterface = "1"
+Term = "1"
 julia = "1.7"
 
 [extras]
