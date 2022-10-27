@@ -5,6 +5,6 @@ include("ConformalModels/ConformalModels.jl")
 using .ConformalModels
 export ConformalModel
 export conformal_model, fit, predict
-export available_models
+export available_models, tested_atomic_models
 
 end

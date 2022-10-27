@@ -1,6 +1,7 @@
 using ConformalPrediction.ConformalModels: requires_data_splitting
 using MLJ
-model = DecisionTreeClassifier() 
+Model = @load DecisionTreeClassifier pkg=DecisionTree
+model = Model() 
 
 @testset "Model Traits" begin
     

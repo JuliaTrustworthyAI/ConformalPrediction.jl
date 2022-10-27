@@ -1,7 +1,11 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 EvoTrees = "f6006082-12f8-11e9-0c9c-0d5d367ab1e5"
+LightGBM = "7acf609c-83a4-11e9-1ffb-b912bcd3b04a"
 MLJ = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"
 MLJDecisionTreeInterface = "c6f25543-311c-4c74-83dc-3ea6d1015661"
+MLJLinearModels = "6ee0df7b-362f-4a72-a706-9e79364fb692"
 MLJModelInterface = "e80e1ace-859a-464e-9ed9-23947d8ae3ea"
+MLJScikitLearnInterface = "5ae90465-5518-4432-b9d2-8a1def2f0cab"
+NearestNeighborModels = "636a865e-7cf4-491e-846c-de09b730eb36"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
