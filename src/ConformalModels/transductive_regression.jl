@@ -30,14 +30,14 @@ A typical choice for the heuristic function is ``h(\hat\mu(X_i),Y_i)=|Y_i-\hat\m
 function MMI.fit(conf_model::NaiveRegressor, verbosity, X, y)
     
     # Setup:
-    X, y = MMI.reformat(conf_model.model, X, y)
+    Xtrain, ytrain = MMI.reformat(conf_model.model, X, y)
 
     # Training: 
-    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, X, y)
+    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
     # Nonconformity Scores:
-    ŷ = MMI.predict(conf_model.model, fitresult, X)
-    conf_model.scores = @.(conf_model.heuristic(y, ŷ))
+    ŷ = MMI.predict(conf_model.model, fitresult, Xtrain)
+    conf_model.scores = @.(conf_model.heuristic(ytrain, ŷ))
 
     return (fitresult, cache, report)
 
@@ -91,10 +91,10 @@ where ``\hat\mu_{-i}(X_i)`` denotes the leave-one-out prediction for ``X_i``. In
 function MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
     
     # Setup:
-    X, y = MMI.reformat(conf_model.model, X, y)
+    Xtrain, ytrain = MMI.reformat(conf_model.model, X, y)
 
     # Training: 
-    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, X, y)
+    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
     # Nonconformity Scores:
     T = size(y, 1)
@@ -102,11 +102,11 @@ function MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
     for t in 1:T
         loo_ids = 1:T .!= t
         y₋ᵢ = y[loo_ids]                
-        X₋ᵢ = MLJ.matrix(X)[loo_ids,:]
+        X₋ᵢ = selectrows(X, loo_ids)
         yᵢ = y[t]
         Xᵢ = selectrows(X, t)
         μ̂₋ᵢ, = MMI.fit(conf_model.model, 0, MMI.reformat(conf_model.model, X₋ᵢ, y₋ᵢ)...)
-        ŷᵢ = MMI.predict(conf_model.model, μ̂₋ᵢ, Xᵢ)
+        ŷᵢ = MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xᵢ)...)
         push!(scores,@.(conf_model.heuristic(yᵢ, ŷᵢ))...)
     end
     conf_model.scores = scores
@@ -178,7 +178,7 @@ function MMI.fit(conf_model::JackknifePlusRegressor, verbosity, X, y)
         push!(cache, cache₋ᵢ)
         push!(report, report₋ᵢ)
         # Store LOO score:
-        ŷᵢ = MMI.predict(conf_model.model, μ̂₋ᵢ, Xᵢ)
+        ŷᵢ = MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xᵢ)...)
         push!(scores,@.(conf_model.heuristic(yᵢ, ŷᵢ))...)
     end
     conf_model.scores = scores
@@ -256,7 +256,7 @@ function MMI.fit(conf_model::JackknifeMinMaxRegressor, verbosity, X, y)
         push!(cache, cache₋ᵢ)
         push!(report, report₋ᵢ)
         # Store LOO score:
-        ŷᵢ = MMI.predict(conf_model.model, μ̂₋ᵢ, Xᵢ)
+        ŷᵢ = MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xᵢ)...)
         push!(scores,@.(conf_model.heuristic(yᵢ, ŷᵢ))...)
     end
     conf_model.scores = scores
@@ -345,7 +345,7 @@ function MMI.fit(conf_model::CVPlusRegressor, verbosity, X, y)
         push!(cache, cacheᵢ)
         push!(report, reportᵢ)
         # Store LOO score:
-        ŷᵢ = MMI.predict(conf_model.model, μ̂ᵢ, Xᵢ)
+        ŷᵢ = MMI.predict(conf_model.model, μ̂ᵢ, MMI.reformat(conf_model.model, Xᵢ)...)
         push!(scores,@.(conf_model.heuristic(yᵢ, ŷᵢ))...)
     end
     conf_model.scores = scores
@@ -438,7 +438,7 @@ function MMI.fit(conf_model::CVMinMaxRegressor, verbosity, X, y)
         push!(cache, cacheᵢ)
         push!(report, reportᵢ)
         # Store LOO score:
-        ŷᵢ = MMI.predict(conf_model.model, μ̂ᵢ, Xᵢ)
+        ŷᵢ = MMI.predict(conf_model.model, μ̂ᵢ, MMI.reformat(conf_model.model, Xᵢ)...)
         push!(scores,@.(conf_model.heuristic(yᵢ, ŷᵢ))...)
     end
     conf_model.scores = scores

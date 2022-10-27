@@ -23,5 +23,6 @@ bibliography: https://raw.githubusercontent.com/pat-alt/bib/main/bib.bib
 [![Coverage](https://codecov.io/gh/pat-alt/ConformalPrediction.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/pat-alt/ConformalPrediction.jl)
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 [![ColPrac: Contributor's Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet)](https://github.com/SciML/ColPrac)
+[![Twitter Badge](https://img.shields.io/twitter/follow/paltmey?style=social)](https://twitter.com/paltmey)
 
 {{< include docs/src/intro.qmd >}}

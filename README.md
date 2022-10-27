@@ -1,13 +1,21 @@
 
 # ConformalPrediction
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/stable/) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/dev/) [![Build Status](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml?query=branch%3Amain) [![Coverage](https://codecov.io/gh/pat-alt/ConformalPrediction.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/pat-alt/ConformalPrediction.jl) [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle) [![ColPrac: Contributor’s Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet.png)](https://github.com/SciML/ColPrac)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/stable/) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/dev/) [![Build Status](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml?query=branch%3Amain) [![Coverage](https://codecov.io/gh/pat-alt/ConformalPrediction.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/pat-alt/ConformalPrediction.jl) [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle) [![ColPrac: Contributor’s Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet.png)](https://github.com/SciML/ColPrac) [![Twitter Badge](https://img.shields.io/twitter/follow/paltmey?style=social.png)](https://twitter.com/paltmey)
 
 `ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic.
 
-## Installation 🚩
+# 📖 Background
 
-You can install the first stable release from the general registry:
+Conformal Prediction is a scalable frequentist approach to uncertainty quantification and coverage control. It promises to be an easy-to-understand, distribution-free and model-agnostic way to generate statistically rigorous uncertainty estimates. Interestingly, it can even be used to complement Bayesian methods.
+
+The animation below is lifted from a small blog post that introduces the topic and the package (\[[TDS](https://towardsdatascience.com/conformal-prediction-in-julia-351b81309e30)\], \[[Quarto](https://www.paltmeyer.com/blog/posts/conformal-prediction/#fig-anim)\]). It shows conformal prediction sets for two different samples and changing coverage rates. Standard conformal classifiers produce set-valued predictions: for ambiguous samples these sets are typically large (for high coverage) or empty (for low coverage).
+
+![Conformal Prediction in action: Prediction sets for two different samples and changing coverage rates. As coverage grows, so does the size of the prediction sets.](https://raw.githubusercontent.com/pat-alt/blog/main/posts/conformal-prediction/www/medium.gif)
+
+## 🚩 Installation
+
+You can install the latest stable release from the general registry:
 
 ``` julia
 using Pkg
@@ -21,9 +29,9 @@ using Pkg
 Pkg.add(url="https://github.com/pat-alt/ConformalPrediction.jl")
 ```
 
-## Status 🔁
+## 🔁 Status
 
-This package is in its very early stages of development and therefore still subject to changes to the core architecture. The following approaches have been implemented in the development version:
+This package is in its early stages of development and therefore still subject to changes to the core architecture and API. The following CP approaches have been implemented in the development version:
 
 **Regression**:
 
@@ -40,9 +48,22 @@ This package is in its very early stages of development and therefore still subj
 - Inductive (LABEL (Sadinle, Lei, and Wasserman 2019))
 - Adaptive Inductive
 
-I have only tested it for a few of the supervised models offered by [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/).
+The package has been tested for the following supervised models offered by [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/).
 
-## Usage Example 🔍
+**Regression**:
+
+``` julia
+using ConformalPrediction
+keys(tested_atomic_models[:regression])
+```
+
+**Classification**:
+
+``` julia
+keys(tested_atomic_models[:classification])
+```
+
+## 🔍 Usage Example
 
 To illustrate the intended use of the package, let’s have a quick look at a simple regression problem. Using [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) we first generate some synthetic data and then determine indices for our training, calibration and test data:
 
@@ -52,11 +73,11 @@ X, y = MLJ.make_regression(1000, 2)
 train, test = partition(eachindex(y), 0.4, 0.4)
 ```
 
-We then import a decision tree ([DecisionTree](https://github.com/Evovest/DecisionTree.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
+We then import a decision tree ([`EvoTrees.jl`](https://github.com/Evovest/EvoTrees.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
 
 ``` julia
-DecisionTreeRegressor = @load DecisionTreeRegressor pkg=DecisionTree
-model = DecisionTreeRegressor() 
+EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
+model = EvoTreeRegressor() 
 ```
 
 To turn our conventional model into a conformal model, we just need to declare it as such by using `conformal_model` wrapper function. The generated conformal model instance can wrapped in data to create a *machine*. Finally, we proceed by fitting the machine on training data using the generic `fit!` method:
@@ -77,26 +98,26 @@ ytest = y[first(test,n)]
 predict(mach, Xtest)
 ```
 
-    ╭────────────────────────────────────────────────────────────────╮
-    │                                                                │
-    │       (1)   ([-1.755717205142032], [0.1336793920749545])       │
-    │       (2)   ([-2.725152276022311], [-0.8357556788053242])      │
-    │       (3)   ([1.7996228430066177], [3.6890194402236043])       │
-    │       (4)   ([-2.090812733251826], [-0.20141613603483965])     │
-    │       (5)   ([0.9599243814807339], [2.8493209786977207])       │
-    │       (6)   ([-0.6383470472809984], [1.2510495499359882])      │
-    │       (7)   ([1.6779292744150438], [3.5673258716320304])       │
-    │       (8)   ([0.08317330201878925], [1.9725698992357759])      │
-    │       (9)   ([-0.12150563172572815], [1.7678909654912585])     │
-    │      (10)   ([-1.1611481858237893], [0.7282484113931974])      │
-    │                                                                │
-    │                                                                │
-    ╰─────────────────────────────────────────────────── 10 items ───╯
+    ╭──────────────────────────────────────────────────────────────────╮
+    │                                                                  │
+    │       (1)   ([-1.6222940237738053], [0.13968291770776242])       │
+    │       (2)   ([-1.690658497197263], [0.07131844428430478])        │
+    │       (3)   ([-1.2326768178821994], [0.5293001235993684])        │
+    │       (4)   ([-1.408944684371105], [0.3530322571104627])         │
+    │       (5)   ([-1.7978510280911284], [-0.035874086609560596])     │
+    │       (6)   ([-2.4606297492638616], [-0.6986528077822939])       │
+    │       (7)   ([-2.1314284877848504], [-0.3694515463032827])       │
+    │       (8)   ([-2.129566843603574], [-0.3675899021220065])        │
+    │       (9)   ([-1.6222940237738053], [0.13968291770776242])       │
+    │      (10)   ([-1.931029798154714], [-0.1690528566731463])        │
+    │                                                                  │
+    │                                                                  │
+    ╰───────────────────────────────────────────────────── 10 items ───╯
 
-## Contribute 🛠
+## 🛠 Contribute
 
 Contributions are welcome! Please follow the [SciML ColPrac guide](https://github.com/SciML/ColPrac).
 
-## References 🎓
+## 🎓 References
 
 Sadinle, Mauricio, Jing Lei, and Larry Wasserman. 2019. “Least Ambiguous Set-Valued Classifiers with Bounded Error Levels.” *Journal of the American Statistical Association* 114 (525): 223–34.

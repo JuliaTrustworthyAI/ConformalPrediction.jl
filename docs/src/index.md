@@ -9,9 +9,17 @@ Documentation for [ConformalPrediction.jl](https://github.com/pat-alt/ConformalP
 
 `ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic.
 
-## Installation 🚩
+# 📖 Background
 
-You can install the first stable release from the general registry:
+Conformal Prediction is a scalable frequentist approach to uncertainty quantification and coverage control. It promises to be an easy-to-understand, distribution-free and model-agnostic way to generate statistically rigorous uncertainty estimates. Interestingly, it can even be used to complement Bayesian methods.
+
+The animation below is lifted from a small blog post that introduces the topic and the package (\[[TDS](https://towardsdatascience.com/conformal-prediction-in-julia-351b81309e30)\], \[[Quarto](https://www.paltmeyer.com/blog/posts/conformal-prediction/#fig-anim)\]). It shows conformal prediction sets for two different samples and changing coverage rates. Standard conformal classifiers produce set-valued predictions: for ambiguous samples these sets are typically large (for high coverage) or empty (for low coverage).
+
+![Conformal Prediction in action: Prediction sets for two different samples and changing coverage rates. As coverage grows, so does the size of the prediction sets.](https://raw.githubusercontent.com/pat-alt/blog/main/posts/conformal-prediction/www/medium.gif)
+
+## 🚩 Installation
+
+You can install the latest stable release from the general registry:
 
 ``` julia
 using Pkg
@@ -25,9 +33,9 @@ using Pkg
 Pkg.add(url="https://github.com/pat-alt/ConformalPrediction.jl")
 ```
 
-## Status 🔁
+## 🔁 Status
 
-This package is in its very early stages of development and therefore still subject to changes to the core architecture. The following approaches have been implemented in the development version:
+This package is in its early stages of development and therefore still subject to changes to the core architecture and API. The following CP approaches have been implemented in the development version:
 
 **Regression**:
 
@@ -44,9 +52,22 @@ This package is in its very early stages of development and therefore still subj
 - Inductive (LABEL (Sadinle, Lei, and Wasserman 2019))
 - Adaptive Inductive
 
-I have only tested it for a few of the supervised models offered by [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/).
+The package has been tested for the following supervised models offered by [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/).
 
-## Usage Example 🔍
+**Regression**:
+
+``` julia
+using ConformalPrediction
+keys(tested_atomic_models[:regression])
+```
+
+**Classification**:
+
+``` julia
+keys(tested_atomic_models[:classification])
+```
+
+## 🔍 Usage Example
 
 To illustrate the intended use of the package, let’s have a quick look at a simple regression problem. Using [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) we first generate some synthetic data and then determine indices for our training, calibration and test data:
 
@@ -81,26 +102,26 @@ ytest = y[first(test,n)]
 predict(mach, Xtest)
 ```
 
-    ╭────────────────────────────────────────────────────────────────╮
-    │                                                                │
-    │       (1)   ([-5.4338268970328265], [0.25968688121283146])     │
-    │       (2)   ([-3.327102611742035], [2.3664111665036227])       │
-    │       (3)   ([-6.487880423821674], [-0.7943666455760168])      │
-    │       (4)   ([1.5074870726446568], [7.201000850890314])        │
-    │       (5)   ([-6.668012325746515], [-0.9744985475008576])      │
-    │       (6)   ([-2.36920384417906], [3.3243099340665974])        │
-    │       (7)   ([-0.4783861002145251], [5.215127678031132])       │
-    │       (8)   ([-5.554310900530298], [0.1392028777153591])       │
-    │       (9)   ([-1.4607932119178935], [4.232720566327764])       │
-    │      (10)   ([-5.190158387746367], [0.5033553904992907])       │
-    │                                                                │
-    │                                                                │
-    ╰─────────────────────────────────────────────────── 10 items ───╯
+    ╭───────────────────────────────────────────────────────────────╮
+    │                                                               │
+    │       (1)   ([-2.084493521926009], [0.4969279285971252])      │
+    │       (2)   ([-1.5023568530401947], [1.0790645974829394])     │
+    │       (3)   ([-2.084493521926009], [0.4969279285971252])      │
+    │       (4)   ([-1.9184792682286391], [0.662942182294495])      │
+    │       (5)   ([-0.2150875566246131], [2.366333893898521])      │
+    │       (6)   ([-2.3403228023660336], [0.2410986481571007])     │
+    │       (7)   ([-1.5072539944280898], [1.0741674560950443])     │
+    │       (8)   ([-1.4575216187502464], [1.1238998317728877])     │
+    │       (9)   ([-1.8778138299256455], [0.7036076205974886])     │
+    │      (10)   ([-1.1141878838712487], [1.4672335666518854])     │
+    │                                                               │
+    │                                                               │
+    ╰────────────────────────────────────────────────── 10 items ───╯
 
-## Contribute 🛠
+## 🛠 Contribute
 
 Contributions are welcome! Please follow the [SciML ColPrac guide](https://github.com/SciML/ColPrac).
 
-## References 🎓
+## 🎓 References
 
 Sadinle, Mauricio, Jing Lei, and Larry Wasserman. 2019. “Least Ambiguous Set-Valued Classifiers with Bounded Error Levels.” *Journal of the American Statistical Association* 114 (525): 223–34.
