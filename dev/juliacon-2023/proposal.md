@@ -1,0 +1,50 @@
+Uncertainty Quantification in ML through Conformal Prediction
+================
+
+### Abstract
+
+We propose [`ConformalPrediction.jl`](https://github.com/pat-alt/ConformalPrediction.jl): a Julia package for Uncertainty Quantification in Machine Learning (ML) through Conformal Prediction. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) (Blaom et al. 2020), a popular and comprehensive ML framework for Julia. Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic.
+
+### 🔀 The Need for Uncertainty Quantification
+
+A first crucial step towards building trustworthy AI systems is to be transparent about predictive uncertainty. Machine Learning model parameters are random variables and their values are estimated from noisy data. That inherent stochasticity feeds through to model predictions and should to be addressed, at the very least in order to avoid overconfidence in models.
+
+Beyond that obvious concern, it turns out that quantifying model uncertainty actually opens up a myriad of possibilities to improve up- and down-stream modeling tasks like active learning and robustness. In Bayesian Active Learning, for example, uncertainty estimates are used to guide the search for new input samples, which can make ground-truthing tasks more efficient (Houlsby et al. 2011). With respect to model performance in downstream tasks, uncertainty quantification can be used to improve model calibration and robustness (Lakshminarayanan, Pritzel, and Blundell 2016).
+
+### 👉 Enter: Conformal Prediction
+
+Conformal Prediction (CP) is a scalable frequentist approach to uncertainty quantification and coverage control. CP can be used to generate prediction intervals for regression models and prediction sets for classification models. There is also some recent work on conformal predictive distributions and probabilistic predictions. The following characteristics make CP particularly attractive to the ML community:
+
+- The underlying concepts easily understood and implemented.
+- The approach can be applied almost universally to any supervised ML model, which has allowed us to easily tab into the existing [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) toolkit.
+- It comes with a frequentist coverage guarantee that ensures that conformal prediction sets contain the true value with a user-chosen probability.
+- No assumptions about prior parameter distributions are needed, but CP can be used to complement Bayesian Methods.
+
+### 😔 Problem: Limited Availability in Julia Ecosystem
+
+Open-source development in the Julia AI space has been very active in recent years. [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) is just one great example testifying to these community efforts. As we gradually built up an AI ecosystem, it is important to also pay attention to the risks and challenges facing AI today. With respect to Uncertainty Quantification, there is curr:rainbow:ently good support for Bayesian Methods and Ensembling. A fully-fledged implementation of Conformal Prediction in Julia has so far been lacking.
+
+### 🎉 Solution: `ConformalPrediction.jl`
+
+Through this project we aim to close that gap and thereby contribute to broader community efforts towards trustworthy AI. Highlights of our new package include:
+
+- **Interface to [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/)**: turning your machine learning model into a conformal predictor is just one API call away.
+- **Implementation of many SOTA approaches**: the number of approaches to Conformal Regression and Classification is already large and growing.
+- **Clear Documentation**: docstrings document the mathematical underpinnings of the different approaches, while introductory blog posts involving usage examples provide intuition.
+- **Active Community Engagement**: we have coordinated our efforts with the core dev team of [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) and thankfully already received some useful feedback from the community.
+
+### 🎯 Future Developments
+
+Our goal for this package is to provide a one-stop-shop for turning any supervised ML model into a conformal predictor. We also plan to make our package fully compatible with [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/). To this end we currently envision the following future developments:
+
+- Implement support for downstream tasks like model evaluation in coordination with [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/).
+- Add additional approaches to Conformal Regression (including time series) and Conformal Classification (including Venn-ABER) as well as support for Conformal Predictive Distributions.
+- Enhance our documentation through additional tutorials.
+
+### References
+
+Blaom, Anthony D., Franz Kiraly, Thibaut Lienart, Yiannis Simillides, Diego Arenas, and Sebastian J. Vollmer. 2020. “MLJ: A Julia Package for Composable Machine Learning.” *Journal of Open Source Software* 5 (55): 2704. <https://doi.org/10.21105/joss.02704>.
+
+Houlsby, Neil, Ferenc Huszár, Zoubin Ghahramani, and Máté Lengyel. 2011. “Bayesian Active Learning for Classification and Preference Learning.” <https://arxiv.org/abs/1112.5745>.
+
+Lakshminarayanan, Balaji, Alexander Pritzel, and Charles Blundell. 2016. “Simple and Scalable Predictive Uncertainty Estimation Using Deep Ensembles.” <https://arxiv.org/abs/1612.01474>.
