@@ -115,9 +115,9 @@ function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
     L = p̂.decoder.classes
     ŷ = pdf(p̂, L)                                           # compute probabilities for all classes
     scores = map(eachrow(ŷ),eachrow(ycal)) do ŷᵢ, ycalᵢ
-        ranks = sortperm(.-ŷᵢ)                          # rank in descending order
-        index_y = findall(L[ranks].==ycalᵢ)[1]           # index of true y in sorted array
-        scoreᵢ = last(cumsum(ŷᵢ[ranks][1:index_y]))     # sum up until true y is reached
+        ranks = sortperm(.-ŷᵢ)                              # rank in descending order
+        index_y = findall(L[ranks].==ycalᵢ)[1]              # index of true y in sorted array
+        scoreᵢ = last(cumsum(ŷᵢ[ranks][1:index_y]))         # sum up until true y is reached
         return scoreᵢ
     end
     conf_model.scores = scores
@@ -153,4 +153,3 @@ function MMI.predict(conf_model::AdaptiveInductiveClassifier, fitresult, Xnew)
     end
     return p̂
 end
-
