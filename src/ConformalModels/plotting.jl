@@ -3,7 +3,7 @@ using Plots
 function Plots.plot(
     conf_model::ConformalModel,fitresult,X,y;
     target::Union{Nothing,Real}=nothing,
-    colorbar=true,title=nothing,length_out=50,zoom=-1,xlims=nothing,ylims=nothing,linewidth=0.1,lw=4,
+    colorbar=true,title=nothing,length_out=50,zoom=-1,xlims=nothing,ylims=nothing,linewidth=0.1,lw=4,train_lab=nothing,hat_lab=nothing,
     kwargs...
 )
 
@@ -37,7 +37,8 @@ function Plots.plot(
         title = isnothing(title) ? "" : title
 
         # Plot:
-        scatter(vec(X), vec(y), label="ytrain", xlim=xlims, ylim=ylims, lw=lw, title=title; kwargs...)
+        _lab = isnothing(train_lab) ? "Observed" : train_lab
+        scatter(vec(X), vec(y), label=_lab, xlim=xlims, ylim=ylims, lw=lw, title=title; kwargs...)
         _x = reshape([x for x in x_range],:,1)
         _x = MLJ.table(_x)
         MMI.reformat(conf_model.model,_x)
@@ -45,7 +46,8 @@ function Plots.plot(
         lb, ub = eachcol(reduce(vcat, map(y -> permutedims(collect(y)), ŷ)))
         ymid = (lb .+ ub)./2
         yerror = (ub .- lb)./2
-        plot!(x_range, ymid, label="yhat", ribbon = (yerror, yerror), lw=lw; kwargs...)
+        _lab = isnothing(hat_lab) ? "Predicted" : hat_lab
+        plot!(x_range, ymid, label=_lab, ribbon = (yerror, yerror), lw=lw; kwargs...)
 
     else
 

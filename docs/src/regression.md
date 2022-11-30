@@ -1,14 +1,8 @@
+
 # Regression
 
-```@meta
+``` @meta
 CurrentModule = ConformalPrediction
-```
-
-```{julia}
-#| echo: false
-using Pkg; Pkg.activate("docs")
-using Plots
-theme(:wong)
 ```
 
 This tutorial mostly replicates this [tutorial](https://mapie.readthedocs.io/en/latest/examples_regression/4-tutorials/plot_main-tutorial-regression.html#) from MAPIE.
@@ -17,10 +11,7 @@ This tutorial mostly replicates this [tutorial](https://mapie.readthedocs.io/en/
 
 We begin by generating some synthetic regression data below:
 
-```{julia}
-#| label: fig-data
-#| fig-cap: "Synthetic data."
-
+``` julia
 # Regression data:
 
 # Inputs:
@@ -49,7 +40,7 @@ plot!(xrange, @.(fun(xrange)), lw=4, label="Ground truth", ls=:dash, colour=:bla
 
 To model this data we will use polynomial regression. There is currently no out-of-the-box support for polynomial feature transformations in `MLJ`, but it is easy enough to add a little helper function for this. Note how we define a linear pipeline `pipe` here. Since pipelines in `MLJ` are just models, we can use the generated object as an input to `conformal_model` below.
 
-```{julia}
+``` julia
 LinearRegressor = @load LinearRegressor pkg=MLJLinearModels
 degree_polynomial = 10
 polynomial_features(X, degree::Int) = reduce(hcat, map(i -> X.^i, 1:degree))
@@ -58,7 +49,7 @@ pipe = (X -> MLJ.table(polynomial_features(MLJ.matrix(X), degree_polynomial))) |
 
 Next, we conformalize our polynomial regressor using every available approach (except the Naive approach):
 
-```{julia}
+``` julia
 using ConformalPrediction
 conformal_models = merge(values(available_models[:regression])...)
 delete!(conformal_models, :naive)
@@ -74,10 +65,7 @@ end
 
 Finally, let us look at the resulting conformal predictions in each case.
 
-```{julia}
-#| label: fig-cp
-#| fig-cap: "Conformal prediction regions."
-
+``` julia
 using Plots
 zoom = -3
 xrange = range(-xmax+zoom,xmax-zoom,length=N)

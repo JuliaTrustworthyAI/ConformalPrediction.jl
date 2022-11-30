@@ -30,7 +30,9 @@ A typical choice for the heuristic function is ``h(\hat\mu(X_i),Y_i)=|Y_i-\hat\m
 function MMI.fit(conf_model::NaiveRegressor, verbosity, X, y)
     
     # Setup:
-    Xtrain, ytrain = MMI.reformat(conf_model.model, X, y)
+    Xtrain = selectrows(X, :)
+    ytrain = y[:]
+    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
 
     # Training: 
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
@@ -92,7 +94,9 @@ where ``\hat\mu_{-i}(X_i)`` denotes the leave-one-out prediction for ``X_i``. In
 function MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
     
     # Setup:
-    Xtrain, ytrain = MMI.reformat(conf_model.model, X, y)
+    Xtrain = selectrows(X, :)
+    ytrain = y[:]
+    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
 
     # Training: 
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
