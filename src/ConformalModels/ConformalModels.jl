@@ -20,6 +20,8 @@ const ConformalModel = Union{ConformalInterval, ConformalSet, ConformalProbabili
 
 export ConformalInterval, ConformalSet, ConformalProbabilistic, ConformalModel
 
+include("utils.jl")
+include("plotting.jl")
 include("conformal_models.jl")
 
 # Regression Models:

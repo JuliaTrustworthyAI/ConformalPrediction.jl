@@ -60,6 +60,7 @@ function MMI.predict(conf_model::SimpleInductiveRegressor, fitresult, Xnew)
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
+    ŷ = reformat_interval(ŷ)
     return ŷ
 end
 

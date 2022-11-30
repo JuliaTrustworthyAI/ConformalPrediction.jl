@@ -13,36 +13,44 @@ theme(:wong)
 
 ```{julia}
 # Regression data:
-N = 150
-xmax = 8.0
-noise = 0.3
-X = rand(N) * xmax
+
+# Inputs:
+N = 600
+xmax = 5.0
+using Distributions
+d = Uniform(-xmax, xmax)
+X = rand(d, N)
+
+# Outputs:
+noise = 0.5
+fun(X) = X * sin(X)
 ε = randn(N) .* noise
-y = @.(sin(X)) + ε
+y = @.(fun(X)) + ε
+using MLJ
+train, test = partition(eachindex(y), 0.4, 0.4, shuffle=true)
 
 using Plots
 scatter(X, y, label="Observed")
-xrange = range(0,xmax,length=50)
-plot!(xrange, sin.(xrange), lw=4, label="Ground truth")
+xrange = range(-xmax,xmax,length=N)
+plot!(xrange, @.(fun(xrange)), lw=4, label="Ground truth")
 ```
 
 ```{julia}
-using MLJ
 EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
-model = EvoTreeRegressor() 
+model = EvoTreeRegressor(nrounds=50)
 ```
 
 ```{julia}
 using ConformalPrediction
 conf_model = conformal_model(model)
-mach = machine(conf_model, X, y)
+X = reshape(X, :, 1)
+Xtab = MLJ.table(X)
+mach = machine(conf_model, Xtab, y)
 fit!(mach, rows=train)
 ```
 
 ```{julia}
-#| output: true
-rows = rand(test, 10)
-Xtest = selectrows(X, rows)
-ytest = y[rows]
-predict(mach, Xtest)
+using Plots
+zoom = -5
+plot(mach.model, mach.fitresult, X, y, zoom=zoom)
 ```
