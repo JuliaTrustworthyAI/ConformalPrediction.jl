@@ -1,4 +1,4 @@
-# Classification 
+# Regression
 
 ```@meta
 CurrentModule = ConformalPrediction
@@ -12,14 +12,24 @@ theme(:wong)
 ```
 
 ```{julia}
-using MLJ
-X, y = MLJ.make_blobs(1000, 2; centers=3, cluster_std=1.0)
-train, test = partition(eachindex(y), 0.4, 0.4, shuffle=true)
+# Regression data:
+N = 150
+xmax = 8.0
+noise = 0.3
+X = rand(N) * xmax
+ε = randn(N) .* noise
+y = @.(sin(X)) + ε
+
+using Plots
+scatter(X, y, label="Observed")
+xrange = range(0,xmax,length=50)
+plot!(xrange, sin.(xrange), lw=4, label="Ground truth")
 ```
 
 ```{julia}
-EvoTreeClassifier = @load EvoTreeClassifier pkg=EvoTrees
-model = EvoTreeClassifier() 
+using MLJ
+EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
+model = EvoTreeRegressor() 
 ```
 
 ```{julia}
