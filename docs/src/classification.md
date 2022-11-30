@@ -52,9 +52,7 @@ ytest = y[first(test)]
 predict(mach, Xtest)[1]
 ```
 
-    import NearestNeighborModels
-
-     ✔
+    import NearestNeighborModels ✔
 
                UnivariateFinite{Multiclass{2}}      
          ┌                                        ┐ 

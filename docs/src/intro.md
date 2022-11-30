@@ -1,9 +1,17 @@
 
-`ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic.
+`ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) Blaom et al. (2020). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic.
 
-## Installation 🚩
+# 📖 Background
 
-You can install the first stable release from the general registry:
+Conformal Prediction is a scalable frequentist approach to uncertainty quantification and coverage control. It promises to be an easy-to-understand, distribution-free and model-agnostic way to generate statistically rigorous uncertainty estimates. Interestingly, it can even be used to complement Bayesian methods.
+
+The animation below is lifted from a small blog post that introduces the topic and the package (\[[TDS](https://towardsdatascience.com/conformal-prediction-in-julia-351b81309e30)\], \[[Quarto](https://www.paltmeyer.com/blog/posts/conformal-prediction/#fig-anim)\]). It shows conformal prediction sets for two different samples and changing coverage rates. Standard conformal classifiers produce set-valued predictions: for ambiguous samples these sets are typically large (for high coverage) or empty (for low coverage).
+
+![Conformal Prediction in action: Prediction sets for two different samples and changing coverage rates. As coverage grows, so does the size of the prediction sets.](https://raw.githubusercontent.com/pat-alt/blog/main/posts/conformal-prediction/www/medium.gif)
+
+## 🚩 Installation
+
+You can install the latest stable release from the general registry:
 
 ``` julia
 using Pkg
@@ -17,9 +25,9 @@ using Pkg
 Pkg.add(url="https://github.com/pat-alt/ConformalPrediction.jl")
 ```
 
-## Status 🔁
+## 🔁 Status
 
-This package is in its very early stages of development and therefore still subject to changes to the core architecture. The following approaches have been implemented in the development version:
+This package is in its early stages of development and therefore still subject to changes to the core architecture and API. The following CP approaches have been implemented in the development version:
 
 **Regression**:
 
@@ -36,9 +44,34 @@ This package is in its very early stages of development and therefore still subj
 - Inductive (LABEL (Sadinle, Lei, and Wasserman 2019))
 - Adaptive Inductive
 
-I have only tested it for a few of the supervised models offered by [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/).
+The package has been tested for the following supervised models offered by [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/).
 
-## Usage Example 🔍
+**Regression**:
+
+``` julia
+using ConformalPrediction
+keys(tested_atomic_models[:regression])
+```
+
+    KeySet for a Dict{Symbol, Expr} with 4 entries. Keys:
+      :nearest_neighbor
+      :evo_tree
+      :light_gbm
+      :decision_tree
+
+**Classification**:
+
+``` julia
+keys(tested_atomic_models[:classification])
+```
+
+    KeySet for a Dict{Symbol, Expr} with 4 entries. Keys:
+      :nearest_neighbor
+      :evo_tree
+      :light_gbm
+      :decision_tree
+
+## 🔍 Usage Example
 
 To illustrate the intended use of the package, let’s have a quick look at a simple regression problem. Using [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) we first generate some synthetic data and then determine indices for our training, calibration and test data:
 
@@ -67,32 +100,29 @@ fit!(mach, rows=train)
 Predictions can then be computed using the generic `predict` method. The code below produces predictions for the first `n` samples. Each tuple contains the lower and upper bound for the prediction interval.
 
 ``` julia
-n = 10
+n = 5
 Xtest = selectrows(X, first(test,n))
 ytest = y[first(test,n)]
 predict(mach, Xtest)
 ```
 
-    ╭─────────────────────────────────────────────────────────────────╮
-    │                                                                 │
-    │       (1)   ([-0.20063113789390163], [1.323655530145934])       │
-    │       (2)   ([-0.061147489871723804], [1.4631391781681118])     │
-    │       (3)   ([-1.4486105066363675], [0.07567616140346822])      │
-    │       (4)   ([-0.7160881365817455], [0.8081985314580902])       │
-    │       (5)   ([-1.7173644161988695], [-0.19307774815903367])     │
-    │       (6)   ([-1.2158809697881832], [0.3084056982516525])       │
-    │       (7)   ([-1.7173644161988695], [-0.19307774815903367])     │
-    │       (8)   ([0.26510754559144056], [1.7893942136312764])       │
-    │       (9)   ([-0.8716996456392521], [0.6525870224005836])       │
-    │      (10)   ([0.43084861624955606], [1.9551352842893919])       │
-    │                                                                 │
-    │                                                                 │
-    ╰──────────────────────────────────────────────────── 10 items ───╯
+    ╭───────────────────────────────────────────────────────────╮
+    │                                                           │
+    │      (1)   (-2.3533542827227794, 1.1215603803363177)      │
+    │      (2)   (-5.386746248140736, -1.9118315850816388)      │
+    │      (3)   (-4.084485418193179, -0.6095707551340814)      │
+    │      (4)   (-2.5544886119708683, 0.9204260510882288)      │
+    │      (5)   (-3.9127608429516876, -0.4378461798925908)     │
+    │                                                           │
+    │                                                           │
+    ╰─────────────────────────────────────────────── 5 items ───╯
 
-## Contribute 🛠
+## 🛠 Contribute
 
 Contributions are welcome! Please follow the [SciML ColPrac guide](https://github.com/SciML/ColPrac).
 
-## References 🎓
+## 🎓 References
+
+Blaom, Anthony D., Franz Kiraly, Thibaut Lienart, Yiannis Simillides, Diego Arenas, and Sebastian J. Vollmer. 2020. “MLJ: A Julia Package for Composable Machine Learning.” *Journal of Open Source Software* 5 (55): 2704. <https://doi.org/10.21105/joss.02704>.
 
 Sadinle, Mauricio, Jing Lei, and Larry Wasserman. 2019. “Least Ambiguous Set-Valued Classifiers with Bounded Error Levels.” *Journal of the American Statistical Association* 114 (525): 223–34.

@@ -36,7 +36,7 @@ conformal_models = merge(values(available_models[:classification])...)
                     predict(mach, selectrows(X, test))
 
                     # Plot
-                    plot(mach.model, mach.fitresult, X, y)
+                    # plot(mach.model, mach.fitresult, X, y)
 
                 end
 
