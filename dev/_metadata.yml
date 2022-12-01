@@ -1,0 +1,4 @@
+format: 
+  commonmark:
+    variant: -raw_html
+    wrap: none
