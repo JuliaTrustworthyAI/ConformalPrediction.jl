@@ -9,6 +9,7 @@ CurrentModule = ConformalPrediction
 using Pkg; Pkg.activate("docs")
 using Plots
 theme(:wong)
+www_path = "docs/src/www"   # output path for files don't get automatically saved in auto-generated path (e.g. GIFs)
 ```
 
 
@@ -135,7 +136,7 @@ function contourf_cp(mach::Machine, x1_range, x2_range; type=:set_size, kwargs..
 end
 ```
 
-@fig-anim should provide some more intuition as to what exactly is happening here. It illustrates the effect of the chosen coverage rate on the predicted softmax output and the set size in the two-dimensional feature space. Contours are overlayed with the moon data points (including test data). The two samples highlighted in red, $X_1$ and $X_2$, have been manually added for illustration purposes. Let's look at these one by one.
+The animation below should provide some more intuition as to what exactly is happening here. It illustrates the effect of the chosen coverage rate on the predicted softmax output and the set size in the two-dimensional feature space. Contours are overlayed with the moon data points (including test data). The two samples highlighted in red, $X_1$ and $X_2$, have been manually added for illustration purposes. Let's look at these one by one.
 
 Firstly, note that $X_1$ (red cross) falls into a region of the domain that is characterized by high predictive uncertainty. It sits right at the bottom-right corner of our class-zero moon 🌜 (orange), a region that is almost entirely enveloped by our class-one moon 🌛 (green). For low coverage rates the prediction set for $X_1$ is empty: on the left-hand side this is indicated by the missing contour for the softmax probability; on the right-hand side we can observe that the corresponding set size is indeed zero. For high coverage rates the prediction set includes both $y=0$ and $y=1$, indicative of the fact that the conformal classifier is uncertain about the true label.
 
@@ -167,7 +168,6 @@ These two examples illustrate an interesting point: for regions characterised by
 #| output: true
 #| label: fig-anim
 #| fig-cap: "The effect of the coverage rate on the conformal prediction set. Softmax probabilities are shown on the left. The size of the prediction set is shown on the right."
-#| code-fold: true
 
 # Setup
 coverages = range(0.75,1.0,length=5)
@@ -190,5 +190,7 @@ anim = @animate for coverage in coverages
     plot(p1, p2, plot_title="(1-α)=$(round(coverage,digits=2))", size=(800,300))
 end
 
-gif(anim, fps=0.5)
+gif(anim, joinpath(www_path,"classification.gif"), fps=1)
 ```
+
+![](www/classification.gif)

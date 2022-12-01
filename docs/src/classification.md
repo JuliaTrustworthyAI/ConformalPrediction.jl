@@ -92,7 +92,7 @@ predict(mach, Xtest)[1]
 
     missing
 
-**?@fig-anim** should provide some more intuition as to what exactly is happening here. It illustrates the effect of the chosen coverage rate on the predicted softmax output and the set size in the two-dimensional feature space. Contours are overlayed with the moon data points (including test data). The two samples highlighted in red, *X*₁ and *X*₂, have been manually added for illustration purposes. Let’s look at these one by one.
+The animation below should provide some more intuition as to what exactly is happening here. It illustrates the effect of the chosen coverage rate on the predicted softmax output and the set size in the two-dimensional feature space. Contours are overlayed with the moon data points (including test data). The two samples highlighted in red, *X*₁ and *X*₂, have been manually added for illustration purposes. Let’s look at these one by one.
 
 Firstly, note that *X*₁ (red cross) falls into a region of the domain that is characterized by high predictive uncertainty. It sits right at the bottom-right corner of our class-zero moon 🌜 (orange), a region that is almost entirely enveloped by our class-one moon 🌛 (green). For low coverage rates the prediction set for *X*₁ is empty: on the left-hand side this is indicated by the missing contour for the softmax probability; on the right-hand side we can observe that the corresponding set size is indeed zero. For high coverage rates the prediction set includes both *y* = 0 and *y* = 1, indicative of the fact that the conformal classifier is uncertain about the true label.
 
@@ -133,10 +133,12 @@ anim = @animate for coverage in coverages
     plot(p1, p2, plot_title="(1-α)=$(round(coverage,digits=2))", size=(800,300))
 end
 
-gif(anim, fps=0.5)
+gif(anim, joinpath(www_path,"classification.gif"), fps=1)
 ```
 
 The effect of the coverage rate on the conformal prediction set. Softmax probabilities are shown on the left. The size of the prediction set is shown on the right.
+
+![](www/classification.gif)
 
 [1] In other places split conformal prediction is sometimes referred to as *inductive* conformal prediction.
 

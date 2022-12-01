@@ -75,6 +75,7 @@ end
 Finally, let us look at the resulting conformal predictions in each case.
 
 ```{julia}
+#| output: true
 #| label: fig-cp
 #| fig-cap: "Conformal prediction regions."
 

@@ -79,3 +79,5 @@ end
 
 plot(plt_list..., size=(1600,1000))
 ```
+
+![Figure 1: Conformal prediction regions.](regression_files/figure-commonmark/fig-cp-output-1.svg)
