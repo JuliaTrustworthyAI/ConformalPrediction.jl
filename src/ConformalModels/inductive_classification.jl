@@ -1,6 +1,6 @@
 # Simple
 "The `SimpleInductiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset."
-mutable struct SimpleInductiveClassifier{Model <: Supervised} <: ConformalSet
+mutable struct SimpleInductiveClassifier{Model <: Supervised} <: ConformalProbabilisticSet
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -75,7 +75,7 @@ end
 
 # Adaptive
 "The `AdaptiveInductiveClassifier` is an improvement to the [`SimpleInductiveClassifier`](@ref) and the [`NaiveClassifier`](@ref). Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset like the [`SimpleInductiveClassifier`](@ref). Contrary to the [`SimpleInductiveClassifier`](@ref) it utilizes the softmax output of all classes."
-mutable struct AdaptiveInductiveClassifier{Model <: Supervised} <: ConformalSet
+mutable struct AdaptiveInductiveClassifier{Model <: Supervised} <: ConformalProbabilisticSet
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}

@@ -92,6 +92,27 @@ predict(mach, Xtest)[1]
 
     missing
 
+``` julia
+cov_ = .9
+conf_model = conformal_model(model; coverage=cov_)
+mach = machine(conf_model, X, y)
+fit!(mach, rows=train)
+Markdown.parse("""
+The following chart shows the resulting predicted probabilities for ``y=1`` (left) and set size (right) for a choice of ``(1-\\alpha)``=$cov_.
+""")
+```
+
+The following chart shows the resulting predicted probabilities for *y* = 1 (left) and set size (right) for a choice of (1−*α*)=0.9.
+
+``` julia
+using Plots
+p_proba = plot(mach.model, mach.fitresult, X, y)
+p_set_size = plot(mach.model, mach.fitresult, X, y; plot_set_size=true)
+plot(p_proba, p_set_size, size=(800,250))
+```
+
+![](classification_files/figure-commonmark/cell-10-output-1.svg)
+
 The animation below should provide some more intuition as to what exactly is happening here. It illustrates the effect of the chosen coverage rate on the predicted softmax output and the set size in the two-dimensional feature space. Contours are overlayed with the moon data points (including test data). The two samples highlighted in red, *X*₁ and *X*₂, have been manually added for illustration purposes. Let’s look at these one by one.
 
 Firstly, note that *X*₁ (red cross) falls into a region of the domain that is characterized by high predictive uncertainty. It sits right at the bottom-right corner of our class-zero moon 🌜 (orange), a region that is almost entirely enveloped by our class-one moon 🌛 (green). For low coverage rates the prediction set for *X*₁ is empty: on the left-hand side this is indicated by the missing contour for the softmax probability; on the right-hand side we can observe that the corresponding set size is indeed zero. For high coverage rates the prediction set includes both *y* = 0 and *y* = 1, indicative of the fact that the conformal classifier is uncertain about the true label.
@@ -100,16 +121,12 @@ With respect to *X*₂, we observe that while also sitting on the fringe of our 
 
 ``` julia
 Xtest_2 = (x1=[-0.5],x2=[0.25])
-cov_ = .9
-conf_model = conformal_model(model; coverage=cov_)
-mach = machine(conf_model, X, y)
-fit!(mach, rows=train)
 p̂_2 = pdf(predict(mach, Xtest_2)[1], 0)
 ```
 
 Well, for low coverage rates (roughly  \< 0.9) the conformal prediction set does not include *y* = 0: the set size is zero (right panel). Only for higher coverage rates do we have *C*(*X*₂) = {0}: the coverage rate is high enough to include *y* = 0, but the corresponding softmax probability is still fairly low. For example, for (1−*α*) = 0.9 we have *p̂*(*y*=0|*X*₂) = 0.72.
 
-These two examples illustrate an interesting point: for regions characterised by high predictive uncertainty, conformal prediction sets are typically empty (for low coverage) or large (for high coverage). While set-valued predictions may be something to get used to, this notion is overall intuitive.
+These two examples illustrate an interesting point: for regions characterized by high predictive uncertainty, conformal prediction sets are typically empty (for low coverage) or large (for high coverage). While set-valued predictions may be something to get used to, this notion is overall intuitive.
 
 ``` julia
 # Setup
@@ -122,12 +139,11 @@ anim = @animate for coverage in coverages
     conf_model = conformal_model(model; coverage=coverage)
     mach = machine(conf_model, X, y)
     fit!(mach, rows=train)
-    p1 = contourf_cp(mach, x1_range, x2_range; type=:proba, title="Softmax", axis=nothing)
-    scatter!(p1, X.x1, X.x2, group=y, ms=2, msw=0, alpha=0.75)
+    # Probabilities:
+    p1 = plot(mach.model, mach.fitresult, X, y)
     scatter!(p1, Xtest.x1, Xtest.x2, ms=6, c=:red, label="X₁", shape=:cross, msw=6)
     scatter!(p1, Xtest_2.x1, Xtest_2.x2, ms=6, c=:red, label="X₂", shape=:diamond, msw=6)
-    p2 = contourf_cp(mach, x1_range, x2_range; type=:set_size, title="Set size", axis=nothing)
-    scatter!(p2, X.x1, X.x2, group=y, ms=2, msw=0, alpha=0.75)
+    p2 = plot(mach.model, mach.fitresult, X, y; plot_set_size=true)
     scatter!(p2, Xtest.x1, Xtest.x2, ms=6, c=:red, label="X₁", shape=:cross, msw=6)
     scatter!(p2, Xtest_2.x1, Xtest_2.x2, ms=6, c=:red, label="X₂", shape=:diamond, msw=6)
     plot(p1, p2, plot_title="(1-α)=$(round(coverage,digits=2))", size=(800,300))

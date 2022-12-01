@@ -56,6 +56,8 @@ polynomial_features(X, degree::Int) = reduce(hcat, map(i -> X.^i, 1:degree))
 pipe = (X -> MLJ.table(polynomial_features(MLJ.matrix(X), degree_polynomial))) |> LinearRegressor()
 ```
 
+## Conformal Prediction
+
 Next, we conformalize our polynomial regressor using every available approach (except the Naive approach):
 
 ```{julia}
@@ -80,7 +82,7 @@ Finally, let us look at the resulting conformal predictions in each case.
 #| fig-cap: "Conformal prediction regions."
 
 using Plots
-zoom = -3
+zoom = 0
 xrange = range(-xmax+zoom,xmax-zoom,length=N)
 plt_list = []
 
@@ -92,3 +94,5 @@ end
 
 plot(plt_list..., size=(1600,1000))
 ```
+
+

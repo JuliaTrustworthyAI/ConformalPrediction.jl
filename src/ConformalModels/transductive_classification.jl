@@ -1,6 +1,6 @@
 # Simple
 "The `NaiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated trainibration dataset."
-mutable struct NaiveClassifier{Model <: Supervised} <: ConformalSet
+mutable struct NaiveClassifier{Model <: Supervised} <: ConformalProbabilisticSet
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}

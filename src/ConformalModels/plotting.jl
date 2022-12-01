@@ -1,10 +1,12 @@
+using CategoricalArrays
 using MLJ
 using Plots
 
 function Plots.plot(
     conf_model::ConformalModel,fitresult,X,y;
     target::Union{Nothing,Real}=nothing,
-    colorbar=true,title=nothing,length_out=50,zoom=-1,xlims=nothing,ylims=nothing,linewidth=0.1,lw=4,train_lab=nothing,hat_lab=nothing,
+    colorbar=true,title=nothing,length_out=50,zoom=-1,xlims=nothing,ylims=nothing,linewidth=0.1,lw=4,
+    train_lab=nothing,hat_lab=nothing,plot_set_size=false,
     kwargs...
 )
 
@@ -67,37 +69,62 @@ function Plots.plot(
         x_range = range(xlims[1],stop=xlims[2],length=length_out)
         y_range = range(ylims[1],stop=ylims[2],length=length_out)
 
-        # Plot
-        predict_ = function(X::AbstractVector) 
-            z = la(X; link_approx=link_approx)
-            if outdim(la) == 1 # binary
-                z = [1.0 - z[1], z[1]]
-            end
-            return z
+        # Target
+        if !isnothing(target)
+            @assert target in unique(y) "Specified target does not match any of the labels."
         end
-        Z = [predict_([x,y]) for x=x_range, y=y_range]
-        Z = reduce(hcat, Z)
-        if outdim(la) > 1
+        if length(unique(y)) > 1
             if isnothing(target)
                 @info "No target label supplied, using first."
             end
             target = isnothing(target) ? 1 : target
-            title = isnothing(title) ? "p̂(y=$(target))" : title
+            _default_title = plot_set_size ? "Set size" : "p̂(y=$(target))"
         else
             target = isnothing(target) ? 2 : target
-            title = isnothing(title) ? "p̂(y=$(target-1))" : title
+            _default_title = plot_set_size ? "Set size" : "p̂(y=$(target-1))"
         end
+        title = isnothing(title) ? _default_title : title
+
+        # Predictions
+        Z = []
+        for y=y_range, x=x_range
+            p̂ = predict(conf_model, fitresult, [x y])[1]
+            if plot_set_size
+                z = ismissing(p̂) ? 0 : sum(pdf.(p̂, p̂.decoder.classes) .> 0)
+            else
+                z = ismissing(p̂) ? p̂ : pdf.(p̂, 1)
+            end
+            push!(Z, z)
+        end
+        Z = reduce(hcat, Z)
+        Z = Z[Int(target),:]
         
         # Contour:
-        contourf(
-            x_range, y_range, Z[Int(target),:]; 
-            colorbar=colorbar, title=title, linewidth=linewidth,
-            xlims=xlims,
-            ylims=ylims,
-            kwargs...
-        )
+        if plot_set_size
+            _n = length(unique(y))
+            clim=(0,_n)
+            plt = contourf(
+                x_range, y_range, Z; 
+                colorbar=colorbar, title=title, linewidth=linewidth,
+                xlims=xlims,
+                ylims=ylims,
+                c=cgrad(:blues, _n+1, categorical = true),
+                clim=clim,
+                kwargs...
+            )
+        else 
+            plt = contourf(
+                x_range, y_range, Z; 
+                colorbar=colorbar, title=title, linewidth=linewidth,
+                xlims=xlims,
+                ylims=ylims,
+                kwargs...
+            )
+        end
+
         # Samples:
-        scatter!(X[1,:],X[2,:],group=Int.(y); kwargs...)
+        y = typeof(y) <: CategoricalArrays.CategoricalArray ? y : Int.(y)
+        scatter!(plt, X[1,:],X[2,:],group=y; kwargs...)
 
     end
 

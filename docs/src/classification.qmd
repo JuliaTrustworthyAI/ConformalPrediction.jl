@@ -111,30 +111,26 @@ predict(mach, Xtest)[1]
 ```
 
 ```{julia}
-#| echo: false
-using Plots
+#| output: true
 
-function contourf_cp(mach::Machine, x1_range, x2_range; type=:set_size, kwargs...)
-    set_size = []
-    proba = []
-    for x2 in x2_range, x1 in x1_range
-        Xnew = (x1 = [x1], x2 = [x2])
-        p̂ = predict(mach, Xnew)[1]
-        # Set size:
-        z = ismissing(p̂) ? 0 : sum(pdf.(p̂, p̂.decoder.classes) .> 0)
-        push!(set_size, z)
-        # Probability:
-        p = ismissing(p̂) ? p̂ : pdf.(p̂, 1)
-        push!(proba, p)
-    end
-    if type == :set_size
-        plt = contourf(x1_range, x2_range, set_size; clim=(0,2), c=cgrad(:blues, 3, categorical = true),  kwargs...)
-    elseif type == :proba
-        plt = contourf(x1_range, x2_range, proba; c=:thermal, kwargs...)
-    end
-    return plt
-end
+cov_ = .9
+conf_model = conformal_model(model; coverage=cov_)
+mach = machine(conf_model, X, y)
+fit!(mach, rows=train)
+Markdown.parse("""
+The following chart shows the resulting predicted probabilities for ``y=1`` (left) and set size (right) for a choice of ``(1-\\alpha)``=$cov_.
+""")
 ```
+
+```{julia}
+#| output: true
+
+using Plots
+p_proba = plot(mach.model, mach.fitresult, X, y)
+p_set_size = plot(mach.model, mach.fitresult, X, y; plot_set_size=true)
+plot(p_proba, p_set_size, size=(800,250))
+```
+
 
 The animation below should provide some more intuition as to what exactly is happening here. It illustrates the effect of the chosen coverage rate on the predicted softmax output and the set size in the two-dimensional feature space. Contours are overlayed with the moon data points (including test data). The two samples highlighted in red, $X_1$ and $X_2$, have been manually added for illustration purposes. Let's look at these one by one.
 
@@ -146,10 +142,6 @@ With respect to $X_2$, we observe that while also sitting on the fringe of our c
 #| code-fold: true
 
 Xtest_2 = (x1=[-0.5],x2=[0.25])
-cov_ = .9
-conf_model = conformal_model(model; coverage=cov_)
-mach = machine(conf_model, X, y)
-fit!(mach, rows=train)
 p̂_2 = pdf(predict(mach, Xtest_2)[1], 0)
 ```
 
@@ -162,7 +154,7 @@ Well, for low coverage rates (roughly ``<0.9``) the conformal prediction set doe
 """)
 ```
 
-These two examples illustrate an interesting point: for regions characterised by high predictive uncertainty, conformal prediction sets are typically empty (for low coverage) or large (for high coverage). While set-valued predictions may be something to get used to, this notion is overall intuitive. 
+These two examples illustrate an interesting point: for regions characterized by high predictive uncertainty, conformal prediction sets are typically empty (for low coverage) or large (for high coverage). While set-valued predictions may be something to get used to, this notion is overall intuitive. 
 
 ```{julia}
 #| output: true
@@ -179,12 +171,11 @@ anim = @animate for coverage in coverages
     conf_model = conformal_model(model; coverage=coverage)
     mach = machine(conf_model, X, y)
     fit!(mach, rows=train)
-    p1 = contourf_cp(mach, x1_range, x2_range; type=:proba, title="Softmax", axis=nothing)
-    scatter!(p1, X.x1, X.x2, group=y, ms=2, msw=0, alpha=0.75)
+    # Probabilities:
+    p1 = plot(mach.model, mach.fitresult, X, y)
     scatter!(p1, Xtest.x1, Xtest.x2, ms=6, c=:red, label="X₁", shape=:cross, msw=6)
     scatter!(p1, Xtest_2.x1, Xtest_2.x2, ms=6, c=:red, label="X₂", shape=:diamond, msw=6)
-    p2 = contourf_cp(mach, x1_range, x2_range; type=:set_size, title="Set size", axis=nothing)
-    scatter!(p2, X.x1, X.x2, group=y, ms=2, msw=0, alpha=0.75)
+    p2 = plot(mach.model, mach.fitresult, X, y; plot_set_size=true)
     scatter!(p2, Xtest.x1, Xtest.x2, ms=6, c=:red, label="X₁", shape=:cross, msw=6)
     scatter!(p2, Xtest_2.x1, Xtest_2.x2, ms=6, c=:red, label="X₂", shape=:diamond, msw=6)
     plot(p1, p2, plot_title="(1-α)=$(round(coverage,digits=2))", size=(800,300))
