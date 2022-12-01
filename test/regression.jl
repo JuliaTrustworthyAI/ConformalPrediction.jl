@@ -2,7 +2,7 @@ using MLJ
 using Plots
 
 # Data:
-X, y = MLJ.make_regression(1000, 2)
+X, y = MLJ.make_regression(1000, 1)
 train, test = partition(eachindex(y), 0.8)
 
 # Atomic and conformal models:

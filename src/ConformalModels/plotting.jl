@@ -1,3 +1,4 @@
+using MLJ
 using Plots
 
 function Plots.plot(
@@ -7,7 +8,7 @@ function Plots.plot(
     kwargs...
 )
 
-    X = permutedims(X)
+    X = permutedims(MLJ.matrix(X))
     
     is_classifier = target_scitype(conf_model.model) <: AbstractVector{<:Finite}
     if !is_classifier
