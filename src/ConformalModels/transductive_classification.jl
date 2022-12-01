@@ -1,6 +1,6 @@
 # Simple
 "The `NaiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated trainibration dataset."
-mutable struct NaiveClassifier{Model <: Supervised} <: ConformalSet
+mutable struct NaiveClassifier{Model <: Supervised} <: ConformalProbabilisticSet
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -25,7 +25,9 @@ A typical choice for the heuristic function is ``h(\hat\mu(X_i), Y_i)=1-\hat\mu(
 function MMI.fit(conf_model::NaiveClassifier, verbosity, X, y)
     
     # Setup:
-    Xtrain, ytrain = MMI.reformat(conf_model.model, X, y)
+    Xtrain = selectrows(X, :)
+    ytrain = y[:]
+    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
 
     # Training: 
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)

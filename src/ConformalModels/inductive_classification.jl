@@ -1,6 +1,6 @@
 # Simple
 "The `SimpleInductiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset."
-mutable struct SimpleInductiveClassifier{Model <: Supervised} <: ConformalSet
+mutable struct SimpleInductiveClassifier{Model <: Supervised} <: ConformalProbabilisticSet
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -75,7 +75,7 @@ end
 
 # Adaptive
 "The `AdaptiveInductiveClassifier` is an improvement to the [`SimpleInductiveClassifier`](@ref) and the [`NaiveClassifier`](@ref). Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset like the [`SimpleInductiveClassifier`](@ref). Contrary to the [`SimpleInductiveClassifier`](@ref) it utilizes the softmax output of all classes."
-mutable struct AdaptiveInductiveClassifier{Model <: Supervised} <: ConformalSet
+mutable struct AdaptiveInductiveClassifier{Model <: Supervised} <: ConformalProbabilisticSet
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -115,9 +115,9 @@ function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
     L = p̂.decoder.classes
     ŷ = pdf(p̂, L)                                           # compute probabilities for all classes
     scores = map(eachrow(ŷ),eachrow(ycal)) do ŷᵢ, ycalᵢ
-        ranks = sortperm(.-ŷᵢ)                          # rank in descending order
-        index_y = findall(L[ranks].==ycalᵢ)[1]           # index of true y in sorted array
-        scoreᵢ = last(cumsum(ŷᵢ[ranks][1:index_y]))     # sum up until true y is reached
+        ranks = sortperm(.-ŷᵢ)                              # rank in descending order
+        index_y = findall(L[ranks].==ycalᵢ)[1]              # index of true y in sorted array
+        scoreᵢ = last(cumsum(ŷᵢ[ranks][1:index_y]))         # sum up until true y is reached
         return scoreᵢ
     end
     conf_model.scores = scores
@@ -153,4 +153,3 @@ function MMI.predict(conf_model::AdaptiveInductiveClassifier, fitresult, Xnew)
     end
     return p̂
 end
-

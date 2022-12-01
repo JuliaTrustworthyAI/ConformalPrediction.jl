@@ -32,8 +32,12 @@ makedocs(;
     ),
     pages=[
         "🏠 Home" => "index.md",
+        "🤔 Tutorials" => [
+            "Classification" => "classification.md",
+            "Regression" => "regression.md",
+        ],
+        "📖 Reference" => "reference.md",
         "🛠 Contribute" => "contribute.md",
-        "📖 Library" => "reference.md",
     ],
 )
 

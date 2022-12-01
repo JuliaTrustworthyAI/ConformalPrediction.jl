@@ -30,7 +30,9 @@ A typical choice for the heuristic function is ``h(\hat\mu(X_i),Y_i)=|Y_i-\hat\m
 function MMI.fit(conf_model::NaiveRegressor, verbosity, X, y)
     
     # Setup:
-    Xtrain, ytrain = MMI.reformat(conf_model.model, X, y)
+    Xtrain = selectrows(X, :)
+    ytrain = y[:]
+    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
 
     # Training: 
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
@@ -60,6 +62,7 @@ function MMI.predict(conf_model::NaiveRegressor, fitresult, Xnew)
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
+    ŷ = reformat_interval(ŷ)
     return ŷ
 end
 
@@ -91,7 +94,9 @@ where ``\hat\mu_{-i}(X_i)`` denotes the leave-one-out prediction for ``X_i``. In
 function MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
     
     # Setup:
-    Xtrain, ytrain = MMI.reformat(conf_model.model, X, y)
+    Xtrain = selectrows(X, :)
+    ytrain = y[:]
+    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
 
     # Training: 
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
@@ -131,6 +136,7 @@ function MMI.predict(conf_model::JackknifeRegressor, fitresult, Xnew)
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
+    ŷ = reformat_interval(ŷ)
     return ŷ
 end
 
@@ -209,6 +215,7 @@ function MMI.predict(conf_model::JackknifePlusRegressor, fitresult, Xnew)
         ub = Statistics.quantile(yᵢ .+ conf_model.scores, conf_model.coverage)
         return (lb, ub)
     end
+    ŷ = reformat_interval(ŷ)
     return ŷ
 end
 
@@ -286,6 +293,7 @@ function MMI.predict(conf_model::JackknifeMinMaxRegressor, fitresult, Xnew)
     q̂ = Statistics.quantile(v, conf_model.coverage)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
     ŷ = map(yᵢ -> (minimum(yᵢ .- q̂), maximum(yᵢ .+ q̂)), eachrow(ŷ))
+    ŷ = reformat_interval(ŷ)
     return ŷ
 end
 
@@ -378,6 +386,7 @@ function MMI.predict(conf_model::CVPlusRegressor, fitresult, Xnew)
         ub = Statistics.quantile(yᵢ .+ conf_model.scores, conf_model.coverage)
         return (lb, ub)
     end
+    ŷ = reformat_interval(ŷ)
     return ŷ
 end
 

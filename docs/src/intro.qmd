@@ -97,7 +97,7 @@ Predictions can then be computed using the generic `predict` method. The code be
 
 ```{julia}
 #| output: true
-n = 10
+n = 5
 Xtest = selectrows(X, first(test,n))
 ytest = y[first(test,n)]
 predict(mach, Xtest)

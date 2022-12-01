@@ -1,4 +1,5 @@
 using MLJ
+using Plots
 
 # Data:
 X, y = MLJ.make_blobs(1000, 2, centers=2)
@@ -33,6 +34,9 @@ conformal_models = merge(values(available_models[:classification])...)
                     fit!(mach, rows=train)
                     @test !isnothing(conf_model.scores)
                     predict(mach, selectrows(X, test))
+
+                    # Plot
+                    plot(mach.model, mach.fitresult, X, y)
 
                 end
 
