@@ -42,7 +42,6 @@ function Plots.plot(
         scatter(vec(X), vec(y), label=_lab, xlim=xlims, ylim=ylims, lw=lw, title=title; kwargs...)
         _x = reshape([x for x in x_range],:,1)
         _x = MLJ.table(_x)
-        MMI.reformat(conf_model.model,_x)
         ŷ = predict(conf_model, fitresult, _x)
         lb, ub = eachcol(reduce(vcat, map(y -> permutedims(collect(y)), ŷ)))
         ymid = (lb .+ ub)./2
