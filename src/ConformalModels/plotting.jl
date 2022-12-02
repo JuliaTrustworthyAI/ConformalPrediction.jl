@@ -6,7 +6,7 @@ function Plots.plot(
     conf_model::ConformalModel,fitresult,X,y;
     target::Union{Nothing,Real}=nothing,
     colorbar=true,title=nothing,length_out=50,zoom=-1,xlims=nothing,ylims=nothing,linewidth=0.1,lw=4,
-    train_lab=nothing,hat_lab=nothing,plot_set_size=false,
+    observed_lab=nothing,hat_lab=nothing,plot_set_size=false,
     kwargs...
 )
 
@@ -40,7 +40,7 @@ function Plots.plot(
         title = isnothing(title) ? "" : title
 
         # Plot:
-        _lab = isnothing(train_lab) ? "Observed" : train_lab
+        _lab = isnothing(observed_lab) ? "Observed" : observed_lab
         scatter(vec(X), vec(y), label=_lab, xlim=xlims, ylim=ylims, lw=lw, title=title; kwargs...)
         _x = reshape([x for x in x_range],:,1)
         _x = MLJ.table(_x)

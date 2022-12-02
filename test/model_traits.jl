@@ -1,4 +1,4 @@
-using ConformalPrediction.ConformalModels: requires_data_splitting
+using ConformalPrediction: requires_data_splitting
 using MLJ
 Model = @load DecisionTreeClassifier pkg=DecisionTree
 model = Model() 

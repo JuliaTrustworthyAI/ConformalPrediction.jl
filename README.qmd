@@ -2,8 +2,7 @@
 format: 
   commonmark:
     variant: -raw_html
-    wrap: preserve
-    self-contained: true
+    wrap: none
 execute: 
   freeze: auto
   echo: true

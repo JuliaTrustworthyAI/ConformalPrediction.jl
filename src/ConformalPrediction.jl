@@ -1,8 +1,7 @@
 module ConformalPrediction
 
 # conformal models
-include("ConformalModels/ConformalModels.jl")
-using .ConformalModels
+include("ConformalModels/conformal_models.jl")
 export ConformalModel
 export conformal_model, fit, predict
 export available_models, tested_atomic_models

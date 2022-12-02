@@ -37,7 +37,7 @@ function MMI.fit(conf_model::SimpleInductiveRegressor, verbosity, X, y)
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
     # Nonconformity Scores:
-    ŷ = MMI.predict(conf_model.model, fitresult, Xcal)
+    ŷ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, Xcal))
     conf_model.scores = @.(conf_model.heuristic(ycal, ŷ))
 
     return (fitresult, cache, report)
@@ -56,7 +56,7 @@ For the [`SimpleInductiveRegressor`](@ref) prediction intervals are computed as 
 where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
 """
 function MMI.predict(conf_model::SimpleInductiveRegressor, fitresult, Xnew)
-    ŷ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
+    ŷ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...))
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))

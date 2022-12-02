@@ -1,13 +1,7 @@
 
 # ConformalPrediction
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/stable/)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/dev/)
-[![Build Status](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Coverage](https://codecov.io/gh/pat-alt/ConformalPrediction.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/pat-alt/ConformalPrediction.jl)
-[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
-[![ColPrac: Contributor’s Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet.png)](https://github.com/SciML/ColPrac)
-[![Twitter Badge](https://img.shields.io/twitter/url/https/twitter.com/paltmey.svg?style=social&label=Follow%20%40paltmey)](https://twitter.com/paltmey)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/stable/) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/dev/) [![Build Status](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml?query=branch%3Amain) [![Coverage](https://codecov.io/gh/pat-alt/ConformalPrediction.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/pat-alt/ConformalPrediction.jl) [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle) [![ColPrac: Contributor’s Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet.png)](https://github.com/SciML/ColPrac) [![Twitter Badge](https://img.shields.io/twitter/url/https/twitter.com/paltmey.svg?style=social&label=Follow%20%40paltmey)](https://twitter.com/paltmey)
 
 `ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) Blaom et al. (2020). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic.
 
@@ -87,50 +81,64 @@ To illustrate the intended use of the package, let’s have a quick look at a si
 
 ``` julia
 using MLJ
-X, y = MLJ.make_regression(1000, 2)
-train, test = partition(eachindex(y), 0.4, 0.4)
+
+# Inputs:
+N = 600
+xmax = 3.0
+using Distributions
+d = Uniform(-xmax, xmax)
+X = rand(d, N)
+X = reshape(X, :, 1)
+
+# Outputs:
+noise = 0.5
+fun(X) = X * sin(X)
+ε = randn(N) .* noise
+y = @.(fun(X)) + ε
+y = vec(y)
+
+# Partition:
+train, test = partition(eachindex(y), 0.4, 0.4, shuffle=true)
 ```
 
 We then import a decision tree ([`EvoTrees.jl`](https://github.com/Evovest/EvoTrees.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
 
 ``` julia
 EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
-model = EvoTreeRegressor() 
+model = EvoTreeRegressor(rounds=100) 
 ```
 
 To turn our conventional model into a conformal model, we just need to declare it as such by using `conformal_model` wrapper function. The generated conformal model instance can wrapped in data to create a *machine*. Finally, we proceed by fitting the machine on training data using the generic `fit!` method:
 
 ``` julia
 using ConformalPrediction
-conf_model = conformal_model(model)
+conf_model = conformal_model(model; method=:jackknife_plus)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 ```
 
-Predictions can then be computed using the generic `predict` method. The code below produces predictions for the first `n` samples. Each tuple contains the lower and upper bound for the prediction interval.
+Predictions can then be computed using the generic `predict` method. The code below produces predictions for the first `n` samples. Each tuple contains the lower and upper bound for the prediction interval. The chart below visualizes the results.
 
 ``` julia
-n = 10
+n = 50
+show_first = 5
 Xtest = selectrows(X, first(test,n))
 ytest = y[first(test,n)]
-predict(mach, Xtest)
+predict(mach, Xtest)[1:show_first]
 ```
 
-    ╭────────────────────────────────────────────────────────────────╮
-    │                                                                │
-    │       (1)   ([-1.0398755385842378], [1.174649631946424])       │
-    │       (2)   ([-0.8812446360021866], [1.333280534528475])       │
-    │       (3)   ([-1.0186882105711579], [1.1958369599595038])      │
-    │       (4)   ([-1.8854818442600265], [0.32904332627063515])     │
-    │       (5)   ([-1.5473925987675485], [0.6671325717631131])      │
-    │       (6)   ([-1.7896211025024724], [0.42490406802818925])     │
-    │       (7)   ([-1.9246506093872306], [0.289874561143431])       │
-    │       (8)   ([-0.9791712385383624], [1.2353539319922993])      │
-    │       (9)   ([-1.7526388729209201], [0.4618862976097414])      │
-    │      (10)   ([-0.5015897849914924], [1.7129353855391694])      │
-    │                                                                │
-    │                                                                │
-    ╰─────────────────────────────────────────────────── 10 items ───╯
+    ╭───────────────────────────────────────────────────────────╮
+    │                                                           │
+    │      (1)   (0.06643608016194015, 2.199069549950995)       │
+    │      (2)   (-0.6079302896513563, 1.546106456388848)       │
+    │      (3)   (-0.20262398640845367, 1.9259457269644886)     │
+    │      (4)   (-0.20569203722491558, 1.9427538877470787)     │
+    │      (5)   (0.34299105411307174, 2.4988991108644765)      │
+    │                                                           │
+    │                                                           │
+    ╰─────────────────────────────────────────────── 5 items ───╯
+
+![](README_files/figure-commonmark/cell-9-output-1.svg)
 
 ## 🛠 Contribute
 

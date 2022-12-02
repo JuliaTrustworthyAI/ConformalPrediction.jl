@@ -85,45 +85,64 @@ To illustrate the intended use of the package, let’s have a quick look at a si
 
 ``` julia
 using MLJ
-X, y = MLJ.make_regression(1000, 2)
-train, test = partition(eachindex(y), 0.4, 0.4)
+
+# Inputs:
+N = 600
+xmax = 3.0
+using Distributions
+d = Uniform(-xmax, xmax)
+X = rand(d, N)
+X = reshape(X, :, 1)
+
+# Outputs:
+noise = 0.5
+fun(X) = X * sin(X)
+ε = randn(N) .* noise
+y = @.(fun(X)) + ε
+y = vec(y)
+
+# Partition:
+train, test = partition(eachindex(y), 0.4, 0.4, shuffle=true)
 ```
 
 We then import a decision tree ([`EvoTrees.jl`](https://github.com/Evovest/EvoTrees.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
 
 ``` julia
 EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
-model = EvoTreeRegressor() 
+model = EvoTreeRegressor(rounds=100) 
 ```
 
 To turn our conventional model into a conformal model, we just need to declare it as such by using `conformal_model` wrapper function. The generated conformal model instance can wrapped in data to create a *machine*. Finally, we proceed by fitting the machine on training data using the generic `fit!` method:
 
 ``` julia
 using ConformalPrediction
-conf_model = conformal_model(model)
+conf_model = conformal_model(model; method=:jackknife_plus)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 ```
 
-Predictions can then be computed using the generic `predict` method. The code below produces predictions for the first `n` samples. Each tuple contains the lower and upper bound for the prediction interval.
+Predictions can then be computed using the generic `predict` method. The code below produces predictions for the first `n` samples. Each tuple contains the lower and upper bound for the prediction interval. The chart below visualizes the results.
 
 ``` julia
-n = 5
+n = 50
+show_first = 5
 Xtest = selectrows(X, first(test,n))
 ytest = y[first(test,n)]
-predict(mach, Xtest)
+predict(mach, Xtest)[1:show_first]
 ```
 
-    ╭─────────────────────────────────────────────────────────╮
-    │                                                         │
-    │      (1)   (1.2801183281465092, 2.0024286641173816)     │
-    │      (2)   (0.8012756658949756, 1.5235860018658482)     │
-    │      (3)   (1.1850387604493555, 1.9073490964202282)     │
-    │      (4)   (1.1185514282818692, 1.8408617642527418)     │
-    │      (5)   (1.1651738766694149, 1.8874842126402875)     │
-    │                                                         │
-    │                                                         │
-    ╰───────────────────────────────────────────── 5 items ───╯
+    ╭────────────────────────────────────────────────────────────╮
+    │                                                            │
+    │      (1)   (-0.4309093903560088, 1.8653170568964714)       │
+    │      (2)   (-0.746029823358249, 1.546205902752017)         │
+    │      (3)   (-0.006196703340113345, 2.3501050609620244)     │
+    │      (4)   (-0.3765398641712998, 1.8744673193178676)       │
+    │      (5)   (-0.7368273164886879, 1.510311036910479)        │
+    │                                                            │
+    │                                                            │
+    ╰──────────────────────────────────────────────── 5 items ───╯
+
+![](index_files/figure-commonmark/cell-9-output-1.svg)
 
 ## 🛠 Contribute
 

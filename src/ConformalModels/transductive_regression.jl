@@ -38,7 +38,7 @@ function MMI.fit(conf_model::NaiveRegressor, verbosity, X, y)
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
     # Nonconformity Scores:
-    ŷ = MMI.predict(conf_model.model, fitresult, Xtrain)
+    ŷ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, Xtrain))
     conf_model.scores = @.(conf_model.heuristic(ytrain, ŷ))
 
     return (fitresult, cache, report)
@@ -58,7 +58,7 @@ For the [`NaiveRegressor`](@ref) prediction intervals are computed as follows:
 The naive approach typically produces prediction regions that undercover due to overfitting.
 """
 function MMI.predict(conf_model::NaiveRegressor, fitresult, Xnew)
-    ŷ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
+    ŷ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...))
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
@@ -111,7 +111,7 @@ function MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
         yᵢ = y[t]
         Xᵢ = selectrows(X, t)
         μ̂₋ᵢ, = MMI.fit(conf_model.model, 0, MMI.reformat(conf_model.model, X₋ᵢ, y₋ᵢ)...)
-        ŷᵢ = MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xᵢ)...)
+        ŷᵢ = reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xᵢ)...))
         push!(scores,@.(conf_model.heuristic(yᵢ, ŷᵢ))...)
     end
     conf_model.scores = scores
@@ -132,7 +132,7 @@ For the [`JackknifeRegressor`](@ref) prediction intervals are computed as follow
 where ``S_i^{\text{LOO}}`` denotes the nonconformity that is generated as explained in [`fit(conf_model::JackknifeRegressor, verbosity, X, y)`](@ref). The jackknife procedure addresses the overfitting issue associated with the [`NaiveRegressor`](@ref).
 """
 function MMI.predict(conf_model::JackknifeRegressor, fitresult, Xnew)
-    ŷ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
+    ŷ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...))
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
@@ -175,7 +175,7 @@ function MMI.fit(conf_model::JackknifePlusRegressor, verbosity, X, y)
     for t in 1:T
         loo_ids = 1:T .!= t
         y₋ᵢ = y[loo_ids]                
-        X₋ᵢ = MLJ.matrix(X)[loo_ids,:]
+        X₋ᵢ = selectrows(X, loo_ids)
         yᵢ = y[t]
         Xᵢ = selectrows(X, t)
         # Store LOO fitresult:
@@ -184,7 +184,7 @@ function MMI.fit(conf_model::JackknifePlusRegressor, verbosity, X, y)
         push!(cache, cache₋ᵢ)
         push!(report, report₋ᵢ)
         # Store LOO score:
-        ŷᵢ = MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xᵢ)...)
+        ŷᵢ = reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xᵢ)...))
         push!(scores,@.(conf_model.heuristic(yᵢ, ŷᵢ))...)
     end
     conf_model.scores = scores
@@ -206,7 +206,7 @@ where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th po
 """
 function MMI.predict(conf_model::JackknifePlusRegressor, fitresult, Xnew)
     # Get all LOO predictions for each Xnew:
-    ŷ = [MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...) for μ̂₋ᵢ in fitresult] 
+    ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)) for μ̂₋ᵢ in fitresult] 
     # All LOO predictions across columns for each Xnew across rows:
     ŷ = reduce(hcat, ŷ)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
@@ -254,7 +254,7 @@ function MMI.fit(conf_model::JackknifeMinMaxRegressor, verbosity, X, y)
     for t in 1:T
         loo_ids = 1:T .!= t
         y₋ᵢ = y[loo_ids]                
-        X₋ᵢ = MLJ.matrix(X)[loo_ids,:]
+        X₋ᵢ = selectrows(X, loo_ids)
         yᵢ = y[t]
         Xᵢ = selectrows(X, t)
         # Store LOO fitresult:
@@ -263,7 +263,7 @@ function MMI.fit(conf_model::JackknifeMinMaxRegressor, verbosity, X, y)
         push!(cache, cache₋ᵢ)
         push!(report, report₋ᵢ)
         # Store LOO score:
-        ŷᵢ = MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xᵢ)...)
+        ŷᵢ = reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xᵢ)...))
         push!(scores,@.(conf_model.heuristic(yᵢ, ŷᵢ))...)
     end
     conf_model.scores = scores
@@ -285,7 +285,7 @@ where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th po
 """
 function MMI.predict(conf_model::JackknifeMinMaxRegressor, fitresult, Xnew)
     # Get all LOO predictions for each Xnew:
-    ŷ = [MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...) for μ̂₋ᵢ in fitresult] 
+    ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)) for μ̂₋ᵢ in fitresult] 
     # All LOO predictions across columns for each Xnew across rows:
     ŷ = reduce(hcat, ŷ)
     # Get all LOO residuals:
@@ -353,7 +353,7 @@ function MMI.fit(conf_model::CVPlusRegressor, verbosity, X, y)
         push!(cache, cacheᵢ)
         push!(report, reportᵢ)
         # Store LOO score:
-        ŷᵢ = MMI.predict(conf_model.model, μ̂ᵢ, MMI.reformat(conf_model.model, Xᵢ)...)
+        ŷᵢ = reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂ᵢ, MMI.reformat(conf_model.model, Xᵢ)...))
         push!(scores,@.(conf_model.heuristic(yᵢ, ŷᵢ))...)
     end
     conf_model.scores = scores
@@ -377,7 +377,7 @@ The [`JackknifePlusRegressor`](@ref) is a special case of the [`CVPlusRegressor`
 """
 function MMI.predict(conf_model::CVPlusRegressor, fitresult, Xnew)
     # Get all LOO predictions for each Xnew:
-    ŷ = [MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...) for μ̂₋ᵢ in fitresult] 
+    ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)) for μ̂₋ᵢ in fitresult] 
     # All LOO predictions across columns for each Xnew across rows:
     ŷ = reduce(hcat, ŷ)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
@@ -426,7 +426,7 @@ function MMI.fit(conf_model::CVMinMaxRegressor, verbosity, X, y)
     cv_indices = MLJBase.train_test_pairs(conf_model.cv, 1:T)
     cv_fitted = map(cv_indices) do (train, test)
         ytrain = y[train]                
-        Xtrain = MLJ.matrix(X)[train,:]
+        Xtrain = selectrows(X, train)
         μ̂ₖ, cache, report = MMI.fit(conf_model.model, 0, MMI.reformat(conf_model.model, Xtrain, ytrain)...)
         Dict(:fitresult => μ̂ₖ, :test => test, :cache => cache, :report => report)
     end
@@ -447,7 +447,7 @@ function MMI.fit(conf_model::CVMinMaxRegressor, verbosity, X, y)
         push!(cache, cacheᵢ)
         push!(report, reportᵢ)
         # Store LOO score:
-        ŷᵢ = MMI.predict(conf_model.model, μ̂ᵢ, MMI.reformat(conf_model.model, Xᵢ)...)
+        ŷᵢ = reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂ᵢ, MMI.reformat(conf_model.model, Xᵢ)...))
         push!(scores,@.(conf_model.heuristic(yᵢ, ŷᵢ))...)
     end
     conf_model.scores = scores
@@ -470,7 +470,7 @@ where ``\hat\mu_{-\mathcal{D}_{k(i)}}`` denotes the model fitted on training dat
 """
 function MMI.predict(conf_model::CVMinMaxRegressor, fitresult, Xnew)
     # Get all LOO predictions for each Xnew:
-    ŷ = [MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...) for μ̂₋ᵢ in fitresult] 
+    ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)) for μ̂₋ᵢ in fitresult] 
     # All LOO predictions across columns for each Xnew across rows:
     ŷ = reduce(hcat, ŷ)
     # Get all LOO residuals:

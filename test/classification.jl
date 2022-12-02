@@ -37,6 +37,7 @@ conformal_models = merge(values(available_models[:classification])...)
 
                     # Plot
                     plot(mach.model, mach.fitresult, X, y)
+                    plot(mach.model, mach.fitresult, X, y; zoom=-1, plot_set_size=true)
 
                 end
 
