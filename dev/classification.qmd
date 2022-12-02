@@ -22,7 +22,6 @@ We consider a simple binary classification problem. Let $(X_i, Y_i), \ i=1,...,n
 ```{julia}
 using MLJ
 using Random
-Random.seed!(123)
 
 # Data:
 X, y = make_moons(500; noise=0.15)
@@ -59,9 +58,10 @@ mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 
 # Conformal Prediction:
-Xtest = selectrows(X, first(test))
-ytest = y[first(test)]
-predict(mach, Xtest)[1]
+Xtest = selectrows(X, test)
+ytest = y[test]
+ŷ = predict(mach, Xtest)
+ŷ[1]
 ```
 
 The final predictions are set-valued. While the softmax output remains unchanged for the `SimpleInductiveClassifier`, the size of the prediction set depends on the chosen coverage rate, $(1-\alpha)$. 
@@ -120,6 +120,17 @@ fit!(mach, rows=train)
 Markdown.parse("""
 The following chart shows the resulting predicted probabilities for ``y=1`` (left) and set size (right) for a choice of ``(1-\\alpha)``=$cov_.
 """)
+```
+
+We can evaluate the conformal model using the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) workflow with a custom performance measure `emp_coverage`:
+
+```{julia}
+#| output: true
+
+_eval = evaluate!(mach; measure=emp_coverage, verbosity=0)
+@info "Empirical coverage:"
+println("Aggregate: $(round(_eval.measurement[1], digits=3))")
+println("Per fold: $(_eval.per_fold[1])")
 ```
 
 ```{julia}
