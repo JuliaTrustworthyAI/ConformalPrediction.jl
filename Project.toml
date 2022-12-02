@@ -16,6 +16,7 @@ CategoricalArrays = "0.10"
 MLJ = "0.18, 0.19"
 MLJBase = "0.20, 0.21"
 MLJModelInterface = "1"
+Plots = "1"
 julia = "1.7"
 
 [extras]
