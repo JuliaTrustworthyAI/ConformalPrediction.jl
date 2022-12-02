@@ -57,10 +57,11 @@ using ConformalPrediction
 keys(tested_atomic_models[:regression])
 ```
 
-    KeySet for a Dict{Symbol, Expr} with 4 entries. Keys:
+    KeySet for a Dict{Symbol, Expr} with 5 entries. Keys:
       :nearest_neighbor
       :evo_tree
       :light_gbm
+      :linear
       :decision_tree
 
 **Classification**:
@@ -69,11 +70,12 @@ keys(tested_atomic_models[:regression])
 keys(tested_atomic_models[:classification])
 ```
 
-    KeySet for a Dict{Symbol, Expr} with 4 entries. Keys:
+    KeySet for a Dict{Symbol, Expr} with 5 entries. Keys:
       :nearest_neighbor
       :evo_tree
       :light_gbm
       :decision_tree
+      :logistic
 
 ## 🔍 Usage Example
 
@@ -120,25 +122,36 @@ fit!(mach, rows=train)
 Predictions can then be computed using the generic `predict` method. The code below produces predictions for the first `n` samples. Each tuple contains the lower and upper bound for the prediction interval. The chart below visualizes the results.
 
 ``` julia
-n = 50
 show_first = 5
-Xtest = selectrows(X, first(test,n))
-ytest = y[first(test,n)]
-predict(mach, Xtest)[1:show_first]
+Xtest = selectrows(X, test)
+ytest = y[test]
+ŷ = predict(mach, Xtest)
+ŷ[1:show_first]
 ```
 
-    ╭───────────────────────────────────────────────────────────╮
-    │                                                           │
-    │      (1)   (0.06643608016194015, 2.199069549950995)       │
-    │      (2)   (-0.6079302896513563, 1.546106456388848)       │
-    │      (3)   (-0.20262398640845367, 1.9259457269644886)     │
-    │      (4)   (-0.20569203722491558, 1.9427538877470787)     │
-    │      (5)   (0.34299105411307174, 2.4988991108644765)      │
-    │                                                           │
-    │                                                           │
-    ╰─────────────────────────────────────────────── 5 items ───╯
+    ╭──────────────────────────────────────────────────────────╮
+    │                                                          │
+    │      (1)   (0.3558060231683146, 2.5255520092155503)      │
+    │      (2)   (-0.6338099447321348, 1.5962854649942955)     │
+    │      (3)   (0.3574132445332896, 2.5123855503735695)      │
+    │      (4)   (0.17338132080753402, 2.4041549803073066)     │
+    │      (5)   (-0.284312701902185, 1.946104586090851)       │
+    │                                                          │
+    │                                                          │
+    ╰────────────────────────────────────────────── 5 items ───╯
 
 ![](README_files/figure-commonmark/cell-9-output-1.svg)
+
+We can evaluate the conformal model using the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) workflow with a custom performance measure (either `emp_coverage` for the overall empirical coverage or `ssc` for the size-stratified coverage rate).
+
+``` julia
+_eval = evaluate!(mach; measure=[emp_coverage, ssc], verbosity=0)
+println("Empirical coverage: $(round(_eval.measurement[1], digits=3))")
+println("SSC: $(round(_eval.measurement[2], digits=3))")
+```
+
+    Empirical coverage: 0.953
+    SSC: 0.844
 
 ## 🛠 Contribute
 

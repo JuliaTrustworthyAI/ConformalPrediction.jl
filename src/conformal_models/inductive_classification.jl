@@ -38,7 +38,7 @@ function MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
     # Nonconformity Scores:
-    ŷ = pdf.(MMI.predict(conf_model.model, fitresult, Xcal), ycal)
+    ŷ = pdf.(reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, Xcal)), ycal)
     conf_model.scores = @.(conf_model.heuristic(ycal, ŷ))
 
     return (fitresult, cache, report)
@@ -56,7 +56,7 @@ For the [`SimpleInductiveClassifier`](@ref) prediction sets are computed as foll
 where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
 """
 function MMI.predict(conf_model::SimpleInductiveClassifier, fitresult, Xnew)
-    p̂ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
+    p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...))
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
     p̂ = map(p̂) do pp
@@ -111,7 +111,7 @@ function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
     # Nonconformity Scores:
-    p̂ = MMI.predict(conf_model.model, fitresult, Xcal)
+    p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, Xcal))
     L = p̂.decoder.classes
     ŷ = pdf(p̂, L)                                           # compute probabilities for all classes
     scores = map(eachrow(ŷ),eachrow(ycal)) do ŷᵢ, ycalᵢ
@@ -137,7 +137,7 @@ For the [`AdaptiveInductiveClassifier`](@ref) prediction sets are computed as fo
 where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
 """
 function MMI.predict(conf_model::AdaptiveInductiveClassifier, fitresult, Xnew)
-    p̂ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
+    p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...))
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
     p̂ = map(p̂) do pp

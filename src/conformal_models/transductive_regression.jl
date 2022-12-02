@@ -332,7 +332,7 @@ function MMI.fit(conf_model::CVPlusRegressor, verbosity, X, y)
     cv_indices = MLJBase.train_test_pairs(conf_model.cv, 1:T)
     cv_fitted = map(cv_indices) do (train, test)
         ytrain = y[train]                
-        Xtrain = MLJ.matrix(X)[train,:]
+        Xtrain = selectrows(X, train)
         μ̂ₖ, cache, report = MMI.fit(conf_model.model, 0, MMI.reformat(conf_model.model, Xtrain, ytrain)...)
         Dict(:fitresult => μ̂ₖ, :test => test, :cache => cache, :report => report)
     end

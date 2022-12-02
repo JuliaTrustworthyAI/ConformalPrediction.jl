@@ -113,11 +113,11 @@ Predictions can then be computed using the generic `predict` method. The code be
 
 ```{julia}
 #| output: true
-n = 50
 show_first = 5
-Xtest = selectrows(X, first(test,n))
-ytest = y[first(test,n)]
-predict(mach, Xtest)[1:show_first]
+Xtest = selectrows(X, test)
+ytest = y[test]
+ŷ = predict(mach, Xtest)
+ŷ[1:show_first]
 ```
 
 ```{julia}
@@ -130,6 +130,17 @@ plt = plot(mach.model, mach.fitresult, Xtest, ytest, zoom=zoom, observed_lab="Te
 xrange = range(-xmax+zoom,xmax-zoom,length=N)
 plot!(plt, xrange, @.(fun(xrange)), lw=1, ls=:dash, colour=:black, label="Ground truth")
 ```
+
+We can evaluate the conformal model using the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) workflow with a custom performance measure (either `emp_coverage` for the overall empirical coverage or `ssc` for the size-stratified coverage rate).
+
+```{julia}
+#| output: true
+
+_eval = evaluate!(mach; measure=[emp_coverage, ssc], verbosity=0)
+println("Empirical coverage: $(round(_eval.measurement[1], digits=3))")
+println("SSC: $(round(_eval.measurement[2], digits=3))")
+```
+
 
 
 ## 🛠 Contribute 
