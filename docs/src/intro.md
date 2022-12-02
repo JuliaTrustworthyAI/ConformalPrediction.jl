@@ -89,6 +89,11 @@ predict(mach, Xtest)
     │                                                                 │
     ╰──────────────────────────────────────────────────── 10 items ───╯
 
+Here is the plot visualizes the above result, shaded area indicates prediction intervals.
+
+![](./contribute_files/figure-commonmark/example_plot.png)
+
+
 ## Contribute 🛠
 
 Contributions are welcome! Please follow the [SciML ColPrac guide](https://github.com/SciML/ColPrac).
