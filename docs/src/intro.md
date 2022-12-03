@@ -53,10 +53,11 @@ using ConformalPrediction
 keys(tested_atomic_models[:regression])
 ```
 
-    KeySet for a Dict{Symbol, Expr} with 4 entries. Keys:
+    KeySet for a Dict{Symbol, Expr} with 5 entries. Keys:
       :nearest_neighbor
       :evo_tree
       :light_gbm
+      :linear
       :decision_tree
 
 **Classification**:
@@ -65,11 +66,12 @@ keys(tested_atomic_models[:regression])
 keys(tested_atomic_models[:classification])
 ```
 
-    KeySet for a Dict{Symbol, Expr} with 4 entries. Keys:
+    KeySet for a Dict{Symbol, Expr} with 5 entries. Keys:
       :nearest_neighbor
       :evo_tree
       :light_gbm
       :decision_tree
+      :logistic
 
 ## 🔍 Usage Example
 
@@ -77,45 +79,75 @@ To illustrate the intended use of the package, let’s have a quick look at a si
 
 ``` julia
 using MLJ
-X, y = MLJ.make_regression(1000, 2)
-train, test = partition(eachindex(y), 0.4, 0.4)
+
+# Inputs:
+N = 600
+xmax = 3.0
+using Distributions
+d = Uniform(-xmax, xmax)
+X = rand(d, N)
+X = reshape(X, :, 1)
+
+# Outputs:
+noise = 0.5
+fun(X) = X * sin(X)
+ε = randn(N) .* noise
+y = @.(fun(X)) + ε
+y = vec(y)
+
+# Partition:
+train, test = partition(eachindex(y), 0.4, 0.4, shuffle=true)
 ```
 
 We then import a decision tree ([`EvoTrees.jl`](https://github.com/Evovest/EvoTrees.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
 
 ``` julia
 EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
-model = EvoTreeRegressor() 
+model = EvoTreeRegressor(rounds=100) 
 ```
 
 To turn our conventional model into a conformal model, we just need to declare it as such by using `conformal_model` wrapper function. The generated conformal model instance can wrapped in data to create a *machine*. Finally, we proceed by fitting the machine on training data using the generic `fit!` method:
 
 ``` julia
 using ConformalPrediction
-conf_model = conformal_model(model)
+conf_model = conformal_model(model; method=:jackknife_plus)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 ```
 
-Predictions can then be computed using the generic `predict` method. The code below produces predictions for the first `n` samples. Each tuple contains the lower and upper bound for the prediction interval.
+Predictions can then be computed using the generic `predict` method. The code below produces predictions for the first `n` samples. Each tuple contains the lower and upper bound for the prediction interval. The chart below visualizes the results.
 
 ``` julia
-n = 5
-Xtest = selectrows(X, first(test,n))
-ytest = y[first(test,n)]
-predict(mach, Xtest)
+show_first = 5
+Xtest = selectrows(X, test)
+ytest = y[test]
+ŷ = predict(mach, Xtest)
+ŷ[1:show_first]
 ```
 
-    ╭──────────────────────────────────────────────────────────╮
-    │                                                          │
-    │      (1)   (-0.9864061984981062, 2.2503222170961554)     │
-    │      (2)   (-0.7192196826151477, 2.5175087329791137)     │
-    │      (3)   (-0.33838267507136344, 2.898345740522898)     │
-    │      (4)   (-2.838413186252051, 0.39831522934221053)     │
-    │      (5)   (-0.7192196826151477, 2.5175087329791137)     │
-    │                                                          │
-    │                                                          │
-    ╰────────────────────────────────────────────── 5 items ───╯
+    ╭───────────────────────────────────────────────────────────╮
+    │                                                           │
+    │      (1)   (-0.3384571953732175, 1.7151149666103997)      │
+    │      (2)   (0.4551176557788876, 2.490739509385918)        │
+    │      (3)   (0.3502152856504755, 2.403651625606496)        │
+    │      (4)   (0.089929381362391, 2.130259349265593)         │
+    │      (5)   (-0.18131311753243126, 1.8734633759514197)     │
+    │                                                           │
+    │                                                           │
+    ╰─────────────────────────────────────────────── 5 items ───╯
+
+![](intro_files/figure-commonmark/cell-9-output-1.svg)
+
+We can evaluate the conformal model using the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) workflow with a custom performance measure (either `emp_coverage` for the overall empirical coverage or `ssc` for the size-stratified coverage rate).
+
+``` julia
+_eval = evaluate!(mach; measure=[emp_coverage, ssc], verbosity=0)
+println("Empirical coverage: $(round(_eval.measurement[1], digits=3))")
+println("SSC: $(round(_eval.measurement[2], digits=3))")
+```
+
+    Empirical coverage: 0.947
+    SSC: 0.784
 
 ## 🛠 Contribute
 

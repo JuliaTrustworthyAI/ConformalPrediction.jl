@@ -32,11 +32,19 @@ makedocs(;
     ),
     pages=[
         "🏠 Home" => "index.md",
-        "🤔 Tutorials" => [
-            "Classification" => "classification.md",
-            "Regression" => "regression.md",
+        "🫣 Tutorials" => [
+            "Overview" => "tutorials/index.md",
+            "Classification" => "tutorials/classification.md",
+            "Regression" => "tutorials/regression.md",
         ],
-        "📖 Reference" => "reference.md",
+        "🫡 How-To Guides" => [
+            "Overview" => "how_to_guides/index.md",
+        ],
+        "🤓 Explanation" => [
+            "Overview" => "explanation/index.md",
+            "Package Architecture" => "explanation/architecture.md",
+        ],
+        "🧐 Reference" => "reference.md",
         "🛠 Contribute" => "contribute.md",
     ],
 )

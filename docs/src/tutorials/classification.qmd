@@ -22,6 +22,7 @@ We consider a simple binary classification problem. Let $(X_i, Y_i), \ i=1,...,n
 ```{julia}
 using MLJ
 using Random
+Random.seed!(123)
 
 # Data:
 X, y = make_moons(500; noise=0.15)
