@@ -2,7 +2,7 @@
 CurrentModule = ConformalPrediction
 ```
 
-# How to Conformalize an Deep Learning Image Classifier in Five Minutes
+# How to Conformalize an Deep Learning Image Classifier in Four Lines of Code
 
 ```{julia}
 #| echo: false
@@ -70,7 +70,7 @@ evaluate!(
 
 ```{julia}
 using ConformalPrediction
-conf_model = conformal_model(clf)
+conf_model = conformal_model(clf; method=:simple_inductive)
 mach = machine(conf_model, X, y)
 fit!(mach)
 ```
@@ -78,12 +78,45 @@ fit!(mach)
 ```{julia}
 #| output: true
 
-set_sizes = ConformalPrediction.set_size.(predict(mach, X))
-candidates = findall(set_sizes .> 1)
-chosen = rand(candidates)
-display(predict(mach, X[chosen])[1])
-display(X[chosen])
+using Plots
+function plot_results(mach, X, y; set_size=1, n_samples=3)
+
+    # Choose images:
+    set_sizes = ConformalPrediction.set_size.(predict(mach, X))
+    candidates = findall(set_sizes .== set_size)
+    @assert length(candidates) > 0 "No sets of size $set_size."
+    chosen = sample(candidates, n_samples, replace=false)
+
+    plt_lst = []
+    for i in chosen
+        ytrue = y[i]
+        x = X[i]
+        ŷ = predict(mach, x)[1]
+        title = join(["$(Int(key)-1) ($(round(val, digits=2)))" for (key, val) in ŷ.prob_given_ref], ", ")
+        title = "C={$title}\nytrue=$ytrue"
+        plt = plot(x, axis=false)
+        annotate!(plt, (14, 31, (title, 10-set_size)))
+        push!(plt_lst, plt)
+    end
+
+    plot(plt_lst..., size=(n_samples*200, 200), layout=(1,n_samples))
+end
 ```
+
+
+```{julia}
+plot_results(mach, X, y; set_size=1)
+```
+
+```{julia}
+plot_results(mach, X, y; set_size=2)
+```
+
+```{julia}
+plot_results(mach, X, y; set_size=3)
+```
+
+
 
 
 ```{julia}
