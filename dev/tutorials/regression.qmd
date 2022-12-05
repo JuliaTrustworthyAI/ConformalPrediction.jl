@@ -102,5 +102,3 @@ end
 
 plot(plt_list..., size=(1600,1000))
 ```
-
-
