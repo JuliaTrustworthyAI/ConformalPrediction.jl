@@ -32,11 +32,20 @@ makedocs(;
     ),
     pages=[
         "🏠 Home" => "index.md",
-        "🤔 Tutorials" => [
-            "Classification" => "classification.md",
-            "Regression" => "regression.md",
+        "🫣 Tutorials" => [
+            "Overview" => "tutorials/index.md",
+            "Classification" => "tutorials/classification.md",
+            "Regression" => "tutorials/regression.md",
         ],
-        "📖 Reference" => "reference.md",
+        "🫡 How-To Guides" => [
+            "Overview" => "how_to_guides/index.md",
+            "How to Conformalize a Deep Image Classifier" => "how_to_guides/mnist.md"
+        ],
+        "🤓 Explanation" => [
+            "Overview" => "explanation/index.md",
+            "Package Architecture" => "explanation/architecture.md",
+        ],
+        "🧐 Reference" => "_reference.md",
         "🛠 Contribute" => "contribute.md",
     ],
 )

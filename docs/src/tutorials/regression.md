@@ -27,6 +27,9 @@ noise = 0.5
 fun(X) = X * sin(X)
 ε = randn(N) .* noise
 y = @.(fun(X)) + ε
+y = vec(y)
+
+# Partition:
 using MLJ
 train, test = partition(eachindex(y), 0.4, 0.4, shuffle=true)
 
@@ -47,6 +50,13 @@ polynomial_features(X, degree::Int) = reduce(hcat, map(i -> X.^i, 1:degree))
 pipe = (X -> MLJ.table(polynomial_features(MLJ.matrix(X), degree_polynomial))) |> LinearRegressor()
 ```
 
+``` julia
+EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
+# pipe = EvoTreeRegressor(rounds=100) 
+```
+
+## Conformal Prediction
+
 Next, we conformalize our polynomial regressor using every available approach (except the Naive approach):
 
 ``` julia
@@ -57,7 +67,7 @@ delete!(conformal_models, :naive)
 results = Dict()
 for _mod in keys(conformal_models) 
     conf_model = conformal_model(pipe; method=_mod, coverage=0.95)
-    mach = machine(conf_model, X, y)
+    global mach = machine(conf_model, X, y)
     fit!(mach, rows=train)
     results[_mod] = mach
 end
@@ -67,7 +77,7 @@ Finally, let us look at the resulting conformal predictions in each case.
 
 ``` julia
 using Plots
-zoom = -3
+zoom = -0.5
 xrange = range(-xmax+zoom,xmax-zoom,length=N)
 plt_list = []
 

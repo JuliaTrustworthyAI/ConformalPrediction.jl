@@ -47,9 +47,10 @@ mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 
 # Conformal Prediction:
-Xtest = selectrows(X, first(test))
-ytest = y[first(test)]
-predict(mach, Xtest)[1]
+Xtest = selectrows(X, test)
+ytest = y[test]
+ŷ = predict(mach, Xtest)
+ŷ[1]
 ```
 
     import NearestNeighborModels ✔
@@ -104,6 +105,18 @@ The following chart shows the resulting predicted probabilities for ``y=1`` (lef
 
 The following chart shows the resulting predicted probabilities for *y* = 1 (left) and set size (right) for a choice of (1−*α*)=0.9.
 
+We can evaluate the conformal model using the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) workflow with a custom performance measure `emp_coverage`:
+
+``` julia
+_eval = evaluate!(mach; measure=emp_coverage, verbosity=0)
+@info "Empirical coverage:"
+println("Aggregate: $(round(_eval.measurement[1], digits=3))")
+println("Per fold: $(_eval.per_fold[1])")
+```
+
+    Aggregate: 0.91
+    Per fold: [0.9047619047619047, 0.9642857142857142, 0.9156626506024097, 0.8433734939759037, 0.8915662650602411, 0.9397590361445783]
+
 ``` julia
 using Plots
 p_proba = plot(mach.model, mach.fitresult, X, y)
@@ -111,7 +124,7 @@ p_set_size = plot(mach.model, mach.fitresult, X, y; plot_set_size=true)
 plot(p_proba, p_set_size, size=(800,250))
 ```
 
-![](classification_files/figure-commonmark/cell-10-output-1.svg)
+![](classification_files/figure-commonmark/cell-11-output-1.svg)
 
 The animation below should provide some more intuition as to what exactly is happening here. It illustrates the effect of the chosen coverage rate on the predicted softmax output and the set size in the two-dimensional feature space. Contours are overlayed with the moon data points (including test data). The two samples highlighted in red, *X*₁ and *X*₂, have been manually added for illustration purposes. Let’s look at these one by one.
 
@@ -154,7 +167,7 @@ gif(anim, joinpath(www_path,"classification.gif"), fps=1)
 
 The effect of the coverage rate on the conformal prediction set. Softmax probabilities are shown on the left. The size of the prediction set is shown on the right.
 
-![](www/classification.gif)
+![](../www/classification.gif)
 
 [1] In other places split conformal prediction is sometimes referred to as *inductive* conformal prediction.
 

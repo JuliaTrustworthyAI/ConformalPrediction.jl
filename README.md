@@ -3,7 +3,7 @@
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/stable/) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/dev/) [![Build Status](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml?query=branch%3Amain) [![Coverage](https://codecov.io/gh/pat-alt/ConformalPrediction.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/pat-alt/ConformalPrediction.jl) [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle) [![ColPrac: Contributor’s Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet.png)](https://github.com/SciML/ColPrac) [![Twitter Badge](https://img.shields.io/twitter/url/https/twitter.com/paltmey.svg?style=social&label=Follow%20%40paltmey)](https://twitter.com/paltmey)
 
-`ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) Blaom et al. (2020). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic.
+`ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) (Blaom et al. 2020). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic.
 
 # 📖 Background
 
@@ -31,7 +31,7 @@ Pkg.add(url="https://github.com/pat-alt/ConformalPrediction.jl")
 
 ## 🔁 Status
 
-This package is in its early stages of development and therefore still subject to changes to the core architecture and API. The following CP approaches have been implemented in the development version:
+This package is in its early stages of development and therefore still subject to changes to the core architecture and API. The following CP approaches have been implemented:
 
 **Regression**:
 
@@ -46,6 +46,7 @@ This package is in its early stages of development and therefore still subject t
 **Classification**:
 
 - Inductive (LABEL (Sadinle, Lei, and Wasserman 2019))
+- Naive Transductive
 - Adaptive Inductive
 
 The package has been tested for the following supervised models offered by [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/).
@@ -79,7 +80,7 @@ keys(tested_atomic_models[:classification])
 
 ## 🔍 Usage Example
 
-To illustrate the intended use of the package, let’s have a quick look at a simple regression problem. Using [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) we first generate some synthetic data and then determine indices for our training, calibration and test data:
+To illustrate the intended use of the package, let’s have a quick look at a simple regression problem. We first generate some synthetic data and then determine indices for our training and test data using [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/):
 
 ``` julia
 using MLJ
@@ -103,7 +104,7 @@ y = vec(y)
 train, test = partition(eachindex(y), 0.4, 0.4, shuffle=true)
 ```
 
-We then import a decision tree ([`EvoTrees.jl`](https://github.com/Evovest/EvoTrees.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
+We then import a decision-tree based regressor ([`EvoTrees.jl`](https://github.com/Evovest/EvoTrees.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
 
 ``` julia
 EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
@@ -119,7 +120,7 @@ mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 ```
 
-Predictions can then be computed using the generic `predict` method. The code below produces predictions for the first `n` samples. Each tuple contains the lower and upper bound for the prediction interval. The chart below visualizes the results.
+Predictions can then be computed using the generic `predict` method. The code below produces predictions for the first `n` samples. Each tuple contains the lower and upper bound for the prediction interval.
 
 ``` julia
 show_first = 5
@@ -131,18 +132,28 @@ ŷ[1:show_first]
 
     ╭──────────────────────────────────────────────────────────╮
     │                                                          │
-    │      (1)   (0.3558060231683146, 2.5255520092155503)      │
-    │      (2)   (-0.6338099447321348, 1.5962854649942955)     │
-    │      (3)   (0.3574132445332896, 2.5123855503735695)      │
-    │      (4)   (0.17338132080753402, 2.4041549803073066)     │
-    │      (5)   (-0.284312701902185, 1.946104586090851)       │
+    │     (1)   (0.5113539995719073, 2.7791173590180245)       │
+    │     (2)   (0.15501260477711076, 2.491986075800726)       │
+    │     (3)   (-0.32783606947941524, 1.9302674946467009)     │
+    │     (4)   (-0.13732511816023366, 2.141708832043786)      │
+    │     (5)   (0.5089900787456267, 2.7771571126470387)       │
     │                                                          │
     │                                                          │
     ╰────────────────────────────────────────────── 5 items ───╯
 
+For simple models like this one, we can call `Plots.plot` on our instance, fit result and data to generate the chart below:
+
+``` julia
+using Plots
+zoom = -0.5
+plt = plot(mach.model, mach.fitresult, Xtest, ytest, zoom=zoom, observed_lab="Test points")
+xrange = range(-xmax+zoom,xmax-zoom,length=N)
+plot!(plt, xrange, @.(fun(xrange)), lw=1, ls=:dash, colour=:black, label="Ground truth")
+```
+
 ![](README_files/figure-commonmark/cell-9-output-1.svg)
 
-We can evaluate the conformal model using the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) workflow with a custom performance measure (either `emp_coverage` for the overall empirical coverage or `ssc` for the size-stratified coverage rate).
+We can evaluate the conformal model using the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) workflow with a custom performance measure. You can use either `emp_coverage` for the overall empirical coverage (correctness) or `ssc` for the size-stratified coverage rate (adaptiveness).
 
 ``` julia
 _eval = evaluate!(mach; measure=[emp_coverage, ssc], verbosity=0)
@@ -150,15 +161,23 @@ println("Empirical coverage: $(round(_eval.measurement[1], digits=3))")
 println("SSC: $(round(_eval.measurement[2], digits=3))")
 ```
 
-    Empirical coverage: 0.953
-    SSC: 0.844
+    Empirical coverage: 0.947
+    SSC: 0.817
 
 ## 🛠 Contribute
 
-Contributions are welcome! Please follow the [SciML ColPrac guide](https://github.com/SciML/ColPrac).
+Contributions are welcome! A good place to start is the [list](https://github.com/pat-alt/ConformalPrediction.jl/issues) of outstanding issues. For more details, see also the [Contributor’s Guide](https://www.paltmeyer.com/ConformalPrediction.jl/dev/contribute/). Please follow the [SciML ColPrac guide](https://github.com/SciML/ColPrac).
+
+## 🙏 Thanks
+
+To build this package we have made heavy use of this amazing [tutorial](https://arxiv.org/abs/2107.07511) (Angelopoulos and Bates 2021) and also this research [paper](https://arxiv.org/abs/1905.02928). The Awesome Conformal Prediction [repository](https://github.com/valeman/awesome-conformal-prediction) (Manokhin, n.d.) has also been a fantastic place to get started. Special thanks also to [@aangelopoulos](https://github.com/aangelopoulos), [@valeman](https://github.com/valeman) and others for actively contributing to discussions on here.
 
 ## 🎓 References
 
+Angelopoulos, Anastasios N., and Stephen Bates. 2021. “A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification.” <https://arxiv.org/abs/2107.07511>.
+
 Blaom, Anthony D., Franz Kiraly, Thibaut Lienart, Yiannis Simillides, Diego Arenas, and Sebastian J. Vollmer. 2020. “MLJ: A Julia Package for Composable Machine Learning.” *Journal of Open Source Software* 5 (55): 2704. <https://doi.org/10.21105/joss.02704>.
+
+Manokhin, Valery. n.d. “Awesome Conformal Prediction.”
 
 Sadinle, Mauricio, Jing Lei, and Larry Wasserman. 2019. “Least Ambiguous Set-Valued Classifiers with Bounded Error Levels.” *Journal of the American Statistical Association* 114 (525): 223–34.

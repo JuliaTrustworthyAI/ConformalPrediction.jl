@@ -6,4 +6,4 @@ CurrentModule = ConformalPrediction
 
 Documentation for [ConformalPrediction.jl](https://github.com/pat-alt/ConformalPrediction.jl).
 
-{{< include intro.qmd >}}
+{{< include _intro.qmd >}}
