@@ -27,11 +27,11 @@ using Images
 X = map(x -> convert2image(MNIST, x), eachslice(Xraw, dims=3))
 y = coerce(yraw, Multiclass)
 
-n_samples = 5
+n_samples = 10
 mosaic(rand(X, n_samples)..., ncol=n_samples)
 ```
 
-![Figure 1: Random samples from the MNIST dataset.](neural_network_files/figure-commonmark/fig-samples-output-1.png)
+![Figure 1: Random samples from the MNIST dataset.](mnist_files/figure-commonmark/fig-samples-output-1.png)
 
 ## Building the Network
 
@@ -110,11 +110,11 @@ display(plot_results(mach, X, y; set_size=2))
 display(plot_results(mach, X, y; set_size=3))
 ```
 
-![Figure 2: Plot 1](neural_network_files/figure-commonmark/fig-plots-output-1.svg)
+![Figure 2: Plot 1](mnist_files/figure-commonmark/fig-plots-output-1.svg)
 
-![Figure 3: Plot 2](neural_network_files/figure-commonmark/fig-plots-output-2.svg)
+![Figure 3: Plot 2](mnist_files/figure-commonmark/fig-plots-output-2.svg)
 
-![Figure 4: Plot 3](neural_network_files/figure-commonmark/fig-plots-output-3.svg)
+![Figure 4: Plot 3](mnist_files/figure-commonmark/fig-plots-output-3.svg)
 
 Conformalised predictions from an image classifier.
 

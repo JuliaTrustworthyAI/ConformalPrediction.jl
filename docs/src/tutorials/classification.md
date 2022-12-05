@@ -115,7 +115,6 @@ println("Per fold: $(_eval.per_fold[1])")
 ```
 
     Aggregate: 0.91
-
     Per fold: [0.9047619047619047, 0.9642857142857142, 0.9156626506024097, 0.8433734939759037, 0.8915662650602411, 0.9397590361445783]
 
 ``` julia
@@ -168,7 +167,7 @@ gif(anim, joinpath(www_path,"classification.gif"), fps=1)
 
 The effect of the coverage rate on the conformal prediction set. Softmax probabilities are shown on the left. The size of the prediction set is shown on the right.
 
-![](www/classification.gif)
+![](../www/classification.gif)
 
 [1] In other places split conformal prediction is sometimes referred to as *inductive* conformal prediction.
 

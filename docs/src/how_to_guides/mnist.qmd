@@ -40,7 +40,7 @@ using Images
 X = map(x -> convert2image(MNIST, x), eachslice(Xraw, dims=3))
 y = coerce(yraw, Multiclass)
 
-n_samples = 5
+n_samples = 10
 mosaic(rand(X, n_samples)..., ncol=n_samples)
 ```
 

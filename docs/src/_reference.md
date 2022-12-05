@@ -15,7 +15,7 @@ In other words, you come here because you want to take a very close look at the 
 ## Content
 
 ```@contents
-Pages = ["reference.md"]
+Pages = ["_reference.md"]
 ```
 
 ## Index
@@ -27,8 +27,7 @@ Pages = ["reference.md"]
 
 ```@autodocs
 Modules = [
-    ConformalPrediction,
-    ConformalPrediction.ConformalModels
+    ConformalPrediction
 ]
 Private = false
 ```
@@ -37,8 +36,7 @@ Private = false
 
 ```@autodocs
 Modules = [
-    ConformalPrediction,
-    ConformalPrediction.ConformalModels
+    ConformalPrediction
 ]
 Public = false
 ```

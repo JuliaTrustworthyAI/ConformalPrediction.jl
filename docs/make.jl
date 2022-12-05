@@ -39,6 +39,7 @@ makedocs(;
         ],
         "🫡 How-To Guides" => [
             "Overview" => "how_to_guides/index.md",
+            "How to Conformalize a Deep Image Classifier" => "how_to_guides/mnist.md"
         ],
         "🤓 Explanation" => [
             "Overview" => "explanation/index.md",

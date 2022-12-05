@@ -196,4 +196,4 @@ end
 gif(anim, joinpath(www_path,"classification.gif"), fps=1)
 ```
 
-![](www/classification.gif)
+![](../www/classification.gif)

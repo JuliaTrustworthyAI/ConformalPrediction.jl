@@ -7,7 +7,7 @@ using Random
 Random.seed!(123)
 ```
 
-`ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) @blaom2020mlj. Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic. 
+`ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) [@blaom2020mlj]. Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic. 
 
 # 📖 Background
 
@@ -35,7 +35,7 @@ Pkg.add(url="https://github.com/pat-alt/ConformalPrediction.jl")
 
 ## 🔁 Status 
 
-This package is in its early stages of development and therefore still subject to changes to the core architecture and API. The following CP approaches have been implemented in the development version:
+This package is in its early stages of development and therefore still subject to changes to the core architecture and API. The following CP approaches have been implemented:
 
 **Regression**:
 
@@ -50,6 +50,7 @@ This package is in its early stages of development and therefore still subject t
 **Classification**:
 
 - Inductive (LABEL [@sadinle2019least])
+- Naive Transductive 
 - Adaptive Inductive
 
 The package has been tested for the following supervised models offered by [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/).
@@ -71,7 +72,7 @@ keys(tested_atomic_models[:classification])
 
 ## 🔍 Usage Example 
 
-To illustrate the intended use of the package, let's have a quick look at a simple regression problem. Using [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) we first generate some synthetic data and then determine indices for our training, calibration and test data:
+To illustrate the intended use of the package, let's have a quick look at a simple regression problem. We first generate some synthetic data and then determine indices for our training and test data using [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/):
 
 ```{julia}
 using MLJ
@@ -95,7 +96,7 @@ y = vec(y)
 train, test = partition(eachindex(y), 0.4, 0.4, shuffle=true)
 ```
 
-We then import a decision tree ([`EvoTrees.jl`](https://github.com/Evovest/EvoTrees.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
+We then import a decision-tree based regressor ([`EvoTrees.jl`](https://github.com/Evovest/EvoTrees.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
 
 ```{julia}
 EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
@@ -111,7 +112,7 @@ mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 ```
 
-Predictions can then be computed using the generic `predict` method. The code below produces predictions for the first `n` samples. Each tuple contains the lower and upper bound for the prediction interval. The chart below visualizes the results.
+Predictions can then be computed using the generic `predict` method. The code below produces predictions for the first `n` samples. Each tuple contains the lower and upper bound for the prediction interval. 
 
 ```{julia}
 #| output: true
@@ -122,9 +123,10 @@ ŷ = predict(mach, Xtest)
 ŷ[1:show_first]
 ```
 
+For simple models like this one, we can call `Plots.plot` on our instance, fit result and data to generate the chart below:
+
 ```{julia}
 #| output: true
-#| echo: false
 
 using Plots
 zoom = -0.5
@@ -133,7 +135,7 @@ xrange = range(-xmax+zoom,xmax-zoom,length=N)
 plot!(plt, xrange, @.(fun(xrange)), lw=1, ls=:dash, colour=:black, label="Ground truth")
 ```
 
-We can evaluate the conformal model using the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) workflow with a custom performance measure (either `emp_coverage` for the overall empirical coverage or `ssc` for the size-stratified coverage rate).
+We can evaluate the conformal model using the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) workflow with a custom performance measure. You can use either `emp_coverage` for the overall empirical coverage (correctness) or `ssc` for the size-stratified coverage rate (adaptiveness).
 
 ```{julia}
 #| output: true
@@ -143,11 +145,13 @@ println("Empirical coverage: $(round(_eval.measurement[1], digits=3))")
 println("SSC: $(round(_eval.measurement[2], digits=3))")
 ```
 
-
-
 ## 🛠 Contribute 
 
-Contributions are welcome! Please follow the [SciML ColPrac guide](https://github.com/SciML/ColPrac).
+Contributions are welcome! A good place to start is the [list](https://github.com/pat-alt/ConformalPrediction.jl/issues) of outstanding issues. For more details, see also the [Contributor's Guide](https://www.paltmeyer.com/ConformalPrediction.jl/dev/contribute/). Please follow the [SciML ColPrac guide](https://github.com/SciML/ColPrac).
+
+## 🙏 Thanks
+
+To build this package we have made heavy use of this amazing [tutorial](https://arxiv.org/abs/2107.07511) [@angelopoulos2021gentle] and also this research [paper](https://arxiv.org/abs/1905.02928). The Awesome Conformal Prediction [repository](https://github.com/valeman/awesome-conformal-prediction) [@manokhin2022awesome] has also been a fantastic place to get started. Special thanks also to [\@aangelopoulos](https://github.com/aangelopoulos), [\@valeman](https://github.com/valeman) and others for actively contributing to discussions on here. 
 
 ## 🎓 References 
 
