@@ -44,7 +44,7 @@ makedocs(;
             "Overview" => "explanation/index.md",
             "Package Architecture" => "explanation/architecture.md",
         ],
-        "🧐 Reference" => "reference.md",
+        "🧐 Reference" => "_reference.md",
         "🛠 Contribute" => "contribute.md",
     ],
 )
