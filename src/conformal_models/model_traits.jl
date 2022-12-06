@@ -9,7 +9,7 @@ struct IsTransductive <: SamplingType end
 
 # Identifying traits
 SamplingType(::Type) = IsInductive()                            # default behaviour is inductive
-SamplingType(::Type{<:TransductiveModel}) = IsTransductive()    
+SamplingType(::Type{<:TransductiveModel}) = IsTransductive()
 
 # Implementating trait behaviour
 requires_data_splitting(x::T) where {T} = requires_data_splitting(SamplingType(T), x)

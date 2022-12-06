@@ -30,7 +30,7 @@ end
 Helper function to check if `y` is contained in conformal region. Based on whether conformal predictions `ŷ` are set- or interval-valued, different checks are executed.
 """
 function is_covered(ŷ, y)
-    is_covered = map(ŷ,y) do  ŷᵢ, yᵢ
+    is_covered = map(ŷ, y) do ŷᵢ, yᵢ
 
         # Regression:
         if is_regression(ŷᵢ)
@@ -54,7 +54,7 @@ Computes the empirical coverage for conformal predictions `ŷ`.
 """
 function emp_coverage(ŷ, y)
     R = length(ŷ)
-    C̄ = 1/R * sum(is_covered(ŷ, y))
+    C̄ = 1 / R * sum(is_covered(ŷ, y))
     return C̄
 end
 
@@ -64,7 +64,7 @@ end
 Computes the size-stratisfied coverage for conformal predictions `ŷ`.
 """
 function size_stratified_coverage(ŷ, y)
-    
+
     # Setup:
     stratum_indicator = size_indicator(ŷ)
     unique_stratums = sort(unique(stratum_indicator))
@@ -75,7 +75,7 @@ function size_stratified_coverage(ŷ, y)
         _in_this_stratum = stratum_indicator .== stratum
         _mask = findall(_in_this_stratum)
         ŷ_g, y_g = (ŷ[_mask], y[_mask])
-        push!(_covs,emp_coverage(ŷ_g, y_g))
+        push!(_covs, emp_coverage(ŷ_g, y_g))
     end
 
     # Find minimum:

@@ -6,7 +6,7 @@ using Statistics
 Reformates conformal iterval predictions.
 """
 function reformat_interval(ŷ)
-    return map(y -> map(yᵢ -> ndims(yᵢ)==1 ? yᵢ[1] : yᵢ,y), ŷ)
+    return map(y -> map(yᵢ -> ndims(yᵢ) == 1 ? yᵢ[1] : yᵢ, y), ŷ)
 end
 
 """
@@ -15,7 +15,7 @@ end
 A helper function that extracts only the output (predicted values) for whatever is returned from `MMI.predict(model, fitresult, Xnew)`. This is currently used to avoid issues when calling `MMI.predict(model, fitresult, Xnew)` in pipelines.
 """
 function reformat_mlj_prediction(ŷ)
-    return isa(ŷ, Tuple) ? first(ŷ) : ŷ 
+    return isa(ŷ, Tuple) ? first(ŷ) : ŷ
 end
 
 """
@@ -52,15 +52,15 @@ function set_size(ŷ)
     return _size
 end
 
-function size_indicator(ŷ::AbstractVector; bins=10)
+function size_indicator(ŷ::AbstractVector; bins = 10)
 
     _sizes = set_size.(ŷ)
 
     # Regression:
     if typeof(set_size(ŷ[1])) != Int
         _size_min, _size_max = extrema(_sizes)
-        q = quantile(_sizes,(1/bins):(1/bins):1)
-        idx = [sum(_size .> q)+1 for _size in _sizes]
+        q = quantile(_sizes, (1/bins):(1/bins):1)
+        idx = [sum(_size .> q) + 1 for _size in _sizes]
     end
 
     # Classification:

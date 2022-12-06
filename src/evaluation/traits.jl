@@ -5,7 +5,7 @@ const EMPC = emp_coverage
 const ssc = size_stratified_coverage
 const SSC = size_stratified_coverage
 
-# Traitsa
+# Traitss
 MLJ.reports_each_observation(::typeof(empc)) = false
 MLJ.reports_each_observation(::typeof(ssc)) = false
 MLJ.orientation(::typeof(empc)) = :score
