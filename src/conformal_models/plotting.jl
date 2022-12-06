@@ -158,3 +158,19 @@ function Plots.plot(
     end
 
 end
+
+function Plots.histogram(conf_model::ConformalModel, fitresult, X; kwrgs...)
+    _sizes = round.(set_size.(predict(conf_model, fitresult, X)), digits=10)
+    Plots.histogram(_sizes; kwrgs...) 
+end
+
+function plot_set_size(conf_model::ConformalModel, fitresult, X; kwrgs...)
+    _sizes = round.(set_size.(predict(conf_model, fitresult, X)), digits=10)
+    Plots.plot(X, _sizes; kwrgs...)
+end
+
+function plot_set_size!(conf_model::ConformalModel, fitresult, X; kwrgs...)
+    _sizes = round.(set_size.(predict(conf_model, fitresult, X)), digits=10)
+    Plots.plot!(X, _sizes; kwrgs...)
+end
+

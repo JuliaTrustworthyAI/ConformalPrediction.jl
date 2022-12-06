@@ -5,7 +5,7 @@
 CurrentModule = ConformalPrediction
 ```
 
-This tutorial mostly replicates this [tutorial](https://mapie.readthedocs.io/en/latest/examples_regression/4-tutorials/plot_main-tutorial-regression.html#) from MAPIE.
+This tutorial presents and compares different approaches to Conformal Regression using a simple synthetic dataset. It is inspired by this MAPIE [tutorial](https://mapie.readthedocs.io/en/latest/examples_regression/4-tutorials/plot_main-tutorial-regression.html#).
 
 ## Data
 
@@ -16,7 +16,7 @@ We begin by generating some synthetic regression data below:
 
 # Inputs:
 N = 600
-xmax = 3.0
+xmax = 5.0
 using Distributions
 d = Uniform(-xmax, xmax)
 X = rand(d, N)
@@ -50,11 +50,6 @@ polynomial_features(X, degree::Int) = reduce(hcat, map(i -> X.^i, 1:degree))
 pipe = (X -> MLJ.table(polynomial_features(MLJ.matrix(X), degree_polynomial))) |> LinearRegressor()
 ```
 
-``` julia
-EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
-# pipe = EvoTreeRegressor(rounds=100) 
-```
-
 ## Conformal Prediction
 
 Next, we conformalize our polynomial regressor using every available approach (except the Naive approach):
@@ -62,8 +57,6 @@ Next, we conformalize our polynomial regressor using every available approach (e
 ``` julia
 using ConformalPrediction
 conformal_models = merge(values(available_models[:regression])...)
-delete!(conformal_models, :naive)
-# delete!(conformal_models, :jackknife)
 results = Dict()
 for _mod in keys(conformal_models) 
     conf_model = conformal_model(pipe; method=_mod, coverage=0.95)
@@ -73,7 +66,7 @@ for _mod in keys(conformal_models)
 end
 ```
 
-Finally, let us look at the resulting conformal predictions in each case.
+Finally, let us look at the resulting conformal predictions in each case. The chart below shows the results: for the first 4 methods it displays the training data (dots) overlaid with the conformal prediction interval (shaded area). At first glance it is hard to spot any major differences between the different approaches. Next, we will look at how we can evaluate and benchmark these predictions.
 
 ``` julia
 using Plots
@@ -81,13 +74,89 @@ zoom = -0.5
 xrange = range(-xmax+zoom,xmax-zoom,length=N)
 plt_list = []
 
-for (_mod, mach) in results
+for (_mod, mach) in first(results, n_charts)
     plt = plot(mach.model, mach.fitresult, X, y, zoom=zoom, title=_mod)
     plot!(plt, xrange, @.(fun(xrange)), lw=1, ls=:dash, colour=:black, label="Ground truth")
     push!(plt_list, plt)
 end
 
-plot(plt_list..., size=(1600,1000))
+plot(plt_list..., size=(800,500))
 ```
 
 ![Figure 1: Conformal prediction regions.](regression_files/figure-commonmark/fig-cp-output-1.svg)
+
+## Evaluation
+
+For evaluation of conformal predictors we follow Angelopoulos and Bates (2021) (Section 3). As a first step towards adaptiveness (adaptivity), the authors recommend to inspect the set size of conformal predictions. The chart below shows the interval width for the different methods along with the ground truth interval width:
+
+``` julia
+xrange = range(-xmax,xmax,length=N)
+plt = plot(xrange, ones(N) .* (1.96*2*noise), ls=:dash, colour=:black, label="Ground truth", lw=2)
+for (_mod, mach) in results
+    ŷ = predict(mach, reshape([x for x in xrange], :, 1))
+    y_size = set_size.(ŷ)
+    plot!(xrange, y_size, label=String(_mod))
+end
+plt
+```
+
+![Figure 2: Prediction interval width.](regression_files/figure-commonmark/fig-setsize-output-1.svg)
+
+We can also use specific metrics like **empirical coverage** and **size-stratified coverage** to check for correctness and adaptiveness, respectively. To this end, the package provides custom measures that are compatible with `MLJ.jl`. In other words, we can evaluate model performance in true `MLJ.jl` fashion (see [here](https://alan-turing-institute.github.io/MLJ.jl/dev/evaluating_model_performance/)).
+
+The code below runs the evaluation with respect to both metrics, `emp_coverage` and `ssc` for a single conformal machine:
+
+``` julia
+_mod, mach = first(results)
+_eval = evaluate!(
+    mach,
+    operation=predict,
+    measure=[emp_coverage, ssc]
+)
+println("Empirical coverage for $(_mod): $(round(_eval.measurement[1], digits=3))")
+println("SSC for $(_mod): $(round(_eval.measurement[2], digits=3))")
+```
+
+    Empirical coverage for jackknife_plus: 0.942
+    SSC for jackknife_plus: 0.899
+
+To benchmark the different approaches, we evaluate them iteratively below. As expected, more conservative approaches like Jackknife-min max  and CV-min max  attain higher aggregate and conditional coverage. Note that size-stratified is not available for methods that produce constant intervals, like standard Jackknife.
+
+``` julia
+using DataFrames
+bmk = DataFrame()
+for (_mod, mach) in results
+    _eval = evaluate!(
+        mach,
+        resampling=CV(;nfolds=5),
+        operation=predict,
+        measure=[emp_coverage, ssc]
+    )
+    _bmk = DataFrame(
+        Dict(
+            :model => _mod,
+            :emp_coverage => _eval.measurement[1],
+            :ssc => _eval.measurement[2]
+        )
+    )
+    bmk = vcat(bmk, _bmk)
+end
+
+show(sort(select!(bmk, [2,1,3]), 2, rev=true))
+```
+
+    7×3 DataFrame
+     Row │ model             emp_coverage  ssc        
+         │ Symbol            Float64       Float64    
+    ─────┼────────────────────────────────────────────
+       1 │ cv_minmax             0.96        0.916667
+       2 │ simple_inductive      0.953333  NaN
+       3 │ jackknife_minmax      0.946667    0.908333
+       4 │ cv_plus               0.945       0.841667
+       5 │ jackknife_plus        0.941667    0.873
+       6 │ jackknife             0.941667  NaN
+       7 │ naive                 0.938333  NaN
+
+## References
+
+Angelopoulos, Anastasios N., and Stephen Bates. 2021. “A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification.” <https://arxiv.org/abs/2107.07511>.

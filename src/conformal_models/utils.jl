@@ -52,15 +52,18 @@ function set_size(ŷ)
     return _size
 end
 
-function size_indicator(ŷ::AbstractVector; bins = 10)
+function size_indicator(ŷ::AbstractVector; bins = 5, tol=1e-10)
 
     _sizes = set_size.(ŷ)
 
     # Regression:
     if typeof(set_size(ŷ[1])) != Int
-        _size_min, _size_max = extrema(_sizes)
-        q = quantile(_sizes, (1/bins):(1/bins):1)
-        idx = [sum(_size .> q) + 1 for _size in _sizes]
+        if abs.(diff(collect(extrema(set_size.(ŷ)))))[1] < tol
+            idx = ones(length(_sizes))
+        else
+            q = quantile(_sizes, (1/bins):(1/bins):1)
+            idx = [sum(_size .> q) + 1 for _size in _sizes]
+        end
     end
 
     # Classification:
