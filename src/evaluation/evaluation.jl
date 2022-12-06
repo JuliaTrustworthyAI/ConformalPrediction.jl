@@ -1,3 +1,5 @@
+using MLJ
+
 """
     is_covered_interval(ŷ, y)
 
@@ -83,4 +85,4 @@ function size_stratified_coverage(ŷ, y)
 
 end
 
-const ssc=size_stratified_coverage
+include("traits.jl")
