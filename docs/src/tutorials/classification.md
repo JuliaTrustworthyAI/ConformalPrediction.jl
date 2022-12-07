@@ -7,7 +7,7 @@ CurrentModule = ConformalPrediction
 
 This tutorial is based in parts on this [blog post](https://www.paltmeyer.com/blog/posts/conformal-prediction/).
 
-### Split Conformal Classification
+## Split Conformal Classification
 
 We consider a simple binary classification problem. Let (*X*_(*i*),*Y*_(*i*)), *i* = 1, ..., *n* denote our feature-label pairs and let *μ* : 𝒳 ↦ 𝒴 denote the mapping from features to labels. For illustration purposes we will use the moons dataset 🌙. Using [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/v0.18/) we first generate the data and split into into a training and test set:
 
@@ -94,7 +94,7 @@ predict(mach, Xtest)[1]
     missing
 
 ``` julia
-cov_ = .9
+cov_ = .95
 conf_model = conformal_model(model; coverage=cov_)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
@@ -103,19 +103,7 @@ The following chart shows the resulting predicted probabilities for ``y=1`` (lef
 """)
 ```
 
-The following chart shows the resulting predicted probabilities for *y* = 1 (left) and set size (right) for a choice of (1−*α*)=0.9.
-
-We can evaluate the conformal model using the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) workflow with a custom performance measure `emp_coverage`:
-
-``` julia
-_eval = evaluate!(mach; measure=emp_coverage, verbosity=0)
-@info "Empirical coverage:"
-println("Aggregate: $(round(_eval.measurement[1], digits=3))")
-println("Per fold: $(_eval.per_fold[1])")
-```
-
-    Aggregate: 0.91
-    Per fold: [0.9047619047619047, 0.9642857142857142, 0.9156626506024097, 0.8433734939759037, 0.8915662650602411, 0.9397590361445783]
+The following chart shows the resulting predicted probabilities for *y* = 1 (left) and set size (right) for a choice of (1−*α*)=0.95.
 
 ``` julia
 using Plots
@@ -124,7 +112,7 @@ p_set_size = plot(mach.model, mach.fitresult, X, y; plot_set_size=true)
 plot(p_proba, p_set_size, size=(800,250))
 ```
 
-![](classification_files/figure-commonmark/cell-11-output-1.svg)
+![](classification_files/figure-commonmark/cell-10-output-1.svg)
 
 The animation below should provide some more intuition as to what exactly is happening here. It illustrates the effect of the chosen coverage rate on the predicted softmax output and the set size in the two-dimensional feature space. Contours are overlayed with the moon data points (including test data). The two samples highlighted in red, *X*₁ and *X*₂, have been manually added for illustration purposes. Let’s look at these one by one.
 
@@ -137,7 +125,7 @@ Xtest_2 = (x1=[-0.5],x2=[0.25])
 p̂_2 = pdf(predict(mach, Xtest_2)[1], 0)
 ```
 
-Well, for low coverage rates (roughly  \< 0.9) the conformal prediction set does not include *y* = 0: the set size is zero (right panel). Only for higher coverage rates do we have *C*(*X*₂) = {0}: the coverage rate is high enough to include *y* = 0, but the corresponding softmax probability is still fairly low. For example, for (1−*α*) = 0.9 we have *p̂*(*y*=0|*X*₂) = 0.72.
+Well, for low coverage rates (roughly  \< 0.9) the conformal prediction set does not include *y* = 0: the set size is zero (right panel). Only for higher coverage rates do we have *C*(*X*₂) = {0}: the coverage rate is high enough to include *y* = 0, but the corresponding softmax probability is still fairly low. For example, for (1−*α*) = 0.95 we have *p̂*(*y*=0|*X*₂) = 0.72.
 
 These two examples illustrate an interesting point: for regions characterized by high predictive uncertainty, conformal prediction sets are typically empty (for low coverage) or large (for high coverage). While set-valued predictions may be something to get used to, this notion is overall intuitive.
 
@@ -168,6 +156,54 @@ gif(anim, joinpath(www_path,"classification.gif"), fps=1)
 The effect of the coverage rate on the conformal prediction set. Softmax probabilities are shown on the left. The size of the prediction set is shown on the right.
 
 ![](../www/classification.gif)
+
+## Adaptive Sets
+
+Instead of using the simple approach, we can use adaptive prediction sets (Angelopoulos and Bates 2021):
+
+``` julia
+conf_model = conformal_model(model; coverage=cov_, method=:adaptive_inductive)
+mach = machine(conf_model, X, y)
+fit!(mach, rows=train)
+results[:adaptive_inductive] = mach
+```
+
+## Evaluation
+
+For evaluation of conformal predictors we follow Angelopoulos and Bates (2021) (Section 3). As a first step towards adaptiveness (adaptivity), the authors recommend to inspect the set size of conformal predictions. The chart below shows the interval width for the different methods along with the ground truth interval width:
+
+``` julia
+plt_list = []
+for (_mod, mach) in results
+    push!(plt_list, bar(mach.model, mach.fitresult, X; title=String(_mod)))
+end
+plot(plt_list..., size=(800,300))
+```
+
+![Figure 1: Prediction interval width.](classification_files/figure-commonmark/fig-setsize-output-1.svg)
+
+We can also use specific metrics like **empirical coverage** and **size-stratified coverage** to check for correctness and adaptiveness, respectively. To this end, the package provides custom measures that are compatible with `MLJ.jl`. In other words, we can evaluate model performance in true `MLJ.jl` fashion (see [here](https://alan-turing-institute.github.io/MLJ.jl/dev/evaluating_model_performance/)).
+
+The code below runs the evaluation with respect to both metrics, `emp_coverage` and `ssc` for a single conformal machine:
+
+``` julia
+_mod, mach = first(results)
+_eval = evaluate!(
+    mach,
+    operation=predict,
+    measure=[emp_coverage, ssc]
+)
+# display(_eval)
+println("Empirical coverage for $(_mod): $(round(_eval.measurement[1], digits=3))")
+println("SSC for $(_mod): $(round(_eval.measurement[2], digits=3))")
+```
+
+    Empirical coverage for adaptive_inductive: 1.0
+    SSC for adaptive_inductive: 1.0
+
+## References
+
+Angelopoulos, Anastasios N., and Stephen Bates. 2021. “A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification.” <https://arxiv.org/abs/2107.07511>.
 
 [1] In other places split conformal prediction is sometimes referred to as *inductive* conformal prediction.
 

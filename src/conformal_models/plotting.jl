@@ -1,4 +1,5 @@
 using CategoricalArrays
+using NaturalSort
 using Plots
 
 function Plots.plot(
@@ -158,18 +159,18 @@ function Plots.plot(
 
 end
 
-function Plots.histogram(conf_model::ConformalModel, fitresult, X; kwrgs...)
-    _sizes = round.(set_size.(predict(conf_model, fitresult, X)), digits=10)
-    Plots.histogram(_sizes; kwrgs...) 
+"""
+    Plots.bar(conf_model::ConformalModel, fitresult, X; label="", xtickfontsize=6, kwrgs...)
+
+Plots the count of set sizes for a conformal predictor.
+"""
+function Plots.bar(conf_model::ConformalModel, fitresult, X; label="", xtickfontsize=6, kwrgs...)
+    ŷ = predict(conf_model, fitresult, X)
+    idx = size_indicator(ŷ)
+    x = sort(levels(idx), lt=natural)
+    y = [sum(idx .== _x) for _x in x]
+    Plots.bar(x, y; label=label, xtickfontsize=xtickfontsize, kwrgs...) 
 end
 
-function plot_set_size(conf_model::ConformalModel, fitresult, X; kwrgs...)
-    _sizes = round.(set_size.(predict(conf_model, fitresult, X)), digits=10)
-    Plots.plot(X, _sizes; kwrgs...)
-end
 
-function plot_set_size!(conf_model::ConformalModel, fitresult, X; kwrgs...)
-    _sizes = round.(set_size.(predict(conf_model, fitresult, X)), digits=10)
-    Plots.plot!(X, _sizes; kwrgs...)
-end
 

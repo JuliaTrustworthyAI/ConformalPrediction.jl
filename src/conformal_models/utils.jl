@@ -1,3 +1,4 @@
+using CategoricalArrays
 using Statistics
 
 """
@@ -55,20 +56,48 @@ end
 function size_indicator(ŷ::AbstractVector; bins = 5, tol=1e-10)
 
     _sizes = set_size.(ŷ)
+    unique_sizes = unique(_sizes)
 
     # Regression:
     if typeof(set_size(ŷ[1])) != Int
         if abs.(diff(collect(extrema(set_size.(ŷ)))))[1] < tol
-            idx = Int.(ones(length(_sizes)))
+            idx = categorical(ones(length(_sizes)))
         else
-            q = quantile(_sizes, (1/bins):(1/bins):1)           # get all quantiles
-            idx = [sum(_size .> q) + 1 for _size in _sizes]     # check which is the largest quantile the _size exceeds
+            bin_caps = collect(range(minimum(unique_sizes), maximum(unique_sizes), length=bins+1))[2:end]
+            idx = map(_sizes) do s
+                # Check which is the largest bin cap that _size exceeds:
+                ub = argmax(x -> s-x <= 0 ? s-x : -Inf, bin_caps)
+                if ub == minimum(bin_caps)
+                    ub = round(ub, digits=2)
+                    lb = round(minimum(_sizes), digits=2)
+                    _idx = "|C| ∈ ($lb,$ub]"
+                else
+                    ub = round(ub, digits=2)
+                    lb = round(argmin(x -> s-x > 0 ? s-x : Inf, bin_caps),digits=2)
+                    _idx = "|C| ∈ ($lb,$ub]"
+                end
+                return _idx 
+            end
+            idx = categorical(idx)          
         end
     end
 
     # Classification:
     if typeof(set_size(ŷ[1])) == Int
-        idx = _sizes
+        bin_caps = collect(1:2:(maximum(unique_sizes)+1))
+        idx = map(_sizes) do s
+            # Check which is the largest bin cap that _size exceeds:
+            ub = bin_caps[sum(s .> bin_caps) + 1]
+            if ub > maximum(_sizes)
+                ub = ub - 1
+                _idx = "|C| ∈ [$ub]"
+            else
+                lb = ub - 1
+                _idx = "|C| ∈ [$lb,$ub]"
+            end
+            return _idx
+        end
+        idx = categorical(idx)   
     end
 
     return idx

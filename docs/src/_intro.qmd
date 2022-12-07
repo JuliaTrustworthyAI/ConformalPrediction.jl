@@ -5,6 +5,7 @@ using Plots
 theme(:wong)
 using Random
 Random.seed!(123)
+using ConformalPrediction
 ```
 
 `ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) [@blaom2020mlj]. Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic. 
@@ -31,43 +32,6 @@ The development version can be installed as follows:
 ```{.julia}
 using Pkg
 Pkg.add(url="https://github.com/pat-alt/ConformalPrediction.jl")
-```
-
-## 🔁 Status 
-
-This package is in its early stages of development and therefore still subject to changes to the core architecture and API. The following CP approaches have been implemented:
-
-**Regression**:
-
-- Inductive 
-- Naive Transductive 
-- Jackknife 
-- Jackknife+ 
-- Jackknife-minmax
-- CV+
-- CV-minmax
-
-**Classification**:
-
-- Inductive (LABEL [@sadinle2019least])
-- Naive Transductive 
-- Adaptive Inductive
-
-The package has been tested for the following supervised models offered by [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/).
-
-**Regression**:
-
-```{julia}
-#| output: true
-using ConformalPrediction
-keys(tested_atomic_models[:regression])
-```
-
-**Classification**:
-
-```{julia}
-#| output: true
-keys(tested_atomic_models[:classification])
 ```
 
 ## 🔍 Usage Example 
@@ -144,6 +108,61 @@ _eval = evaluate!(mach; measure=[emp_coverage, ssc], verbosity=0)
 display(_eval)
 println("Empirical coverage: $(round(_eval.measurement[1], digits=3))")
 println("SSC: $(round(_eval.measurement[2], digits=3))")
+```
+
+## 🔁 Status 
+
+This package is in its early stages of development and therefore still subject to changes to the core architecture and API. 
+
+### Implemented Methodologies
+
+The following CP approaches have been implemented:
+
+**Regression**:
+
+- Inductive 
+- Naive Transductive 
+- Jackknife 
+- Jackknife+ 
+- Jackknife-minmax
+- CV+
+- CV-minmax
+
+**Classification**:
+
+- Inductive (LABEL [@sadinle2019least])
+- Naive Transductive 
+- Adaptive Inductive
+
+The package has been tested for the following supervised models offered by [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/).
+
+**Regression**:
+
+```{julia}
+#| output: true
+keys(tested_atomic_models[:regression])
+```
+
+**Classification**:
+
+```{julia}
+#| output: true
+keys(tested_atomic_models[:classification])
+```
+
+### Implemented Evaluation Metrics
+
+To evaluate conformal predictors we are typically interested in correctness and adaptiveness. The former can be evaluated by looking at the empirical coverage rate, while the latter can be assessed through metrics that address the conditional coverage [@angelopoulos2021gentle]. To this end, the following metrics have been implemented:
+
+- `emp_coverage` (empirical coverage)
+- `ssc` (size-stratified coverage)
+
+There is also a simple `Plots.jl` recipe that can be used to inspect the set sizes. In the regression case, the interval width is stratified into discrete bins for this purpose:
+
+```{julia}
+#| output: true
+
+bar(mach.model, mach.fitresult, X)
 ```
 
 ## 🛠 Contribute 

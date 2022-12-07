@@ -126,7 +126,7 @@ end
 plt
 ```
 
-We can also use specific metrics like **empirical coverage** and **size-stratified coverage** to check for correctness and adaptiveness, respectively. To this end, the package provides custom measures that are compatible with `MLJ.jl`. In other words, we can evaluate model performance in true `MLJ.jl` fashion (see [here](https://alan-turing-institute.github.io/MLJ.jl/dev/evaluating_model_performance/)). 
+We can also use specific metrics like **empirical coverage** and **size-stratified coverage** to check for correctness and adaptiveness, respectively [@angelopoulus2021gentle]. To this end, the package provides custom measures that are compatible with `MLJ.jl`. In other words, we can evaluate model performance in true `MLJ.jl` fashion (see [here](https://alan-turing-institute.github.io/MLJ.jl/dev/evaluating_model_performance/)). 
 
 The code below runs the evaluation with respect to both metrics, `emp_coverage` and `ssc` for a single conformal machine: 
 
@@ -144,6 +144,7 @@ println("Empirical coverage for $(_mod): $(round(_eval.measurement[1], digits=3)
 println("SSC for $(_mod): $(round(_eval.measurement[2], digits=3))")
 ```
 
+Note that, in the regression case, stratified set sizes correspond to discretized interval widths. 
 
 To benchmark the different approaches, we evaluate them iteratively below. As expected, more conservative approaches like Jackknife-$\min\max$ and CV-$\min\max$ attain higher aggregate and conditional coverage. Note that size-stratified is not available for methods that produce constant intervals, like standard Jackknife.
 

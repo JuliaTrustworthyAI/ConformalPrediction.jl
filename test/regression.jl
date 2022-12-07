@@ -39,6 +39,7 @@ conformal_models = merge(values(available_models[:regression])...)
 
                     # Plot:
                     plot(mach.model, mach.fitresult, X, y)
+                    bar(mach.model, mach.fitresult, X)
 
                     # Evaluate:
                     # Evaluation takes some time, so only testing for one method.

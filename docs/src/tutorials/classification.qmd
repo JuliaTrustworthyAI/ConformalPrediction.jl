@@ -9,6 +9,8 @@ CurrentModule = ConformalPrediction
 using Pkg; Pkg.activate("docs")
 using Plots
 theme(:wong)
+using Random
+Random.seed!(2022)
 www_path = "docs/src/www"   # output path for files don't get automatically saved in auto-generated path (e.g. GIFs)
 ```
 
@@ -66,6 +68,7 @@ ŷ[1]
 ```
 
 The final predictions are set-valued. While the softmax output remains unchanged for the `SimpleInductiveClassifier`, the size of the prediction set depends on the chosen coverage rate, $(1-\alpha)$. 
+
 ```{julia}
 #| echo: false
 #| output: true
@@ -114,7 +117,7 @@ predict(mach, Xtest)[1]
 ```{julia}
 #| output: true
 
-cov_ = .9
+cov_ = .95
 conf_model = conformal_model(model; coverage=cov_)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
@@ -135,7 +138,7 @@ plot(p_proba, p_set_size, size=(800,250))
 ```{julia}
 #| echo: false
 
-results = Dict(:simple_inductive => mach) # store results
+results = Dict{Symbol,Any}(:simple_inductive => mach) # store results
 ```
 
 
@@ -195,7 +198,14 @@ gif(anim, joinpath(www_path,"classification.gif"), fps=1)
 
 ## Adaptive Sets
 
-[TBC]
+Instead of using the simple approach, we can use adaptive prediction sets [@angelopoulos2021gentle]:
+
+```{julia}
+conf_model = conformal_model(model; coverage=cov_, method=:adaptive_inductive)
+mach = machine(conf_model, X, y)
+fit!(mach, rows=train)
+results[:adaptive_inductive] = mach
+```
 
 ## Evaluation
 
@@ -208,16 +218,14 @@ For evaluation of conformal predictors we follow @angelopoulos2021gentle (Sectio
 
 plt_list = []
 for (_mod, mach) in results
-    push!(plt_list, histogram(mach.model, mach.fitresult, X; title=String(_mod)))
+    push!(plt_list, bar(mach.model, mach.fitresult, X; title=String(_mod)))
 end
-plot(plt_list...)
+plot(plt_list..., size=(800,300))
 ```
 
 We can also use specific metrics like **empirical coverage** and **size-stratified coverage** to check for correctness and adaptiveness, respectively. To this end, the package provides custom measures that are compatible with `MLJ.jl`. In other words, we can evaluate model performance in true `MLJ.jl` fashion (see [here](https://alan-turing-institute.github.io/MLJ.jl/dev/evaluating_model_performance/)). 
 
 The code below runs the evaluation with respect to both metrics, `emp_coverage` and `ssc` for a single conformal machine: 
-
-We can evaluate the conformal model using the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) workflow with a custom performance measure `emp_coverage`:
 
 ```{julia}
 #| output: true
@@ -228,7 +236,7 @@ _eval = evaluate!(
     operation=predict,
     measure=[emp_coverage, ssc]
 )
-display(_eval)
+# display(_eval)
 println("Empirical coverage for $(_mod): $(round(_eval.measurement[1], digits=3))")
 println("SSC for $(_mod): $(round(_eval.measurement[2], digits=3))")
 ```

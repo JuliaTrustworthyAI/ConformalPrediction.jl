@@ -17,9 +17,9 @@ Computes the size-stratisfied coverage for conformal predictions `ŷ`.
 function size_stratified_coverage(ŷ, y)
 
     # Setup:
-    stratum_indicator = size_indicator(ŷ)
+    stratum_indicator = size_indicator(ŷ) |> x -> x.refs
     unique_stratums = sort(unique(stratum_indicator))
-    # unique_stratums = unique_stratums[unique_stratums .!= 0]
+    unique_stratums = unique_stratums[unique_stratums .!= 0]
     _covs = []
 
     if length(unique_stratums) == 1 && is_regression(ŷ)
