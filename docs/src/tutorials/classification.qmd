@@ -15,7 +15,7 @@ www_path = "docs/src/www"   # output path for files don't get automatically save
 
 This tutorial is based in parts on this [blog post](https://www.paltmeyer.com/blog/posts/conformal-prediction/).
 
-### Split Conformal Classification {#sec-scp}
+## Split Conformal Classification {#sec-scp}
 
 We consider a simple binary classification problem. Let $(X_i, Y_i), \ i=1,...,n$ denote our feature-label pairs and let $\mu: \mathcal{X} \mapsto \mathcal{Y}$ denote the mapping from features to labels. For illustration purposes we will use the moons dataset 🌙. Using [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/v0.18/) we first generate the data and split into into a training and test set:
 
@@ -123,17 +123,6 @@ The following chart shows the resulting predicted probabilities for ``y=1`` (lef
 """)
 ```
 
-We can evaluate the conformal model using the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) workflow with a custom performance measure `emp_coverage`:
-
-```{julia}
-#| output: true
-
-_eval = evaluate!(mach; measure=emp_coverage, verbosity=0)
-@info "Empirical coverage:"
-println("Aggregate: $(round(_eval.measurement[1], digits=3))")
-println("Per fold: $(_eval.per_fold[1])")
-```
-
 ```{julia}
 #| output: true
 
@@ -141,6 +130,12 @@ using Plots
 p_proba = plot(mach.model, mach.fitresult, X, y)
 p_set_size = plot(mach.model, mach.fitresult, X, y; plot_set_size=true)
 plot(p_proba, p_set_size, size=(800,250))
+```
+
+```{julia}
+#| echo: false
+
+results = Dict(:simple_inductive => mach) # store results
 ```
 
 
@@ -197,3 +192,46 @@ gif(anim, joinpath(www_path,"classification.gif"), fps=1)
 ```
 
 ![](../www/classification.gif)
+
+## Adaptive Sets
+
+[TBC]
+
+## Evaluation
+
+For evaluation of conformal predictors we follow @angelopoulos2021gentle (Section 3). As a first step towards adaptiveness (adaptivity), the authors recommend to inspect the set size of conformal predictions. The chart below shows the interval width for the different methods along with the ground truth interval width:
+
+```{julia}
+#| output: true
+#| label: fig-setsize
+#| fig-cap: "Prediction interval width."
+
+plt_list = []
+for (_mod, mach) in results
+    push!(plt_list, histogram(mach.model, mach.fitresult, X; title=String(_mod)))
+end
+plot(plt_list...)
+```
+
+We can also use specific metrics like **empirical coverage** and **size-stratified coverage** to check for correctness and adaptiveness, respectively. To this end, the package provides custom measures that are compatible with `MLJ.jl`. In other words, we can evaluate model performance in true `MLJ.jl` fashion (see [here](https://alan-turing-institute.github.io/MLJ.jl/dev/evaluating_model_performance/)). 
+
+The code below runs the evaluation with respect to both metrics, `emp_coverage` and `ssc` for a single conformal machine: 
+
+We can evaluate the conformal model using the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) workflow with a custom performance measure `emp_coverage`:
+
+```{julia}
+#| output: true
+
+_mod, mach = first(results)
+_eval = evaluate!(
+    mach,
+    operation=predict,
+    measure=[emp_coverage, ssc]
+)
+display(_eval)
+println("Empirical coverage for $(_mod): $(round(_eval.measurement[1], digits=3))")
+println("SSC for $(_mod): $(round(_eval.measurement[2], digits=3))")
+```
+
+## References
+

@@ -107,7 +107,7 @@ To turn our conventional model into a conformal model, we just need to declare i
 
 ```{julia}
 using ConformalPrediction
-conf_model = conformal_model(model)
+conf_model = conformal_model(model; method=:jackknife_plus)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 ```
@@ -141,6 +141,7 @@ We can evaluate the conformal model using the standard [MLJ](https://alan-turing
 #| output: true
 
 _eval = evaluate!(mach; measure=[emp_coverage, ssc], verbosity=0)
+display(_eval)
 println("Empirical coverage: $(round(_eval.measurement[1], digits=3))")
 println("SSC: $(round(_eval.measurement[2], digits=3))")
 ```

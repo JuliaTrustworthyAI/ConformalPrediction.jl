@@ -113,9 +113,23 @@ _eval = evaluate!(
     operation=predict,
     measure=[emp_coverage, ssc]
 )
+display(_eval)
 println("Empirical coverage for $(_mod): $(round(_eval.measurement[1], digits=3))")
 println("SSC for $(_mod): $(round(_eval.measurement[2], digits=3))")
 ```
+
+    PerformanceEvaluation object with these fields:
+      measure, operation, measurement, per_fold,
+      per_observation, fitted_params_per_fold,
+      report_per_fold, train_test_rows
+    Extract:
+    ┌───────────────────────────────────────────────────────────┬───────────┬───────
+    │ measure                                                   │ operation │ meas ⋯
+    ├───────────────────────────────────────────────────────────┼───────────┼───────
+    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.94 ⋯
+    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.89 ⋯
+    └───────────────────────────────────────────────────────────┴───────────┴───────
+                                                                   3 columns omitted
 
     Empirical coverage for jackknife_plus: 0.942
     SSC for jackknife_plus: 0.899
@@ -146,16 +160,16 @@ show(sort(select!(bmk, [2,1,3]), 2, rev=true))
 ```
 
     7×3 DataFrame
-     Row │ model             emp_coverage  ssc        
-         │ Symbol            Float64       Float64    
-    ─────┼────────────────────────────────────────────
-       1 │ cv_minmax             0.96        0.916667
-       2 │ simple_inductive      0.953333  NaN
-       3 │ jackknife_minmax      0.946667    0.908333
-       4 │ cv_plus               0.945       0.841667
-       5 │ jackknife_plus        0.941667    0.873
-       6 │ jackknife             0.941667  NaN
-       7 │ naive                 0.938333  NaN
+     Row │ model             emp_coverage  ssc         
+         │ Symbol            Float64       Float64     
+    ─────┼─────────────────────────────────────────────
+       1 │ cv_minmax             0.96         0.916667
+       2 │ simple_inductive      0.953333  -Inf
+       3 │ jackknife_minmax      0.946667     0.908333
+       4 │ cv_plus               0.945        0.841667
+       5 │ jackknife_plus        0.941667     0.873
+       6 │ jackknife             0.941667  -Inf
+       7 │ naive                 0.938333  -Inf
 
 ## References
 

@@ -19,9 +19,10 @@ function size_stratified_coverage(ŷ, y)
     # Setup:
     stratum_indicator = size_indicator(ŷ)
     unique_stratums = sort(unique(stratum_indicator))
+    # unique_stratums = unique_stratums[unique_stratums .!= 0]
     _covs = []
 
-    if length(unique_stratums) == 1
+    if length(unique_stratums) == 1 && is_regression(ŷ)
         C̄ = -Inf
     else
         # Compute empirical coverage for each stratum:

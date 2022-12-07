@@ -139,6 +139,7 @@ _eval = evaluate!(
     operation=predict,
     measure=[emp_coverage, ssc]
 )
+display(_eval)
 println("Empirical coverage for $(_mod): $(round(_eval.measurement[1], digits=3))")
 println("SSC for $(_mod): $(round(_eval.measurement[2], digits=3))")
 ```
