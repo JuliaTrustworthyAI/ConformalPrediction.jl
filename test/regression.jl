@@ -11,7 +11,7 @@ models = tested_atomic_models[:regression]
 conformal_models = merge(values(available_models[:regression])...)
 
 # Test workflow:
-@testset "Classification" begin
+@testset "Regression" begin
 
     for (model_name, import_call) in models
 
@@ -43,14 +43,12 @@ conformal_models = merge(values(available_models[:regression])...)
                     # Evaluate:
                     # Evaluation takes some time, so only testing for one method.
                     if _method == :simple_inductive
-                        if _method == :simple_inductive
-                            # Empirical coverage:
-                            _eval = evaluate!(mach; measure = emp_coverage, verbosity = 0)
-                            Δ = _eval.measurement[1] - _cov     # over-/under-coverage
-                            @test Δ >= -0.05                    # we don't undercover too much
-                            # Size-stratified coverage:
-                            _eval = evaluate!(mach; measure = ssc, verbosity = 0)
-                        end
+                        # Empirical coverage:
+                        _eval = evaluate!(mach; measure = emp_coverage, verbosity = 0)
+                        Δ = _eval.measurement[1] - _cov     # over-/under-coverage
+                        @test Δ >= -0.05                    # we don't undercover too much
+                        # Size-stratified coverage:
+                        _eval = evaluate!(mach; measure = ssc, verbosity = 0)
                     end
 
                 end

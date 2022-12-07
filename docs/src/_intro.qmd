@@ -107,7 +107,7 @@ To turn our conventional model into a conformal model, we just need to declare i
 
 ```{julia}
 using ConformalPrediction
-conf_model = conformal_model(model; method=:jackknife_plus)
+conf_model = conformal_model(model)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 ```

@@ -59,10 +59,10 @@ function size_indicator(ŷ::AbstractVector; bins = 5, tol=1e-10)
     # Regression:
     if typeof(set_size(ŷ[1])) != Int
         if abs.(diff(collect(extrema(set_size.(ŷ)))))[1] < tol
-            idx = ones(length(_sizes))
+            idx = Int.(ones(length(_sizes)))
         else
-            q = quantile(_sizes, (1/bins):(1/bins):1)
-            idx = [sum(_size .> q) + 1 for _size in _sizes]
+            q = quantile(_sizes, (1/bins):(1/bins):1)           # get all quantiles
+            idx = [sum(_size .> q) + 1 for _size in _sizes]     # check which is the largest quantile the _size exceeds
         end
     end
 

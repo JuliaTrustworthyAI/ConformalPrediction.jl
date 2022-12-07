@@ -1,5 +1,4 @@
 using CategoricalArrays
-using MLJ
 using Plots
 
 function Plots.plot(
@@ -22,7 +21,7 @@ function Plots.plot(
     kwargs...,
 )
 
-    X = permutedims(MLJ.matrix(X))
+    X = permutedims(MMI.matrix(X))
 
     is_classifier = target_scitype(conf_model.model) <: AbstractVector{<:Finite}
     if !is_classifier
@@ -64,7 +63,7 @@ function Plots.plot(
             kwargs...,
         )
         _x = reshape([x for x in x_range], :, 1)
-        _x = MLJ.table(_x)
+        _x = MMI.table(_x)
         ŷ = predict(conf_model, fitresult, _x)
         lb, ub = eachcol(reduce(vcat, map(y -> permutedims(collect(y)), ŷ)))
         ymid = (lb .+ ub) ./ 2

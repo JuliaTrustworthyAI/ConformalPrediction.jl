@@ -1,4 +1,4 @@
-using MLJ
+using MLJBase
 import MLJModelInterface as MMI
 import MLJModelInterface: predict, fit, save, restore
 using Statistics

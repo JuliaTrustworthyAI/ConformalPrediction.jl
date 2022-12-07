@@ -1,5 +1,4 @@
-using MLJ
-using MLJBase
+using MLJBase: CV
 
 # Naive
 """
@@ -340,14 +339,14 @@ mutable struct CVPlusRegressor{Model<:Supervised} <: ConformalInterval
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
     heuristic::Function
-    cv::MLJ.CV
+    cv::MLJBase.CV
 end
 
 function CVPlusRegressor(
     model::Supervised;
     coverage::AbstractFloat = 0.95,
     heuristic::Function = f(y, ŷ) = abs(y - ŷ),
-    cv::MLJ.CV = MLJ.CV(),
+    cv::MLJBase.CV = MLJBase.CV(),
 )
     return CVPlusRegressor(model, coverage, nothing, heuristic, cv)
 end
@@ -447,14 +446,14 @@ mutable struct CVMinMaxRegressor{Model<:Supervised} <: ConformalInterval
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
     heuristic::Function
-    cv::MLJ.CV
+    cv::MLJBase.CV
 end
 
 function CVMinMaxRegressor(
     model::Supervised;
     coverage::AbstractFloat = 0.95,
     heuristic::Function = f(y, ŷ) = abs(y - ŷ),
-    cv::MLJ.CV = MLJ.CV(),
+    cv::MLJBase.CV = MLJBase.CV(),
 )
     return CVMinMaxRegressor(model, coverage, nothing, heuristic, cv)
 end

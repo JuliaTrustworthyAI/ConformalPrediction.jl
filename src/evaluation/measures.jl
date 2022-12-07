@@ -22,7 +22,7 @@ function size_stratified_coverage(ŷ, y)
     _covs = []
 
     if length(unique_stratums) == 1
-        ssc = missing
+        C̄ = -Inf
     else
         # Compute empirical coverage for each stratum:
         for stratum in unique_stratums
@@ -32,9 +32,9 @@ function size_stratified_coverage(ŷ, y)
             push!(_covs, emp_coverage(ŷ_g, y_g))
         end
         # Find minimum:
-        ssc = minimum(_covs)
+        C̄ = minimum(_covs)
     end
 
-    return ssc
+    return C̄
 
 end
