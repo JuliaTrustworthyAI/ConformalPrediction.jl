@@ -20,6 +20,8 @@ using ConformalPrediction
 
 ## Regression
 
+### Univariate Input
+
 ```{julia}
 using MLJ
 X, y = make_regression(100, 1; noise=0.3)
@@ -34,7 +36,26 @@ fit!(mach)
 ```
 
 ```{julia}
-plot(mach.model, mach.fitresult, X, y)
+plot(mach.model, mach.fitresult, X, y; input_var=1)
+```
+
+### Multivariate Input
+
+```{julia}
+using MLJ
+X, y = @load_boston
+```
+
+```{julia}
+EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
+model = EvoTreeRegressor() 
+conf_model = conformal_model(model)
+mach = machine(conf_model, X, y)
+fit!(mach)
+```
+
+```{julia}
+plot(mach.model, mach.fitresult, X, y; input_var=1)
 ```
 
 

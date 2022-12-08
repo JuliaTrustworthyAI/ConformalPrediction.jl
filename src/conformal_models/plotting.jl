@@ -162,7 +162,6 @@ function Plots.plot(
     input_var::Union{Nothing,Int,Symbol}=nothing,
     xlims::Union{Nothing,Tuple}=nothing,
     ylims::Union{Nothing,Tuple}=nothing,
-    ntest::Int=50,
     train_lab::Union{Nothing, String}=nothing,
     test_lab::Union{Nothing, String}=nothing,
     zoom::Real=-0.5,
@@ -177,8 +176,6 @@ function Plots.plot(
 
     Xraw = deepcopy(X)
     X = permutedims(MMI.matrix(X))
-    ndim, ntrain = size(X)
-    Xavg = repeat(mean(X, dims=2), ndim, ntest) # average values for all inputs
 
     # Dimensions:
     if size(X, 1) > 1
@@ -203,9 +200,6 @@ function Plots.plot(
     # Plot limits:
     xlims, ylims = generate_lims(x, y, xlims, ylims, zoom)
 
-    # Test range:
-    xrange = range(xlims[1], stop=xlims[2], length=ntest)
-
     # Plot training data:
     plt = scatter(
         vec(x),
@@ -218,14 +212,13 @@ function Plots.plot(
     )
 
     # Plot predictions:
-    xtest = reshape([x for x in xrange], 1, :)
-    Xavg[idx, :] = xtest
-    Xtest = MMI.table(permutedims(Xavg))
-    ŷ = predict(conf_model, fitresult, Xtest)
+    ŷ = predict(conf_model, fitresult, Xraw)
     lb, ub = eachcol(reduce(vcat, map(y -> permutedims(collect(y)), ŷ)))
     ymid = (lb .+ ub) ./ 2
     yerror = (ub .- lb) ./ 2
-    plot!(plt, xrange, ymid, label=test_lab, ribbon=(yerror, yerror), lw=ymid_lw; kwargs...)
+    xplot = vec(x)
+    _idx = sortperm(xplot)
+    plot!(plt, xplot[_idx], ymid[_idx], label=test_lab, ribbon=(yerror, yerror), lw=ymid_lw; kwargs...)
 
 end
 
