@@ -87,7 +87,7 @@ ŷ = predict(mach, Xtest)
 ŷ[1:show_first]
 ```
 
-For simple models like this one, we can call `Plots.plot` on our instance, fit result and data to generate the chart below:
+For simple models like this one, we can call a custom `Plots` recipe on our instance, fit result and data to generate the chart below:
 
 ```{julia}
 #| output: true

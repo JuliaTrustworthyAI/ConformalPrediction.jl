@@ -139,12 +139,12 @@ println("SSC: $(round(_eval.measurement[2], digits=3))")
     │ measure                                                   │ operation │ meas ⋯
     ├───────────────────────────────────────────────────────────┼───────────┼───────
     │ emp_coverage (generic function with 1 method)             │ predict   │ 0.95 ⋯
-    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.92 ⋯
+    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.86 ⋯
     └───────────────────────────────────────────────────────────┴───────────┴───────
                                                                    2 columns omitted
 
-    Empirical coverage: 0.95
-    SSC: 0.926
+    Empirical coverage: 0.955
+    SSC: 0.867
 
 Unsurprisingly, we can attain higher adaptivity (SSC) when using adaptive prediction sets:
 
@@ -173,12 +173,12 @@ println("SSC: $(round(_eval.measurement[2], digits=3))")
     │ measure                                                   │ operation │ meas ⋯
     ├───────────────────────────────────────────────────────────┼───────────┼───────
     │ emp_coverage (generic function with 1 method)             │ predict   │ 0.99 ⋯
-    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.95 ⋯
+    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.96 ⋯
     └───────────────────────────────────────────────────────────┴───────────┴───────
                                                                    2 columns omitted
 
-    Empirical coverage: 0.99
-    SSC: 0.95
+    Empirical coverage: 0.995
+    SSC: 0.967
 
 We can also have a look at the resulting set size for both approaches:
 
