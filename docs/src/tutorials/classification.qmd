@@ -130,9 +130,9 @@ The following chart shows the resulting predicted probabilities for ``y=1`` (lef
 #| output: true
 
 using Plots
-p_proba = plot(mach.model, mach.fitresult, X, y)
-p_set_size = plot(mach.model, mach.fitresult, X, y; plot_set_size=true)
-plot(p_proba, p_set_size, size=(800,250))
+p_proba = contourf(mach.model, mach.fitresult, X, y)
+p_set_size = contourf(mach.model, mach.fitresult, X, y; plot_set_size=true)
+contourf(p_proba, p_set_size, size=(800,250))
 ```
 
 ```{julia}
@@ -182,10 +182,10 @@ anim = @animate for coverage in coverages
     mach = machine(conf_model, X, y)
     fit!(mach, rows=train)
     # Probabilities:
-    p1 = plot(mach.model, mach.fitresult, X, y)
+    p1 = contourf(mach.model, mach.fitresult, X, y)
     scatter!(p1, Xtest.x1, Xtest.x2, ms=6, c=:red, label="X₁", shape=:cross, msw=6)
     scatter!(p1, Xtest_2.x1, Xtest_2.x2, ms=6, c=:red, label="X₂", shape=:diamond, msw=6)
-    p2 = plot(mach.model, mach.fitresult, X, y; plot_set_size=true)
+    p2 = contourf(mach.model, mach.fitresult, X, y; plot_set_size=true)
     scatter!(p2, Xtest.x1, Xtest.x2, ms=6, c=:red, label="X₁", shape=:cross, msw=6)
     scatter!(p2, Xtest_2.x1, Xtest_2.x2, ms=6, c=:red, label="X₂", shape=:diamond, msw=6)
     plot(p1, p2, plot_title="(1-α)=$(round(coverage,digits=2))", size=(800,300))

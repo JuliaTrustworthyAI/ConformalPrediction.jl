@@ -1,21 +1,13 @@
+
 # Visualization using `Plots.jl` recipes
 
-```@meta
+``` @meta
 CurrentModule = ConformalPrediction
-```
-
-```{julia}
-#| echo: false
-using Pkg; Pkg.activate("docs")
-using Plots
-theme(:wong)
-using Random
-Random.seed!(2022)
 ```
 
 This tutorial demonstrates how various custom `Plots.jl` recipes can be used to visually analyze conformal predictors. It is currently inclomplete.
 
-```{julia}
+``` julia
 using ConformalPrediction
 ```
 
@@ -25,12 +17,12 @@ using ConformalPrediction
 
 #### Univariate Input
 
-```{julia}
+``` julia
 using MLJ
 X, y = make_regression(100, 1; noise=0.3)
 ```
 
-```{julia}
+``` julia
 EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
 model = EvoTreeRegressor() 
 conf_model = conformal_model(model)
@@ -38,19 +30,19 @@ mach = machine(conf_model, X, y)
 fit!(mach)
 ```
 
-```{julia}
+``` julia
 plot(mach.model, mach.fitresult, X, y; input_var=1)
 ```
 
 #### Multivariate Input
 
-```{julia}
+``` julia
 using MLJ
 X, y = @load_boston
 schema(X)
 ```
 
-```{julia}
+``` julia
 EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
 model = EvoTreeRegressor() 
 conf_model = conformal_model(model)
@@ -58,7 +50,7 @@ mach = machine(conf_model, X, y)
 fit!(mach)
 ```
 
-```{julia}
+``` julia
 input_vars = [:Crim, :Age, :Tax]
 nvars = length(input_vars)
 plt_list = []
@@ -71,11 +63,11 @@ plot(plt_list..., layout=(1,nvars), size=(nvars*200, 200))
 
 ### Visualizing Set Size
 
-```{julia}
+``` julia
 bar(mach.model, mach.fitresult, X)
 ```
 
-```{julia}
+``` julia
 EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
 model = EvoTreeRegressor() 
 conf_model = conformal_model(model, method=:jackknife_plus)
@@ -83,33 +75,33 @@ mach = machine(conf_model, X, y)
 fit!(mach)
 ```
 
-```{julia}
+``` julia
 bar(mach.model, mach.fitresult, X)
 ```
 
 ## Classification
 
-```{julia}
-KNNClassifier = @load KNNClassifier pkg=NearestNeighborModels
-model = KNNClassifier(;K=3)
+``` julia
+EvoTreeClassifier = @load EvoTreeClassifier pkg=EvoTrees
+model = EvoTreeClassifier() 
 ```
 
 ### Visualizing Predictions
 
 #### Two-Dimensional Input
 
-```{julia}
+``` julia
 using MLJ
 X, y = make_blobs(100, 2)
 ```
 
-```{julia}
+``` julia
 conf_model = conformal_model(model)
 mach = machine(conf_model, X, y)
 fit!(mach)
 ```
 
-```{julia}
+``` julia
 p1 = contourf(mach.model, mach.fitresult, X, y)
 p2 = contourf(mach.model, mach.fitresult, X, y; plot_set_size=true)
 plot(p1, p2, size=(700,300))
@@ -117,61 +109,53 @@ plot(p1, p2, size=(700,300))
 
 #### Multivariate Input
 
-```{julia}
+``` julia
 using MLJ
-n_input = 4
-X, y = make_blobs(100, n_input)
+X, y = make_blobs(100, 4)
 ```
 
-```{julia}
+``` julia
+EvoTreeClassifier = @load EvoTreeClassifier pkg=EvoTrees
+model = EvoTreeClassifier() 
 conf_model = conformal_model(model)
 mach = machine(conf_model, X, y)
 fit!(mach)
 ```
 
-```{julia}
-plt_list = []
-for i in 1:n_input
-    plt = areaplot(mach.model, mach.fitresult, X, y; input_var=i, title="Input $i")
-    push!(plt_list, plt)
-end
-plot(plt_list..., size=(220*n_input,200), layout=(1, n_input))
-```
+\[NOT YET IMPLEMENTED\]
 
 ### Visualizing Set Size
 
+``` julia
+# Model:
+KNNClassifier = @load KNNClassifier pkg=NearestNeighborModels
+model = KNNClassifier(;K=50)
+```
 
-```{julia}
+``` julia
 X, y = make_moons(500)
 ```
 
-```{julia}
+``` julia
 conf_model = conformal_model(model)
 mach = machine(conf_model, X, y)
 fit!(mach)
 ```
 
-```{julia}
+``` julia
 p1 = contourf(mach.model, mach.fitresult, X, y; plot_set_size=true)
 p2 = bar(mach.model, mach.fitresult, X)
 plot(p1, p2, size=(700,300))
 ```
 
-```{julia}
+``` julia
 conf_model = conformal_model(model, method=:adaptive_inductive)
 mach = machine(conf_model, X, y)
 fit!(mach)
 ```
 
-```{julia}
+``` julia
 p1 = contourf(mach.model, mach.fitresult, X, y; plot_set_size=true)
 p2 = bar(mach.model, mach.fitresult, X)
 plot(p1, p2, size=(700,300))
 ```
-
-
-
-
-
-
-

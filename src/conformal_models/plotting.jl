@@ -24,7 +24,6 @@ end
 
 """
     get_names(X)
-
 Helper function to get variables names of `X`.
 """
 function get_names(X)
@@ -65,12 +64,11 @@ If `plot_set_size` is set to `true`, then the contour instead visualises the the
 ## Higher Dimensional Inputs
 
 """
-function Plots.plot(
+function Plots.contourf(
     conf_model::ConformalProbabilisticSet,
     fitresult,
     X,
     y;
-    input_vars::Union{Nothing,Tuple{Int,Int},Tuple{Symbol,Symbol}}=nothing,
     target::Union{Nothing,Real}=nothing,
     ntest=50,
     zoom=-1,
@@ -80,7 +78,22 @@ function Plots.plot(
     kwargs...
 )
 
-    # Setup and assertions:
+    # Setup:
+    X = permutedims(MMI.matrix(X))
+
+    @assert size(X, 1) == 2 "Can only create contour plot for conformal classifier with exactly two input variables."
+
+    x1 = X[1, :]
+    x2 = X[2, :]
+
+    # Plot limits:
+    xlims, ylims = generate_lims(x1, x2, xlims, ylims, zoom)
+
+    # Surface range:
+    x1range = range(xlims[1], stop=xlims[2], length=ntest)
+    x2range = range(ylims[1], stop=ylims[2], length=ntest)
+
+    # Target
     if !isnothing(target)
         @assert target in unique(y) "Specified target does not match any of the labels."
     end
@@ -95,47 +108,11 @@ function Plots.plot(
         _default_title = plot_set_size ? "Set size" : "p̂(y=$(target-1))"
     end
     title = !@isdefined(title) ? _default_title : title
-    Xraw = deepcopy(X)
-    _names = get_names(Xraw)
-    X = permutedims(MMI.matrix(X))
-    xavg = permutedims(mean(X, dims=2))
-
-    # Dimensions:
-    @assert size(X, 1) > 1 "Need at least two input features."
-    if size(X, 1) > 2
-        if isnothing(input_vars)
-            @info "More than two input features for classification with no input variables (`input_vars`) specified: defaulting to first two variables."
-            idx = [1, 2]
-        else
-            if typeof(input_var) <: Tuple{Int,Int}
-                idx = collect(input_var)
-            else
-                @assert all(map(x -> x in _names, input_vars)) "At least one of $(input_vars) is not among the variable names of `X`."
-                idx = findall(_names .== input_vars)
-            end
-        end
-        x = X[idx, :]
-    else
-        idx = [1, 2]
-        x = X
-    end
-
-    # Plot limits:
-    x1 = X[idx[1], :]
-    x2 = X[idx[2], :]
-    xlims, ylims = generate_lims(x1, x2, xlims, ylims, zoom)
-
-    # Surface range:
-    x1range = range(xlims[1], stop=xlims[2], length=ntest)
-    x2range = range(ylims[1], stop=ylims[2], length=ntest)
 
     # Predictions
     Z = []
     for x2 in x2range, x1 in x1range
-        xnew = xavg
-        xnew[1,idx[1]] = x1
-        xnew[1,idx[2]] = x2
-        p̂ = predict(conf_model, fitresult, xnew)[1]
+        p̂ = predict(conf_model, fitresult, [x1 x2])[1]
         if plot_set_size
             z = ismissing(p̂) ? 0 : sum(pdf.(p̂, p̂.decoder.classes) .> 0)
         else
@@ -146,11 +123,6 @@ function Plots.plot(
     end
     Z = reduce(hcat, Z)
     Z = Z[Int(target), :]
-
-    Z = reduce(hcat, map(p̂ -> ismissing(p̂) ? [missing for i in 1:length(levels(y))] : pdf.(p̂, levels(y)), Z))
-    Z = Z[Int(target), :]
-    x1range = x1
-    x2range = x2
 
     # Contour:
     if plot_set_size
@@ -188,6 +160,46 @@ function Plots.plot(
 end
 
 
+function Plots.areaplot(
+    conf_model::ConformalProbabilisticSet, fitresult, X, y;
+    input_var::Union{Nothing,Int,Symbol}=nothing,
+    kwargs...
+)
+
+    # Setup:
+    Xraw = deepcopy(X)
+    _names = get_names(Xraw)
+    X = permutedims(MMI.matrix(X))
+
+    # Dimensions:
+    if size(X, 1) > 1
+        if isnothing(input_var)
+            @info "Multiple inputs no input variable (`input_var`) specified: defaulting to first variable."
+            idx = 1
+        else
+            if typeof(input_var) == Int
+                idx = input_var
+            else
+                @assert input_var ∈ _names "$(input_var) is not among the variable names of `X`."
+                idx = findall(_names .== input_var)[1]
+            end
+        end
+        x = X[idx, :]
+    else
+        idx = 1
+        x = X
+    end
+
+    # Predictions:
+    ŷ = predict(conf_model, fitresult, Xraw)
+    nout = length(levels(y))
+    ŷ = map(_y -> ismissing(_y) ? [0 for i in 1:nout] : pdf.(_y, levels(y)), ŷ) |> _y -> reduce(hcat, _y)
+    ŷ = permutedims(ŷ)
+
+    areaplot(x, ŷ; kwargs...)
+
+end
+
 """
     Plots.plot(
         conf_model::ConformalInterval, fitresult, X, y;
@@ -214,6 +226,7 @@ function Plots.plot(
     test_lab = isnothing(test_lab) ? "Predicted" : test_lab
 
     Xraw = deepcopy(X)
+    _names = get_names(Xraw)
     X = permutedims(MMI.matrix(X))
 
     # Dimensions:
@@ -225,7 +238,6 @@ function Plots.plot(
             if typeof(input_var) == Int
                 idx = input_var
             else
-                _names = MMI.schema(MMI.table(Xraw)).names
                 @assert input_var ∈ _names "$(input_var) is not among the variable names of `X`."
                 idx = findall(_names .== input_var)[1]
             end

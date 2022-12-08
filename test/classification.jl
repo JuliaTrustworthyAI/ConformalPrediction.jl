@@ -38,9 +38,10 @@ conformal_models = merge(values(available_models[:classification])...)
                     predict(mach, selectrows(X, test))
 
                     # Plot
-                    plot(mach.model, mach.fitresult, X, y)
-                    plot(mach.model, mach.fitresult, X, y; zoom = -1, plot_set_size = true)
+                    contourf(mach.model, mach.fitresult, X, y)
+                    contourf(mach.model, mach.fitresult, X, y; zoom = -1, plot_set_size = true)
                     bar(mach.model, mach.fitresult, X)
+                    areaplot(mach.model, mach.fitresult, X, y)
 
                     # Evaluate:
                     # Evaluation takes some time, so only testing for one method.

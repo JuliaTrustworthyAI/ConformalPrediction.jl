@@ -36,6 +36,7 @@ makedocs(;
             "Overview" => "tutorials/index.md",
             "Classification" => "tutorials/classification.md",
             "Regression" => "tutorials/regression.md",
+            "Visualizations" => "tutorials/plotting.md",
         ],
         "🫡 How-To Guides" => [
             "Overview" => "how_to_guides/index.md",
@@ -44,6 +45,7 @@ makedocs(;
         "🤓 Explanation" => [
             "Overview" => "explanation/index.md",
             "Package Architecture" => "explanation/architecture.md",
+            "FAQ" => "explanation/faq.md",
         ],
         "🧐 Reference" => "_reference.md",
         "🛠 Contribute" => "contribute.md",
