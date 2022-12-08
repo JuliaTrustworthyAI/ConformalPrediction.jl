@@ -22,6 +22,21 @@ function generate_lims(x1, x2, xlims, ylims, zoom)
     return xlims, ylims
 end
 
+"""
+    get_names(X)
+
+Helper function to get variables names of `X`.
+"""
+function get_names(X)
+    try
+        global _names = MMI.schema(X).names
+    catch
+        X = MMI.table(X)
+        global _names = MMI.schema(X).names
+    end
+    return _names
+end
+
 @doc raw"""
     Plots.plot(conf_model::ConformalModel,fitresult,X,y;kwargs...)
 
@@ -55,7 +70,7 @@ function Plots.plot(
     fitresult,
     X,
     y;
-    input_vars::Union{Nothing,Tuple{Int},Tuple{Symbol}}=nothing,
+    input_vars::Union{Nothing,Tuple{Int,Int},Tuple{Symbol,Symbol}}=nothing,
     target::Union{Nothing,Real}=nothing,
     ntest=50,
     zoom=-1,
@@ -65,25 +80,7 @@ function Plots.plot(
     kwargs...
 )
 
-    # Setup:
-    lw = !@isdefined(lw) ? 0.1 : lw
-
-    Xraw = deepcopy(X)
-    X = permutedims(MMI.matrix(X))
-
-    @assert size(X, 1) == 2 "Cannot plot classification for more than two input variables."
-
-    x1 = X[1, :]
-    x2 = X[2, :]
-
-    # Plot limits:
-    xlims, ylims = generate_lims(x1, x2, xlims, ylims, zoom)
-
-    # Surface range:
-    x1range = range(xlims[1], stop=xlims[2], length=ntest)
-    x2range = range(ylims[1], stop=ylims[2], length=ntest)
-
-    # Target
+    # Setup and assertions:
     if !isnothing(target)
         @assert target in unique(y) "Specified target does not match any of the labels."
     end
@@ -98,20 +95,62 @@ function Plots.plot(
         _default_title = plot_set_size ? "Set size" : "p̂(y=$(target-1))"
     end
     title = !@isdefined(title) ? _default_title : title
+    Xraw = deepcopy(X)
+    _names = get_names(Xraw)
+    X = permutedims(MMI.matrix(X))
+    xavg = permutedims(mean(X, dims=2))
+
+    # Dimensions:
+    @assert size(X, 1) > 1 "Need at least two input features."
+    if size(X, 1) > 2
+        if isnothing(input_vars)
+            @info "More than two input features for classification with no input variables (`input_vars`) specified: defaulting to first two variables."
+            idx = [1, 2]
+        else
+            if typeof(input_var) <: Tuple{Int,Int}
+                idx = collect(input_var)
+            else
+                @assert all(map(x -> x in _names, input_vars)) "At least one of $(input_vars) is not among the variable names of `X`."
+                idx = findall(_names .== input_vars)
+            end
+        end
+        x = X[idx, :]
+    else
+        idx = [1, 2]
+        x = X
+    end
+
+    # Plot limits:
+    x1 = X[idx[1], :]
+    x2 = X[idx[2], :]
+    xlims, ylims = generate_lims(x1, x2, xlims, ylims, zoom)
+
+    # Surface range:
+    x1range = range(xlims[1], stop=xlims[2], length=ntest)
+    x2range = range(ylims[1], stop=ylims[2], length=ntest)
 
     # Predictions
     Z = []
-    for y in x2range, x in x1range
-        p̂ = predict(conf_model, fitresult, [x y])[1]
+    for x2 in x2range, x1 in x1range
+        xnew = xavg
+        xnew[1,idx[1]] = x1
+        xnew[1,idx[2]] = x2
+        p̂ = predict(conf_model, fitresult, xnew)[1]
         if plot_set_size
             z = ismissing(p̂) ? 0 : sum(pdf.(p̂, p̂.decoder.classes) .> 0)
         else
-            z = ismissing(p̂) ? p̂ : pdf.(p̂, 1)
+            z = ismissing(p̂) ? [missing for i in 1:length(levels(y))] : pdf.(p̂, levels(y))
+            z = replace(z, 0 => missing)
         end
         push!(Z, z)
     end
     Z = reduce(hcat, Z)
     Z = Z[Int(target), :]
+
+    Z = reduce(hcat, map(p̂ -> ismissing(p̂) ? [missing for i in 1:length(levels(y))] : pdf.(p̂, levels(y)), Z))
+    Z = Z[Int(target), :]
+    x1range = x1
+    x2range = x2
 
     # Contour:
     if plot_set_size
@@ -122,7 +161,6 @@ function Plots.plot(
             x2range,
             Z;
             title=title,
-            linewidth=linewidth,
             xlims=xlims,
             ylims=ylims,
             c=cgrad(:blues, _n + 1, categorical=true),
@@ -130,14 +168,15 @@ function Plots.plot(
             kwargs...
         )
     else
+        clim = @isdefined(clim) ? clim : (0, 1)
         plt = contourf(
             x1range,
             x2range,
             Z;
             title=title,
-            linewidth=linewidth,
             xlims=xlims,
             ylims=ylims,
+            clim=clim,
             kwargs...
         )
     end
@@ -162,8 +201,8 @@ function Plots.plot(
     input_var::Union{Nothing,Int,Symbol}=nothing,
     xlims::Union{Nothing,Tuple}=nothing,
     ylims::Union{Nothing,Tuple}=nothing,
-    train_lab::Union{Nothing, String}=nothing,
-    test_lab::Union{Nothing, String}=nothing,
+    train_lab::Union{Nothing,String}=nothing,
+    test_lab::Union{Nothing,String}=nothing,
     zoom::Real=-0.5,
     ymid_lw::Int=1,
     kwargs...
@@ -183,7 +222,7 @@ function Plots.plot(
             @info "Multivariate input for regression with no input variable (`input_var`) specified: defaulting to first variable."
             idx = 1
         else
-            if isinteger(input_var)
+            if typeof(input_var) == Int
                 idx = input_var
             else
                 _names = MMI.schema(MMI.table(Xraw)).names

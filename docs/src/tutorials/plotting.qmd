@@ -20,7 +20,9 @@ using ConformalPrediction
 
 ## Regression
 
-### Univariate Input
+### Visualizing Predictions
+
+#### Univariate Input
 
 ```{julia}
 using MLJ
@@ -39,11 +41,12 @@ fit!(mach)
 plot(mach.model, mach.fitresult, X, y; input_var=1)
 ```
 
-### Multivariate Input
+#### Multivariate Input
 
 ```{julia}
 using MLJ
 X, y = @load_boston
+schema(X)
 ```
 
 ```{julia}
@@ -55,7 +58,112 @@ fit!(mach)
 ```
 
 ```{julia}
-plot(mach.model, mach.fitresult, X, y; input_var=1)
+input_vars = [:Crim, :Age, :Tax]
+nvars = length(input_vars)
+plt_list = []
+for input_var in input_vars
+    plt = plot(mach.model, mach.fitresult, X, y; input_var=input_var, title=input_var)
+    push!(plt_list, plt)
+end
+plot(plt_list..., layout=(1,nvars), size=(nvars*200, 200))
 ```
+
+### Visualizing Set Size
+
+```{julia}
+bar(mach.model, mach.fitresult, X)
+```
+
+```{julia}
+EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
+model = EvoTreeRegressor() 
+conf_model = conformal_model(model, method=:jackknife_plus)
+mach = machine(conf_model, X, y)
+fit!(mach)
+```
+
+```{julia}
+bar(mach.model, mach.fitresult, X)
+```
+
+## Classification
+
+### Visualizing Predictions
+
+#### Univariate Input
+
+```{julia}
+using MLJ
+X, y = make_blobs(100, 2)
+```
+
+```{julia}
+EvoTreeClassifier = @load EvoTreeClassifier pkg=EvoTrees
+model = EvoTreeClassifier() 
+conf_model = conformal_model(model)
+mach = machine(conf_model, X, y)
+fit!(mach)
+```
+
+```{julia}
+p1 = plot(mach.model, mach.fitresult, X, y)
+p2 = plot(mach.model, mach.fitresult, X, y; plot_set_size=true)
+plot(p1, p2, size=(700,300))
+```
+
+#### Multivariate Input
+
+```{julia}
+using MLJ
+X, y = make_blobs(100, 4)
+```
+
+```{julia}
+EvoTreeClassifier = @load EvoTreeClassifier pkg=EvoTrees
+model = EvoTreeClassifier() 
+conf_model = conformal_model(model)
+mach = machine(conf_model, X, y)
+fit!(mach)
+```
+
+```{julia}
+p1 = plot(mach.model, mach.fitresult, X, y)
+p2 = plot(mach.model, mach.fitresult, X, y; plot_set_size=true)
+plot(p1, p2, size=(700,300))
+```
+
+
+```{julia}
+
+plt_list = []
+for input_var in input_vars
+    plt = plot(mach.model, mach.fitresult, X, y; input_var=input_var, title=input_var)
+    push!(plt_list, plt)
+end
+plot(plt_list..., layout=(1,nvars), size=(nvars*200, 200))
+```
+
+### Visualizing Set Size
+
+```{julia}
+bar(mach.model, mach.fitresult, X)
+```
+
+```{julia}
+EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
+model = EvoTreeRegressor() 
+conf_model = conformal_model(model, method=:jackknife_plus)
+mach = machine(conf_model, X, y)
+fit!(mach)
+```
+
+```{julia}
+bar(mach.model, mach.fitresult, X)
+```
+
+
+
+
+
 
 
