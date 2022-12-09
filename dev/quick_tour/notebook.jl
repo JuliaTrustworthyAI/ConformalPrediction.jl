@@ -7,7 +7,14 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local iv = try
+            Base.loaded_modules[Base.PkgId(
+                Base.UUID("6e696c72-6542-2067-7265-42206c756150"),
+                "AbstractPlutoDingetjes",
+            )].Bonds.initial_value
+        catch
+            b -> missing
+        end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
@@ -16,17 +23,17 @@ end
 
 # ╔═╡ aad62ef1-4136-4732-a9e6-3746524978ee
 begin
-	using ConformalPrediction
-	using Distributions
-	using EvoTrees
-	using LightGBM
-	using MLJ
-	using MLJDecisionTreeInterface
-	using MLJLinearModels
-	using NearestNeighborModels
-	using Plots
-	using PlutoUI
-	include("utils.jl")
+    using ConformalPrediction
+    using Distributions
+    using EvoTrees
+    using LightGBM
+    using MLJ
+    using MLJDecisionTreeInterface
+    using MLJLinearModels
+    using NearestNeighborModels
+    using Plots
+    using PlutoUI
+    include("utils.jl")
 end;
 
 # ╔═╡ bc0d7575-dabd-472d-a0ce-db69d242ced8
@@ -49,18 +56,18 @@ First, we create a simple helper function that generates our data:
 
 # ╔═╡ 2f1c8da3-77dc-4bd7-8fa4-7669c2861aaa
 begin
-	function get_data(N=600, xmax=3.0, noise=0.5; fun::Function=fun(X) = X * sin(X))
-		# Inputs:
-		d = Distributions.Uniform(-xmax, xmax)
-		X = rand(d, N)
-		X = MLJ.table(reshape(X, :, 1))
-		
-		# Outputs:
-		ε = randn(N) .* noise
-		y = @.(fun(X.x1)) + ε
-		y = vec(y)
-		return X, y
-	end
+    function get_data(N = 600, xmax = 3.0, noise = 0.5; fun::Function = fun(X) = X * sin(X))
+        # Inputs:
+        d = Distributions.Uniform(-xmax, xmax)
+        X = rand(d, N)
+        X = MLJ.table(reshape(X, :, 1))
+
+        # Outputs:
+        ε = randn(N) .* noise
+        y = @.(fun(X.x1)) + ε
+        y = vec(y)
+        return X, y
+    end
 end;
 
 # ╔═╡ eb251479-ce0f-4158-8627-099da3516c73
@@ -78,20 +85,27 @@ The slides can be used to change the number of observations `N`, the maximum (an
 
 # ╔═╡ 931ce259-d5fb-4a56-beb8-61a69a2fc09e
 begin
-	data_dict = Dict(
-		"N" => (500:100:5000,1000),
-		"noise" => (0.1:0.1:1.0,0.5),
-		"xmax" => (1:10,5),
-	)
-	@bind data_specs multi_slider(data_dict, title="Parameters")
+    data_dict = Dict(
+        "N" => (500:100:5000, 1000),
+        "noise" => (0.1:0.1:1.0, 0.5),
+        "xmax" => (1:10, 5),
+    )
+    @bind data_specs multi_slider(data_dict, title = "Parameters")
 end
 
 # ╔═╡ f0106aa5-b1c5-4857-af94-2711f80d25a8
 begin
-	X, y = get_data(data_specs.N, data_specs.xmax, data_specs.noise; fun=f)
-	scatter(X.x1, y, label="Observed data")
-	xrange = range(-data_specs.xmax,data_specs.xmax,length=50)
-	plot!(xrange, @.(f(xrange)), lw=4, label="Ground truth", ls=:dash, colour=:black)
+    X, y = get_data(data_specs.N, data_specs.xmax, data_specs.noise; fun = f)
+    scatter(X.x1, y, label = "Observed data")
+    xrange = range(-data_specs.xmax, data_specs.xmax, length = 50)
+    plot!(
+        xrange,
+        @.(f(xrange)),
+        lw = 4,
+        label = "Ground truth",
+        ls = :dash,
+        colour = :black,
+    )
 end
 
 # ╔═╡ 2fe1065e-d1b8-4e3c-930c-654f50349222
@@ -111,7 +125,7 @@ To start with, let's split our data into a training and test set:
 """
 
 # ╔═╡ 3a4fe2bc-387c-4d7e-b45f-292075a01bcd
-train, test = partition(eachindex(y), 0.4, 0.4, shuffle=true);
+train, test = partition(eachindex(y), 0.4, 0.4, shuffle = true);
 
 # ╔═╡ a34b8c07-08e0-4a0e-a0f9-8054b41b038b
 md"Now let's choose a model for our regression task:"
@@ -121,8 +135,8 @@ md"Now let's choose a model for our regression task:"
 
 # ╔═╡ 292978a2-1941-44d3-af5b-13456d16b656
 begin
-	Model = eval(tested_atomic_models[:regression][model_name])
-	model = Model()
+    Model = eval(tested_atomic_models[:regression][model_name])
+    model = Model()
 end;
 
 # ╔═╡ 10340f3f-7981-42da-846a-7599a9edb7f3
@@ -137,7 +151,7 @@ mach_raw = machine(model, X, y);
 md"Then we fit the machine to the training data:"
 
 # ╔═╡ aabfbbfb-7fb0-4f37-9a05-b96207636232
-MLJ.fit!(mach_raw, rows=train, verbosity=0);
+MLJ.fit!(mach_raw, rows = train, verbosity = 0);
 
 # ╔═╡ 5506e1b5-5f2f-4972-a845-9c0434d4b31c
 md"""
@@ -146,13 +160,20 @@ The chart below shows the resulting point predictions for the test data set:
 
 # ╔═╡ 9bb977fe-d7e0-4420-b472-a50e8bd6d94f
 begin
-	Xtest = MLJ.matrix(selectrows(X, test))
-	ytest = y[test]
-	ŷ = MLJ.predict(mach_raw, Xtest)
-	scatter(vec(Xtest), vec(ytest), label="Observed")
-	_order = sortperm(vec(Xtest))
-	plot!(vec(Xtest)[_order], vec(ŷ)[_order], lw=4, label="Predicted")
-	plot!(xrange, @.(f(xrange)), lw=2, ls=:dash, colour=:black, label="Ground truth")
+    Xtest = MLJ.matrix(selectrows(X, test))
+    ytest = y[test]
+    ŷ = MLJ.predict(mach_raw, Xtest)
+    scatter(vec(Xtest), vec(ytest), label = "Observed")
+    _order = sortperm(vec(Xtest))
+    plot!(vec(Xtest)[_order], vec(ŷ)[_order], lw = 4, label = "Predicted")
+    plot!(
+        xrange,
+        @.(f(xrange)),
+        lw = 2,
+        ls = :dash,
+        colour = :black,
+        label = "Ground truth",
+    )
 end
 
 # ╔═╡ 36eef47f-ad55-49be-ac60-7aa1cf50e61a
@@ -186,7 +207,7 @@ Then we fit the machine to the data:
 """
 
 # ╔═╡ 6b574688-ff3c-441a-a616-169685731883
-MLJ.fit!(mach, rows=train, verbosity=0);
+MLJ.fit!(mach, rows = train, verbosity = 0);
 
 # ╔═╡ da6e8f90-a3f9-4d06-86ab-b0f6705bbf54
 md"""
@@ -196,15 +217,22 @@ Now let us look at the predictions for our test data again. The chart below show
 """
 
 # ╔═╡ 797746e9-235f-4fb1-8cdb-9be295b54bbe
-@bind coverage Slider(0.1:0.1:1.0, default=0.8, show_value=true)
+@bind coverage Slider(0.1:0.1:1.0, default = 0.8, show_value = true)
 
 # ╔═╡ ad3e290b-c1f5-4008-81c7-a1a56ab10563
 begin
-	_conf_model = conformal_model(model, coverage=coverage)
-	_mach = machine(_conf_model, X, y)
-	MLJ.fit!(_mach, rows=train, verbosity=0)
-	plot(_mach.model, _mach.fitresult, Xtest, ytest, zoom=0, observed_lab="Test points")
-	plot!(xrange, @.(f(xrange)), lw=2, ls=:dash, colour=:black, label="Ground truth")
+    _conf_model = conformal_model(model, coverage = coverage)
+    _mach = machine(_conf_model, X, y)
+    MLJ.fit!(_mach, rows = train, verbosity = 0)
+    plot(_mach.model, _mach.fitresult, Xtest, ytest, zoom = 0, observed_lab = "Test points")
+    plot!(
+        xrange,
+        @.(f(xrange)),
+        lw = 2,
+        ls = :dash,
+        colour = :black,
+        label = "Ground truth",
+    )
 end
 
 # ╔═╡ b3a88859-0442-41ff-bfea-313437042830
@@ -225,29 +253,32 @@ To verify the marginal coverage property empirically we can look at the empirica
 
 # ╔═╡ d1140af9-608a-4669-9595-aee72ffbaa46
 begin
-	model_evaluation = evaluate!(_mach,operation=MLJ.predict,measure=emp_coverage, verbosity=0);
-	println("Empirical coverage: $(round(model_evaluation.measurement[1], digits=3))")
-	println("Coverage per fold: $(round.(model_evaluation.per_fold[1], digits=3))")
+    model_evaluation =
+        evaluate!(_mach, operation = MLJ.predict, measure = emp_coverage, verbosity = 0)
+    println("Empirical coverage: $(round(model_evaluation.measurement[1], digits=3))")
+    println("Coverage per fold: $(round.(model_evaluation.per_fold[1], digits=3))")
 end
 
 # ╔═╡ f742440b-258e-488a-9c8b-c9267cf1fb99
 begin
-	ncal = Int(conf_model.train_ratio * data_specs.N)
-	Markdown.parse("""
-	The empirical coverage rate should be close to the desired level of coverage. In most cases it will be slightly higher, since ``(1-\\alpha)`` is a lower bound.
-	
-	> Found an empirical coverage rate that is slightly lower than desired? The coverage property is "marginal" in the sense that the probability averaged over the randomness in the data. For most purposes a large enough calibration set size (``n>1000``) mitigates that randomness enough. Depending on your choices above, the calibration set may be quite small (currently $ncal), which can lead to **coverage slack** (see Section 3 in the [tutorial](https://arxiv.org/pdf/2107.07511.pdf)).
-	
-	### *So what's happening under the hood?*
-	
-	Inductive Conformal Prediction (also referred to as Split Conformal Prediction) broadly speaking works as follows:
-	
-	1. Partition the training into a proper training set and a separate calibration set
-	2. Train the machine learning model on the proper training set.
-	3. Using some heuristic notion of uncertainty (e.g. absolute error in the regression case) compute nonconformity scores using the calibration data and the fitted model. 
-	4. For the given coverage ratio compute the corresponding quantile of the empirical distribution of nonconformity scores.
-	5. For the given quantile and test sample ``X_{\\text{test}}``, form the corresponding conformal prediction set like so: ``C(X_{\\text{test}})=\\{y:s(X_{\\text{test}},y) \\le \\hat{q}\\}``
-	""")
+    ncal = Int(conf_model.train_ratio * data_specs.N)
+    Markdown.parse(
+        """
+The empirical coverage rate should be close to the desired level of coverage. In most cases it will be slightly higher, since ``(1-\\alpha)`` is a lower bound.
+
+> Found an empirical coverage rate that is slightly lower than desired? The coverage property is "marginal" in the sense that the probability averaged over the randomness in the data. For most purposes a large enough calibration set size (``n>1000``) mitigates that randomness enough. Depending on your choices above, the calibration set may be quite small (currently $ncal), which can lead to **coverage slack** (see Section 3 in the [tutorial](https://arxiv.org/pdf/2107.07511.pdf)).
+
+### *So what's happening under the hood?*
+
+Inductive Conformal Prediction (also referred to as Split Conformal Prediction) broadly speaking works as follows:
+
+1. Partition the training into a proper training set and a separate calibration set
+2. Train the machine learning model on the proper training set.
+3. Using some heuristic notion of uncertainty (e.g. absolute error in the regression case) compute nonconformity scores using the calibration data and the fitted model. 
+4. For the given coverage ratio compute the corresponding quantile of the empirical distribution of nonconformity scores.
+5. For the given quantile and test sample ``X_{\\text{test}}``, form the corresponding conformal prediction set like so: ``C(X_{\\text{test}})=\\{y:s(X_{\\text{test}},y) \\le \\hat{q}\\}``
+""",
+    )
 end
 
 # ╔═╡ 74444c01-1a0a-47a7-9b14-749946614f07
@@ -267,14 +298,25 @@ Quite cool, right? Using a single API call we are able to generate rigorous pred
 
 
 # ╔═╡ 824bd383-2fcb-4888-8ad1-260c85333edf
-@bind xmax_ood Slider(data_specs.xmax:(data_specs.xmax+5), default=(data_specs.xmax), show_value=true)
+@bind xmax_ood Slider(
+    data_specs.xmax:(data_specs.xmax+5),
+    default = (data_specs.xmax),
+    show_value = true,
+)
 
 # ╔═╡ 072cc72d-20a2-4ee9-954c-7ea70dfb8eea
 begin
-	Xood, yood = get_data(data_specs.N, xmax_ood, data_specs.noise; fun=f)
-	plot(_mach.model, _mach.fitresult, Xood, yood, zoom=0, observed_lab="Test points")
-	xood_range = range(-xmax_ood,xmax_ood,length=50)
-	plot!(xood_range, @.(f(xood_range)), lw=2, ls=:dash, colour=:black, label="Ground truth")
+    Xood, yood = get_data(data_specs.N, xmax_ood, data_specs.noise; fun = f)
+    plot(_mach.model, _mach.fitresult, Xood, yood, zoom = 0, observed_lab = "Test points")
+    xood_range = range(-xmax_ood, xmax_ood, length = 50)
+    plot!(
+        xood_range,
+        @.(f(xood_range)),
+        lw = 2,
+        ls = :dash,
+        colour = :black,
+        label = "Ground truth",
+    )
 end
 
 # ╔═╡ 4f41ec7c-aedd-475f-942d-33e2d1174902

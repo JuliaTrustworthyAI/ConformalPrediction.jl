@@ -2,20 +2,14 @@ using MLJ
 using Plots
 
 # Data:
-data_specs = (
-    "Single Input - Single Output" => (1, 1),
-    "Multiple Inputs - Single Output" => (5, 1),
-)
+data_specs =
+    ("Single Input - Single Output" => (1, 1), "Multiple Inputs - Single Output" => (5, 1))
 data_sets = Dict{String,Any}()
 for (k, v) in data_specs
     X, y = MLJ.make_regression(500, v[1])
     X = MLJ.table(MLJ.matrix(X))
     train, test = partition(eachindex(y), 0.8)
-    _set = Dict(
-        :data => (X, y),
-        :split => (train, test),
-        :specs => v
-    )
+    _set = Dict(:data => (X, y), :split => (train, test), :specs => v)
     data_sets[k] = _set
 end
 
@@ -40,7 +34,7 @@ conformal_models = merge(values(available_models[:regression])...)
 
                     # Instantiate conformal models:
                     _cov = 0.85
-                    conf_model = conformal_model(model; method=_method, coverage=_cov)
+                    conf_model = conformal_model(model; method = _method, coverage = _cov)
                     conf_model = conformal_models[_method](model)
                     @test isnothing(conf_model.scores)
 
@@ -54,25 +48,38 @@ conformal_models = merge(values(available_models[:regression])...)
 
                             # Fit/Predict:
                             mach = machine(conf_model, X, y)
-                            fit!(mach, rows=train)
+                            fit!(mach, rows = train)
                             @test !isnothing(conf_model.scores)
                             predict(mach, selectrows(X, test))
 
                             # Plotting:
                             @test isplot(plot(mach.model, mach.fitresult, X, y))
-                            @test isplot(plot(mach.model, mach.fitresult, X, y; input_var=1, xlims=(-1,1), ylims=(-1,1)))
-                            @test isplot(plot(mach.model, mach.fitresult, X, y; input_var=:x1))
+                            @test isplot(
+                                plot(
+                                    mach.model,
+                                    mach.fitresult,
+                                    X,
+                                    y;
+                                    input_var = 1,
+                                    xlims = (-1, 1),
+                                    ylims = (-1, 1),
+                                ),
+                            )
+                            @test isplot(
+                                plot(mach.model, mach.fitresult, X, y; input_var = :x1),
+                            )
                             @test isplot(bar(mach.model, mach.fitresult, X))
 
                             # Evaluation:
                             # Evaluation takes some time, so only testing for one method.
                             if _method == :simple_inductive
                                 # Empirical coverage:
-                                _eval = evaluate!(mach; measure=emp_coverage, verbosity=0)
+                                _eval =
+                                    evaluate!(mach; measure = emp_coverage, verbosity = 0)
                                 Δ = _eval.measurement[1] - _cov     # over-/under-coverage
                                 @test Δ >= -0.05                    # we don't undercover too much
                                 # Size-stratified coverage:
-                                _eval = evaluate!(mach; measure=ssc, verbosity=0)
+                                _eval = evaluate!(mach; measure = ssc, verbosity = 0)
                             end
 
                         end

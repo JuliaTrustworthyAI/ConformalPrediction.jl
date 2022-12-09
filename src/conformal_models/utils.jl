@@ -53,7 +53,7 @@ function set_size(ŷ)
     return _size
 end
 
-function size_indicator(ŷ::AbstractVector; bins = 5, tol=1e-10)
+function size_indicator(ŷ::AbstractVector; bins = 5, tol = 1e-10)
 
     _sizes = set_size.(ŷ)
     unique_sizes = unique(_sizes)
@@ -63,22 +63,24 @@ function size_indicator(ŷ::AbstractVector; bins = 5, tol=1e-10)
         if abs.(diff(collect(extrema(set_size.(ŷ)))))[1] < tol
             idx = categorical(ones(length(_sizes)))
         else
-            bin_caps = collect(range(minimum(unique_sizes), maximum(unique_sizes), length=bins+1))[2:end]
+            bin_caps = collect(
+                range(minimum(unique_sizes), maximum(unique_sizes), length = bins + 1),
+            )[2:end]
             idx = map(_sizes) do s
                 # Check which is the largest bin cap that _size exceeds:
-                ub = argmax(x -> s-x <= 0 ? s-x : -Inf, bin_caps)
+                ub = argmax(x -> s - x <= 0 ? s - x : -Inf, bin_caps)
                 if ub == minimum(bin_caps)
-                    ub = round(ub, digits=2)
-                    lb = round(minimum(_sizes), digits=2)
+                    ub = round(ub, digits = 2)
+                    lb = round(minimum(_sizes), digits = 2)
                     _idx = "|C| ∈ ($lb,$ub]"
                 else
-                    ub = round(ub, digits=2)
-                    lb = round(argmin(x -> s-x > 0 ? s-x : Inf, bin_caps),digits=2)
+                    ub = round(ub, digits = 2)
+                    lb = round(argmin(x -> s - x > 0 ? s - x : Inf, bin_caps), digits = 2)
                     _idx = "|C| ∈ ($lb,$ub]"
                 end
-                return _idx 
+                return _idx
             end
-            idx = categorical(idx)          
+            idx = categorical(idx)
         end
     end
 
@@ -87,7 +89,7 @@ function size_indicator(ŷ::AbstractVector; bins = 5, tol=1e-10)
         bin_caps = collect(1:2:(maximum(unique_sizes)+1))
         idx = map(_sizes) do s
             # Check which is the largest bin cap that _size exceeds:
-            ub = bin_caps[sum(s .> bin_caps) + 1]
+            ub = bin_caps[sum(s .> bin_caps)+1]
             if ub > maximum(_sizes)
                 ub = ub - 1
                 _idx = "|C| ∈ [$ub]"
@@ -97,7 +99,7 @@ function size_indicator(ŷ::AbstractVector; bins = 5, tol=1e-10)
             end
             return _idx
         end
-        idx = categorical(idx)   
+        idx = categorical(idx)
     end
 
     return idx
