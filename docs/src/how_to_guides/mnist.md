@@ -3,9 +3,9 @@
 CurrentModule = ConformalPrediction
 ```
 
-# How to Conformalize a Deep Learning Image Classifier
+# How to Conformalize a Deep Image Classifier
 
-Deep Learning is popular and — for some tasks like image classification — remarkably powerful. But it is also well-known that Deep Neural Networks (DNN) can be unstable (Goodfellow, Shlens, and Szegedy 2014) and poorly calibrated. Conformal Prediction can be used to mitigate these pitfalls. This how-to guide demonstrates how you can build an image classifier in `Flux.jl` and conformalize its predictions.
+Deep Learning is popular and — for some tasks like image classification — remarkably powerful. But it is also well-known that Deep Neural Networks (DNN) can be unstable (Goodfellow, Shlens, and Szegedy 2014) and poorly calibrated. Conformal Prediction can be used to mitigate these pitfalls. This how-to guide demonstrates how you can build an image classifier in `Flux.jl` and conformalize its predictions. For a formal treatment see A. Angelopoulos et al. (2022).
 
 ## The Task at Hand
 
@@ -87,7 +87,7 @@ evaluate!(
 )
 ```
 
-The accuracy of our very simple model is not amazing, but good enough for the purpose of this tutorial. For each image, our MLP returns a softmax output for each possible digit: 0,1,2,3,…,9. Since each individual softmax output is valued between zero and one, *y*_(*k*) ∈ (0,1), this is commonly interpreted as a probability: *y*_(*k*) ≔ *p*(*y*=*k*|*X*). Edge cases – that is values close to either zero or one – indicate high predictive certainty. But this is only a heuristic notion of predictive uncertainty (Angelopoulos and Bates 2021). Next, we will turn this heuristic notion of uncertainty into a rigorous one using Conformal Prediction.
+The accuracy of our very simple model is not amazing, but good enough for the purpose of this tutorial. For each image, our MLP returns a softmax output for each possible digit: 0,1,2,3,…,9. Since each individual softmax output is valued between zero and one, *y*_(*k*) ∈ (0,1), this is commonly interpreted as a probability: *y*_(*k*) ≔ *p*(*y*=*k*|*X*). Edge cases – that is values close to either zero or one – indicate high predictive certainty. But this is only a heuristic notion of predictive uncertainty (A. N. Angelopoulos and Bates 2021). Next, we will turn this heuristic notion of uncertainty into a rigorous one using Conformal Prediction.
 
 ## Conformalizing the Network
 
@@ -114,6 +114,8 @@ The following two rows display increasingly uncertain predictions of set size tw
 
 Conformalised predictions from an image classifier.
 
+## Evaluation
+
 As always, we can also evaluate our conformal model in terms of coverage (correctness) and size-stratified coverage (adaptiveness).
 
 ``` julia
@@ -123,12 +125,26 @@ _eval = evaluate!(
     operation=predict,
     measure=[emp_coverage, ssc]
 )
+display(_eval)
 println("Empirical coverage: $(round(_eval.measurement[1], digits=3))")
 println("SSC: $(round(_eval.measurement[2], digits=3))")
 ```
 
-    Empirical coverage: 0.95
-    SSC: 0.857
+    PerformanceEvaluation object with these fields:
+      measure, operation, measurement, per_fold,
+      per_observation, fitted_params_per_fold,
+      report_per_fold, train_test_rows
+    Extract:
+    ┌───────────────────────────────────────────────────────────┬───────────┬───────
+    │ measure                                                   │ operation │ meas ⋯
+    ├───────────────────────────────────────────────────────────┼───────────┼───────
+    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.95 ⋯
+    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.86 ⋯
+    └───────────────────────────────────────────────────────────┴───────────┴───────
+                                                                   2 columns omitted
+
+    Empirical coverage: 0.955
+    SSC: 0.867
 
 Unsurprisingly, we can attain higher adaptivity (SSC) when using adaptive prediction sets:
 
@@ -142,16 +158,45 @@ _eval = evaluate!(
     operation=predict,
     measure=[emp_coverage, ssc]
 )
+results[:adaptive_inductive] = mach
+display(_eval)
 println("Empirical coverage: $(round(_eval.measurement[1], digits=3))")
 println("SSC: $(round(_eval.measurement[2], digits=3))")
 ```
 
-    Empirical coverage: 0.99
-    SSC: 0.944
+    PerformanceEvaluation object with these fields:
+      measure, operation, measurement, per_fold,
+      per_observation, fitted_params_per_fold,
+      report_per_fold, train_test_rows
+    Extract:
+    ┌───────────────────────────────────────────────────────────┬───────────┬───────
+    │ measure                                                   │ operation │ meas ⋯
+    ├───────────────────────────────────────────────────────────┼───────────┼───────
+    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.99 ⋯
+    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.96 ⋯
+    └───────────────────────────────────────────────────────────┴───────────┴───────
+                                                                   2 columns omitted
+
+    Empirical coverage: 0.995
+    SSC: 0.967
+
+We can also have a look at the resulting set size for both approaches:
+
+``` julia
+plt_list = []
+for (_mod, mach) in results
+    push!(plt_list, bar(mach.model, mach.fitresult, X; title=String(_mod)))
+end
+plot(plt_list..., size=(800,300))
+```
+
+![Figure 5: Prediction interval width.](mnist_files/figure-commonmark/fig-setsize-output-1.svg)
 
 # References
 
 Angelopoulos, Anastasios N., and Stephen Bates. 2021. “A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification.” <https://arxiv.org/abs/2107.07511>.
+
+Angelopoulos, Anastasios, Stephen Bates, Jitendra Malik, and Michael I. Jordan. 2022. “Uncertainty Sets for Image Classifiers Using Conformal Prediction.” arXiv. <http://arxiv.org/abs/2009.14193>.
 
 Goodfellow, Ian J, Jonathon Shlens, and Christian Szegedy. 2014. “Explaining and Harnessing Adversarial Examples.” <https://arxiv.org/abs/1412.6572>.
 

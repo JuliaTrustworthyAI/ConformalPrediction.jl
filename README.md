@@ -29,55 +29,6 @@ using Pkg
 Pkg.add(url="https://github.com/pat-alt/ConformalPrediction.jl")
 ```
 
-## 🔁 Status
-
-This package is in its early stages of development and therefore still subject to changes to the core architecture and API. The following CP approaches have been implemented:
-
-**Regression**:
-
-- Inductive
-- Naive Transductive
-- Jackknife
-- Jackknife+
-- Jackknife-minmax
-- CV+
-- CV-minmax
-
-**Classification**:
-
-- Inductive (LABEL (Sadinle, Lei, and Wasserman 2019))
-- Naive Transductive
-- Adaptive Inductive
-
-The package has been tested for the following supervised models offered by [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/).
-
-**Regression**:
-
-``` julia
-using ConformalPrediction
-keys(tested_atomic_models[:regression])
-```
-
-    KeySet for a Dict{Symbol, Expr} with 5 entries. Keys:
-      :nearest_neighbor
-      :evo_tree
-      :light_gbm
-      :linear
-      :decision_tree
-
-**Classification**:
-
-``` julia
-keys(tested_atomic_models[:classification])
-```
-
-    KeySet for a Dict{Symbol, Expr} with 5 entries. Keys:
-      :nearest_neighbor
-      :evo_tree
-      :light_gbm
-      :decision_tree
-      :logistic
-
 ## 🔍 Usage Example
 
 To illustrate the intended use of the package, let’s have a quick look at a simple regression problem. We first generate some synthetic data and then determine indices for our training and test data using [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/):
@@ -130,16 +81,12 @@ ŷ = predict(mach, Xtest)
 ŷ[1:show_first]
 ```
 
-    ╭───────────────────────────────────────────────────────────╮
-    │                                                           │
-    │      (1)   (-0.3384571953732175, 1.7151149666103997)      │
-    │      (2)   (0.4551176557788876, 2.490739509385918)        │
-    │      (3)   (0.3502152856504755, 2.403651625606496)        │
-    │      (4)   (0.089929381362391, 2.130259349265593)         │
-    │      (5)   (-0.18131311753243126, 1.8734633759514197)     │
-    │                                                           │
-    │                                                           │
-    ╰─────────────────────────────────────────────── 5 items ───╯
+    5-element Vector{Tuple{Float64, Float64}}:
+     (0.325476135568554, 2.5420611849529986)
+     (-0.8093221495344456, 1.513229072277355)
+     (0.24246467414510378, 2.531848511672005)
+     (-0.37629465789570005, 1.9144457517084361)
+     (-0.5411423339519135, 1.712803571302072)
 
 For simple models like this one, we can call `Plots.plot` on our instance, fit result and data to generate the chart below:
 
@@ -151,18 +98,99 @@ xrange = range(-xmax+zoom,xmax-zoom,length=N)
 plot!(plt, xrange, @.(fun(xrange)), lw=1, ls=:dash, colour=:black, label="Ground truth")
 ```
 
-![](README_files/figure-commonmark/cell-9-output-1.svg)
+![](README_files/figure-commonmark/cell-7-output-1.svg)
 
 We can evaluate the conformal model using the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) workflow with a custom performance measure. You can use either `emp_coverage` for the overall empirical coverage (correctness) or `ssc` for the size-stratified coverage rate (adaptiveness).
 
 ``` julia
 _eval = evaluate!(mach; measure=[emp_coverage, ssc], verbosity=0)
+display(_eval)
 println("Empirical coverage: $(round(_eval.measurement[1], digits=3))")
 println("SSC: $(round(_eval.measurement[2], digits=3))")
 ```
 
-    Empirical coverage: 0.947
-    SSC: 0.784
+    PerformanceEvaluation object with these fields:
+      measure, operation, measurement, per_fold,
+      per_observation, fitted_params_per_fold,
+      report_per_fold, train_test_rows
+    Extract:
+    ┌───────────────────────────────────────────────────────────┬───────────┬───────
+    │ measure                                                   │ operation │ meas ⋯
+    ├───────────────────────────────────────────────────────────┼───────────┼───────
+    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.95 ⋯
+    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.90 ⋯
+    └───────────────────────────────────────────────────────────┴───────────┴───────
+                                                                   3 columns omitted
+
+    Empirical coverage: 0.957
+    SSC: 0.907
+
+## 🔁 Status
+
+This package is in its early stages of development and therefore still subject to changes to the core architecture and API.
+
+### Implemented Methodologies
+
+The following CP approaches have been implemented:
+
+**Regression**:
+
+- Inductive
+- Naive Transductive
+- Jackknife
+- Jackknife+
+- Jackknife-minmax
+- CV+
+- CV-minmax
+
+**Classification**:
+
+- Inductive (LABEL (Sadinle, Lei, and Wasserman 2019))
+- Naive Transductive
+- Adaptive Inductive
+
+The package has been tested for the following supervised models offered by [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/).
+
+**Regression**:
+
+``` julia
+keys(tested_atomic_models[:regression])
+```
+
+    KeySet for a Dict{Symbol, Expr} with 5 entries. Keys:
+      :nearest_neighbor
+      :evo_tree
+      :light_gbm
+      :linear
+      :decision_tree
+
+**Classification**:
+
+``` julia
+keys(tested_atomic_models[:classification])
+```
+
+    KeySet for a Dict{Symbol, Expr} with 5 entries. Keys:
+      :nearest_neighbor
+      :evo_tree
+      :light_gbm
+      :decision_tree
+      :logistic
+
+### Implemented Evaluation Metrics
+
+To evaluate conformal predictors we are typically interested in correctness and adaptiveness. The former can be evaluated by looking at the empirical coverage rate, while the latter can be assessed through metrics that address the conditional coverage (Angelopoulos and Bates 2021). To this end, the following metrics have been implemented:
+
+- `emp_coverage` (empirical coverage)
+- `ssc` (size-stratified coverage)
+
+There is also a simple `Plots.jl` recipe that can be used to inspect the set sizes. In the regression case, the interval width is stratified into discrete bins for this purpose:
+
+``` julia
+bar(mach.model, mach.fitresult, X)
+```
+
+![](README_files/figure-commonmark/cell-11-output-1.svg)
 
 ## 🛠 Contribute
 

@@ -2,7 +2,7 @@
 
 julia_version = "1.8.1"
 manifest_format = "2.0"
-project_hash = "ceb1b9697050386e301dd8b862184765ca502e31"
+project_hash = "44908ab03f43b3078d0587db28cc0ca38726eb8d"
 
 [[deps.ANSIColoredPrinters]]
 git-tree-sha1 = "574baf8110975760d391c710b6341da1afa48d8c"
@@ -321,7 +321,7 @@ uuid = "ed09eef8-17a6-5b46-8889-db040fac31e3"
 version = "0.3.2"
 
 [[deps.ConformalPrediction]]
-deps = ["CategoricalArrays", "MLJ", "MLJBase", "MLJModelInterface", "Plots", "Statistics"]
+deps = ["CategoricalArrays", "MLJBase", "MLJModelInterface", "NaturalSort", "Plots", "Statistics"]
 path = ".."
 uuid = "98bfc277-1877-43dc-819b-a3e38c30242f"
 version = "0.1.4"
@@ -399,9 +399,9 @@ uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
 
 [[deps.DecisionTree]]
 deps = ["AbstractTrees", "DelimitedFiles", "LinearAlgebra", "Random", "ScikitLearnBase", "Statistics"]
-git-tree-sha1 = "5ab40e9f5a554a642bc5ab1d20a198f76a1e6958"
+git-tree-sha1 = "cbf727a9d5fb18c73dc0cbd21a9c696540bf56ae"
 uuid = "7806a523-6efd-50cb-b5f6-3fa6f1930dbb"
-version = "0.12.0"
+version = "0.12.1"
 
 [[deps.DefineSingletons]]
 git-tree-sha1 = "0fba8b706d0178b4dc7fd44a96a92382c9065c2c"
@@ -1255,9 +1255,9 @@ version = "0.19.0"
 
 [[deps.MLJBase]]
 deps = ["CategoricalArrays", "CategoricalDistributions", "ComputationalResources", "Dates", "DelimitedFiles", "Distributed", "Distributions", "InteractiveUtils", "InvertedIndices", "LinearAlgebra", "LossFunctions", "MLJModelInterface", "Missings", "OrderedCollections", "Parameters", "PrettyTables", "ProgressMeter", "Random", "ScientificTypes", "Serialization", "StatisticalTraits", "Statistics", "StatsBase", "Tables"]
-git-tree-sha1 = "decaf881165c0b3c7abf1130dfe3221ee88ef99a"
+git-tree-sha1 = "645ad8980fbd61321dc16dc072f97099d9cf60c9"
 uuid = "a7f614a8-145f-11e9-1d2a-a57a1082229d"
-version = "0.21.2"
+version = "0.21.3"
 
 [[deps.MLJDecisionTreeInterface]]
 deps = ["DecisionTree", "MLJModelInterface", "Random", "Tables"]
@@ -1457,6 +1457,11 @@ git-tree-sha1 = "1a0fa0e9613f46c9b8c11eee38ebb4f590013c5e"
 uuid = "71a1bf82-56d0-4bbc-8a3c-48b961074391"
 version = "0.1.5"
 
+[[deps.NaturalSort]]
+git-tree-sha1 = "eda490d06b9f7c00752ee81cfa451efe55521e21"
+uuid = "c020b1a1-e9b0-503a-9c33-f039bfc54a85"
+version = "1.0.0"
+
 [[deps.NearestNeighborModels]]
 deps = ["Distances", "FillArrays", "InteractiveUtils", "LinearAlgebra", "MLJModelInterface", "NearestNeighbors", "Statistics", "StatsBase", "Tables"]
 git-tree-sha1 = "727b8f1c3f9fec6b1a805ba9bef72c73758eda02"
@@ -1648,10 +1653,10 @@ uuid = "995b91a9-d308-5afd-9ec6-746e21dbc043"
 version = "1.3.2"
 
 [[deps.Plots]]
-deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SnoopPrecompile", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "Unzip"]
-git-tree-sha1 = "6a9521b955b816aa500462951aa67f3e4467248a"
+deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "Preferences", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SnoopPrecompile", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "Unzip"]
+git-tree-sha1 = "7c5d624a2cb080c2bf41dc5da8fbb837c427048a"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.36.6"
+version = "1.37.0"
 
 [[deps.PolyesterWeave]]
 deps = ["BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "Static", "ThreadingUtilities"]

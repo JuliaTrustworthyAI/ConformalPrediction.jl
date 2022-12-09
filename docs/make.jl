@@ -13,33 +13,34 @@ ex_meta = quote
     train, calibration, test = partition(eachindex(y), 0.4, 0.4)
 
     # Model:
-    DecisionTreeRegressor = @load DecisionTreeRegressor pkg=DecisionTree
-    model = DecisionTreeRegressor()   
+    DecisionTreeRegressor = @load DecisionTreeRegressor pkg = DecisionTree
+    model = DecisionTreeRegressor()
 end
 
-DocMeta.setdocmeta!(ConformalPrediction, :DocTestSetup, ex_meta; recursive=true)
+DocMeta.setdocmeta!(ConformalPrediction, :DocTestSetup, ex_meta; recursive = true)
 
 makedocs(;
-    modules=[ConformalPrediction],
-    authors="Patrick Altmeyer",
-    repo="https://github.com/pat-alt/ConformalPrediction.jl/blob/{commit}{path}#{line}",
-    sitename="ConformalPrediction.jl",
-    format=Documenter.HTML(;
-        prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://pat-alt.github.io/ConformalPrediction.jl",
-        edit_link="main",
-        assets=String[],
+    modules = [ConformalPrediction],
+    authors = "Patrick Altmeyer",
+    repo = "https://github.com/pat-alt/ConformalPrediction.jl/blob/{commit}{path}#{line}",
+    sitename = "ConformalPrediction.jl",
+    format = Documenter.HTML(;
+        prettyurls = get(ENV, "CI", "false") == "true",
+        canonical = "https://pat-alt.github.io/ConformalPrediction.jl",
+        edit_link = "main",
+        assets = String[],
     ),
-    pages=[
+    pages = [
         "🏠 Home" => "index.md",
         "🫣 Tutorials" => [
             "Overview" => "tutorials/index.md",
             "Classification" => "tutorials/classification.md",
             "Regression" => "tutorials/regression.md",
+            "Visualizations" => "tutorials/plotting.md",
         ],
         "🫡 How-To Guides" => [
             "Overview" => "how_to_guides/index.md",
-            "How to Conformalize a Deep Image Classifier" => "how_to_guides/mnist.md"
+            "How to Conformalize a Deep Image Classifier" => "how_to_guides/mnist.md",
         ],
         "🤓 Explanation" => [
             "Overview" => "explanation/index.md",
@@ -47,10 +48,8 @@ makedocs(;
         ],
         "🧐 Reference" => "_reference.md",
         "🛠 Contribute" => "contribute.md",
+        "❓ FAQ" => "faq.md",
     ],
 )
 
-deploydocs(;
-    repo="github.com/pat-alt/ConformalPrediction.jl",
-    devbranch="main",
-)
+deploydocs(; repo = "github.com/pat-alt/ConformalPrediction.jl", devbranch = "main")

@@ -1,5 +1,5 @@
 "The `SimpleInductiveRegressor` is the simplest approach to Inductive Conformal Regression. Contrary to the [`NaiveRegressor`](@ref) it computes nonconformity scores using a designated calibration dataset."
-mutable struct SimpleInductiveRegressor{Model <: Supervised} <: ConformalInterval
+mutable struct SimpleInductiveRegressor{Model<:Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -7,7 +7,12 @@ mutable struct SimpleInductiveRegressor{Model <: Supervised} <: ConformalInterva
     train_ratio::AbstractFloat
 end
 
-function SimpleInductiveRegressor(model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=f(y,ŷ)=abs(y-ŷ), train_ratio::AbstractFloat=0.5)
+function SimpleInductiveRegressor(
+    model::Supervised;
+    coverage::AbstractFloat = 0.95,
+    heuristic::Function = f(y, ŷ) = abs(y - ŷ),
+    train_ratio::AbstractFloat = 0.5,
+)
     return SimpleInductiveRegressor(model, coverage, nothing, heuristic, train_ratio)
 end
 
@@ -23,7 +28,7 @@ S_i^{\text{CAL}} = s(X_i, Y_i) = h(\hat\mu(X_i), Y_i), \ i \in \mathcal{D}_{\tex
 A typical choice for the heuristic function is ``h(\hat\mu(X_i),Y_i)=|Y_i-\hat\mu(X_i)|`` where ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``.
 """
 function MMI.fit(conf_model::SimpleInductiveRegressor, verbosity, X, y)
-    
+
     # Data Splitting:
     train, calibration = partition(eachindex(y), conf_model.train_ratio)
     Xtrain = selectrows(X, train)
@@ -56,11 +61,12 @@ For the [`SimpleInductiveRegressor`](@ref) prediction intervals are computed as 
 where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
 """
 function MMI.predict(conf_model::SimpleInductiveRegressor, fitresult, Xnew)
-    ŷ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...))
+    ŷ = reformat_mlj_prediction(
+        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...),
+    )
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
     return ŷ
 end
-

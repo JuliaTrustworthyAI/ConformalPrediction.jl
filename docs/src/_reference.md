@@ -2,7 +2,7 @@
 CurrentModule = ConformalPrediction
 ```
 
-# 🧐 Reference
+# Reference
 
 In this reference you will find a detailed overview of the package API.
 

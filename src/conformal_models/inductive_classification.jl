@@ -1,6 +1,6 @@
 # Simple
 "The `SimpleInductiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset."
-mutable struct SimpleInductiveClassifier{Model <: Supervised} <: ConformalProbabilisticSet
+mutable struct SimpleInductiveClassifier{Model<:Supervised} <: ConformalProbabilisticSet
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -8,7 +8,12 @@ mutable struct SimpleInductiveClassifier{Model <: Supervised} <: ConformalProbab
     train_ratio::AbstractFloat
 end
 
-function SimpleInductiveClassifier(model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=f(y, ŷ)=1.0-ŷ, train_ratio::AbstractFloat=0.5)
+function SimpleInductiveClassifier(
+    model::Supervised;
+    coverage::AbstractFloat = 0.95,
+    heuristic::Function = f(y, ŷ) = 1.0 - ŷ,
+    train_ratio::AbstractFloat = 0.5,
+)
     return SimpleInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
 end
 
@@ -24,7 +29,7 @@ S_i^{\text{CAL}} = s(X_i, Y_i) = h(\hat\mu(X_i), Y_i), \ i \in \mathcal{D}_{\tex
 A typical choice for the heuristic function is ``h(\hat\mu(X_i), Y_i)=1-\hat\mu(X_i)_{Y_i}`` where ``\hat\mu(X_i)_{Y_i}`` denotes the softmax output of the true class and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``. The simple approach only takes the softmax probability of the true label into account.
 """
 function MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
-    
+
     # Data Splitting:
     train, calibration = partition(eachindex(y), conf_model.train_ratio)
     Xtrain = selectrows(X, train)
@@ -56,7 +61,9 @@ For the [`SimpleInductiveClassifier`](@ref) prediction sets are computed as foll
 where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
 """
 function MMI.predict(conf_model::SimpleInductiveClassifier, fitresult, Xnew)
-    p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...))
+    p̂ = reformat_mlj_prediction(
+        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...),
+    )
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
     p̂ = map(p̂) do pp
@@ -75,7 +82,7 @@ end
 
 # Adaptive
 "The `AdaptiveInductiveClassifier` is an improvement to the [`SimpleInductiveClassifier`](@ref) and the [`NaiveClassifier`](@ref). Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset like the [`SimpleInductiveClassifier`](@ref). Contrary to the [`SimpleInductiveClassifier`](@ref) it utilizes the softmax output of all classes."
-mutable struct AdaptiveInductiveClassifier{Model <: Supervised} <: ConformalProbabilisticSet
+mutable struct AdaptiveInductiveClassifier{Model<:Supervised} <: ConformalProbabilisticSet
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -83,7 +90,12 @@ mutable struct AdaptiveInductiveClassifier{Model <: Supervised} <: ConformalProb
     train_ratio::AbstractFloat
 end
 
-function AdaptiveInductiveClassifier(model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=f(y, ŷ)=1.0-ŷ, train_ratio::AbstractFloat=0.5)
+function AdaptiveInductiveClassifier(
+    model::Supervised;
+    coverage::AbstractFloat = 0.95,
+    heuristic::Function = f(y, ŷ) = 1.0 - ŷ,
+    train_ratio::AbstractFloat = 0.5,
+)
     return AdaptiveInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
 end
 
@@ -97,7 +109,7 @@ S_i^{\text{CAL}} = s(X_i,Y_i) = \sum_{j=1}^k  \hat\mu(X_i)_{\pi_j} \ \text{where
 ``
 """
 function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
-    
+
     # Data Splitting:
     train, calibration = partition(eachindex(y), conf_model.train_ratio)
     Xtrain = selectrows(X, train)
@@ -114,9 +126,9 @@ function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
     p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, Xcal))
     L = p̂.decoder.classes
     ŷ = pdf(p̂, L)                                           # compute probabilities for all classes
-    scores = map(eachrow(ŷ),eachrow(ycal)) do ŷᵢ, ycalᵢ
+    scores = map(eachrow(ŷ), eachrow(ycal)) do ŷᵢ, ycalᵢ
         ranks = sortperm(.-ŷᵢ)                              # rank in descending order
-        index_y = findall(L[ranks].==ycalᵢ)[1]              # index of true y in sorted array
+        index_y = findall(L[ranks] .== ycalᵢ)[1]              # index of true y in sorted array
         scoreᵢ = last(cumsum(ŷᵢ[ranks][1:index_y]))         # sum up until true y is reached
         return scoreᵢ
     end
@@ -137,7 +149,9 @@ For the [`AdaptiveInductiveClassifier`](@ref) prediction sets are computed as fo
 where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
 """
 function MMI.predict(conf_model::AdaptiveInductiveClassifier, fitresult, Xnew)
-    p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...))
+    p̂ = reformat_mlj_prediction(
+        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...),
+    )
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
     p̂ = map(p̂) do pp
