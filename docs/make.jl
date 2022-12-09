@@ -45,10 +45,10 @@ makedocs(;
         "🤓 Explanation" => [
             "Overview" => "explanation/index.md",
             "Package Architecture" => "explanation/architecture.md",
-            "FAQ" => "explanation/faq.md",
         ],
         "🧐 Reference" => "_reference.md",
         "🛠 Contribute" => "contribute.md",
+        "❓ FAQ" => "faq.md",
     ],
 )
 

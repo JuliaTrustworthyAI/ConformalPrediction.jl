@@ -36,5 +36,7 @@ It can be useful to plot the distribution of set sizes in order to visually asse
 
 Loosely speaking: aleatoric uncertainty relates to uncertainty that cannot be “learned away” by observing more data (think points near the decision boundary); epistemic uncertainty relates to uncertainty that can be “learned away” by observing more data.
 
+## References
+
 
 

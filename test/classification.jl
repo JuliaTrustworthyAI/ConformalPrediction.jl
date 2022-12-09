@@ -75,7 +75,7 @@ conformal_models = merge(values(available_models[:classification])...)
                             
                             # Evaluation:
                             # Evaluation takes some time, so only testing for one method.
-                            if _method == :simple_inductive
+                            if _method == :simple_inductive && data_set[:specs][1] > 1
                                 # Empirical coverage:
                                 _eval = evaluate!(mach; measure = emp_coverage, verbosity = 0)
                                 Δ = _eval.measurement[1] - _cov     # over-/under-coverage
