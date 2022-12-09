@@ -30,22 +30,10 @@ flowchart TB
 
 Currently I intend to work with three different abstract subtypes: 
 
-```@docs
-ConformalPrediction.ConformalInterval
-ConformalPrediction.ConformalProbabilisticSet
-ConformalPrediction.ConformalProbabilistic
-```
+- [`ConformalPrediction.ConformalInterval`](@ref)
+- [`ConformalPrediction.ConformalProbabilisticSet`](@ref)
+- [`ConformalPrediction.ConformalProbabilistic`](@ref)
 
 ## `fit` and `predict`
 
-The `fit` and `predict` methods are compulsory in order to prepare models for general use with MLJ. They also serve us to implement the logic underlying the various approaches to conformal prediction. 
-
-To understand how this currently works, let's look at the [`ConformalPrediction.AdaptiveInductiveClassifier`](@ref) as an example. Below are the two docstrings documenting both methods. Hovering over the bottom-right corner will reveal buttons that take you to the source code.
-
-```@docs
-fit(conf_model::ConformalPrediction.AdaptiveInductiveClassifier, verbosity, X, y)
-```
-
-```@docs
-predict(conf_model::ConformalPrediction.AdaptiveInductiveClassifier, fitresult, Xnew)
-```
+The `fit` and `predict` methods are compulsory in order to prepare models for general use with MLJ. They also serve us to implement the logic underlying the various approaches to conformal prediction. To understand how this currently works, have a look at the [`ConformalPrediction.AdaptiveInductiveClassifier`](@ref) as an example: [`fit(conf_model::ConformalPrediction.AdaptiveInductiveClassifier, verbosity, X, y)`](@ref) and [`predict(conf_model::ConformalPrediction.AdaptiveInductiveClassifier, fitresult, Xnew)`](@ref).

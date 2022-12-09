@@ -8,7 +8,5 @@ const SSC = size_stratified_coverage
 # Traitss
 MLJBase.reports_each_observation(::typeof(empc)) = false
 MLJBase.reports_each_observation(::typeof(ssc)) = false
-MLJBase.orientation(::typeof(empc)) = :score
-MLJBase.orientation(::typeof(ssc)) = :score
 MLJBase.supports_weights(::typeof(empc)) = false
 MLJBase.supports_weights(::typeof(ssc)) = false

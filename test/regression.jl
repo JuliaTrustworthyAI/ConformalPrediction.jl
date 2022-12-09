@@ -60,7 +60,7 @@ conformal_models = merge(values(available_models[:regression])...)
 
                             # Plotting:
                             @test isplot(plot(mach.model, mach.fitresult, X, y))
-                            @test isplot(plot(mach.model, mach.fitresult, X, y; input_var=1))
+                            @test isplot(plot(mach.model, mach.fitresult, X, y; input_var=1, xlims=(-1,1), ylims=(-1,1)))
                             @test isplot(plot(mach.model, mach.fitresult, X, y; input_var=:x1))
                             @test isplot(bar(mach.model, mach.fitresult, X))
 

@@ -150,7 +150,7 @@ function Plots.contourf(
 end
 
 """
-   Plots.areaplot(
+    Plots.areaplot(
         conf_model::ConformalProbabilisticSet, fitresult, X, y;
         input_var::Union{Nothing,Int,Symbol}=nothing,
         kwargs...
@@ -274,7 +274,7 @@ end
 """
     Plots.bar(conf_model::ConformalModel, fitresult, X; label="", xtickfontsize=6, kwrgs...)
 
-A `Plots.jl` recipe/method extension that can be used to visualize the set size distribution of a conformal predictor.
+A `Plots.jl` recipe/method extension that can be used to visualize the set size distribution of a conformal predictor. In the regression case, prediction interval widths are stratified into discrete bins. It can be useful to plot the distribution of set sizes in order to visually asses how adaptive a conformal predictor is. For more adaptive predictors the distribution of set sizes is typically spread out more widely, which reflects that “the procedure is effectively distinguishing between easy and hard inputs”. This is desirable: when for a given sample it is difficult to make predictions, this should be reflected in the set size (or interval width in the regression case). Since ‘difficult’ lies on some spectrum that ranges from ‘very easy’ to ‘very difficult’ the set size should very across the spectrum of ‘empty set’ to ‘all labels included’.
 """
 function Plots.bar(conf_model::ConformalModel, fitresult, X; label="", xtickfontsize=6, kwrgs...)
     ŷ = predict(conf_model, fitresult, X)
