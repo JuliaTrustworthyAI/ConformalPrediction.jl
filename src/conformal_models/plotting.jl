@@ -37,31 +37,21 @@ function get_names(X)
 end
 
 @doc raw"""
-    Plots.plot(conf_model::ConformalModel,fitresult,X,y;kwargs...)
+    Plots.contourf(conf_model::ConformalModel,fitresult,X,y;kwargs...)
 
-A `Plots.jl` recipe that can be used to visualize the conformal predictions of a fitted conformal model. Training data (`X`,`y`) are plotted as dots and overlaid with predictions sets. 
+A `Plots.jl` recipe/method extension that can be used to visualize the conformal predictions of a fitted conformal classifier with exactly two input variable. Data (`X`,`y`) are plotted as dots and overlaid with predictions sets. `y` is used to indicate the ground-truth labels of samples by colour. Samples are visualized in a two-dimensional feature space, so it is expected that `X` ``\in \mathcal{R}^2``. By default, a contour is used to visualize the softmax output of the conformal classifier for the target label, where `target` indicates can be used to define the index of the target label. Transparent regions indicate that the prediction set does not include the `target` label. 
 
-## Regression
+## Target
 
-In the regession case, `y` is plotted on the vertical axis against a single variable `X` on the horizontal axis. A shaded area indicates the prediction interval. The line in the center of the interval is the midpoint of the interval and can be interpreted as the point estimate of the conformal regressor. 
+In the binary case, `target` defaults to `2`, indexing the second label: assuming the labels are `[0,1]` then the softmax output for `1` is shown. In the multi-class cases, `target` defaults to the first class: for example, if the labels are `["🐶", "🐱", "🐭"]` (in that order) then the contour indicates the softmax output for `"🐶"`.
 
-## Classification
-
-In the classification case, `y` is used to indicate the ground-truth labels of samples by colour. Training samples are visualized in a two-dimensiona feature space, so it is expected that `X` ``\in \mathcal{R}^2``. By default, a contour is used to visualize the softmax output of the conformal classifier for the target label, where `target` indicates can be used to define the index of the target label. Transparent regions indicate that the prediction set does not include the `target` label. 
-
-### Binary
-
-In the binary case, `target` defaults to `2`, indexing the second label: assuming the labels are `[0,1]` then the softmax output for `1` is shown. 
-
-### Multi-class
-
-In the multi-class cases, `target` defaults to the first class: for example, if the labels are `["🐶", "🐱", "🐭"]` (in that order) then the contour indicates the softmax output for `"🐶"`.
-
-### Set size
+## Set Size
 
 If `plot_set_size` is set to `true`, then the contour instead visualises the the set size.
 
-## Higher Dimensional Inputs
+## Univariate and Higher Dimensional Inputs
+
+For univariate of multiple inputs (>2), this function is not applicable. See [`Plots.areaplot(conf_model::ConformalProbabilisticSet, fitresult, X, y; kwargs...)`](@ref) for an alternative way to visualize prediction for any conformal classifier.
 
 """
 function Plots.contourf(
@@ -159,7 +149,15 @@ function Plots.contourf(
 
 end
 
+"""
+   Plots.areaplot(
+        conf_model::ConformalProbabilisticSet, fitresult, X, y;
+        input_var::Union{Nothing,Int,Symbol}=nothing,
+        kwargs...
+    ) 
 
+A `Plots.jl` recipe/method extension that can be used to visualize the conformal predictions of any fitted conformal classifier. Using a stacked area chart, this function plots the softmax output(s) contained the the conformal predictions set on the vertical axis against an input variable `X` on the horizontal axis. In the case of multiple input variables, the `input_var` argument can be used to specify the desired input variable.
+"""
 function Plots.areaplot(
     conf_model::ConformalProbabilisticSet, fitresult, X, y;
     input_var::Union{Nothing,Int,Symbol}=nothing,
@@ -206,16 +204,16 @@ end
         kwrgs...
     )
 
-Regression.
+A `Plots.jl` recipe/method extension that can be used to visualize the conformal predictions of a fitted conformal regressor. Data (`X`,`y`) are plotted as dots and overlaid with predictions intervals. `y` is plotted on the vertical axis against a single variable `X` on the horizontal axis. A shaded area indicates the prediction interval. The line in the center of the interval is the midpoint of the interval and can be interpreted as the point estimate of the conformal regressor. In case `X` is multi-dimensional, `input_var` can be used to specify the input variable of interest that will be used for the horizontal axis. If unspecified, the first variable will be plotting by default.
 """
 function Plots.plot(
     conf_model::ConformalInterval, fitresult, X, y;
     input_var::Union{Nothing,Int,Symbol}=nothing,
     xlims::Union{Nothing,Tuple}=nothing,
     ylims::Union{Nothing,Tuple}=nothing,
+    zoom::Real=-0.5,
     train_lab::Union{Nothing,String}=nothing,
     test_lab::Union{Nothing,String}=nothing,
-    zoom::Real=-0.5,
     ymid_lw::Int=1,
     kwargs...
 )
@@ -276,7 +274,7 @@ end
 """
     Plots.bar(conf_model::ConformalModel, fitresult, X; label="", xtickfontsize=6, kwrgs...)
 
-Plots the count of set sizes for a conformal predictor.
+A `Plots.jl` recipe/method extension that can be used to visualize the set size distribution of a conformal predictor.
 """
 function Plots.bar(conf_model::ConformalModel, fitresult, X; label="", xtickfontsize=6, kwrgs...)
     ŷ = predict(conf_model, fitresult, X)

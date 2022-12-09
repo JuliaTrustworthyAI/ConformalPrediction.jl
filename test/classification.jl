@@ -2,9 +2,24 @@ using MLJ
 using Plots
 
 # Data:
-X, y = MLJ.make_blobs(1000, 2, centers = 2)
-X = MLJ.table(MLJ.matrix(X))
-train, test = partition(eachindex(y), 0.8)
+data_specs = (
+    "Single Input - Binary" => (1, 2),
+    "Two Inputs - Binary" => (2, 2),
+    "Multiple Inputs - Multiclass" => (5,5),
+)
+data_sets = Dict{String, Any}()
+for (k,v) in data_specs
+    X, y = MLJ.make_blobs(500, v[1], centers = v[2])
+    X = MLJ.table(MLJ.matrix(X))
+    train, test = partition(eachindex(y), 0.8)
+    _set = Dict(
+        :data => (X,y),
+        :split => (train, test),
+        :specs => v
+    )
+    data_sets[k] = _set
+end
+
 
 # Atomic and conformal models:
 models = tested_atomic_models[:classification]
@@ -31,27 +46,46 @@ conformal_models = merge(values(available_models[:classification])...)
                     conf_model = conformal_models[_method](model)
                     @test isnothing(conf_model.scores)
 
-                    # Fit/Predict:
-                    mach = machine(conf_model, X, y)
-                    fit!(mach, rows = train)
-                    @test !isnothing(conf_model.scores)
-                    predict(mach, selectrows(X, test))
+                    for (data_name, data_set) in data_sets
 
-                    # Plot
-                    contourf(mach.model, mach.fitresult, X, y)
-                    contourf(mach.model, mach.fitresult, X, y; zoom = -1, plot_set_size = true)
-                    bar(mach.model, mach.fitresult, X)
-                    areaplot(mach.model, mach.fitresult, X, y)
+                        @testset "$(data_name)" begin
 
-                    # Evaluate:
-                    # Evaluation takes some time, so only testing for one method.
-                    if _method == :simple_inductive
-                        # Empirical coverage:
-                        _eval = evaluate!(mach; measure = emp_coverage, verbosity = 0)
-                        Δ = _eval.measurement[1] - _cov     # over-/under-coverage
-                        @test Δ >= -0.05                    # we don't undercover too much
-                        # Size-stratified coverage:
-                        _eval = evaluate!(mach; measure = ssc, verbosity = 0)
+                            # Unpack
+                            X, y = data_set[:data]
+                            train, test = data_set[:split]
+
+                            # Fit/Predict:
+                            mach = machine(conf_model, X, y)
+                            fit!(mach, rows = train)
+                            @test !isnothing(conf_model.scores)
+                            predict(mach, selectrows(X, test))
+
+                            # Plotting:
+                            @test isplot(bar(mach.model, mach.fitresult, X))
+                            @test isplot(areaplot(mach.model, mach.fitresult, X, y))
+                            @test isplot(areaplot(mach.model, mach.fitresult, X, y; input_var=1))
+                            @test isplot(areaplot(mach.model, mach.fitresult, X, y; input_var=:x1))
+                            if data_set[:specs][1] != 2
+                                @test_throws AssertionError contourf(mach.model, mach.fitresult, X, y)
+                            else
+                                @test isplot(contourf(mach.model, mach.fitresult, X, y))
+                                @test isplot(contourf(mach.model, mach.fitresult, X, y; zoom = -1, plot_set_size = true))
+                                @test isplot(contourf(mach.model, mach.fitresult, X, y; target=1))
+                            end
+                            
+                            # Evaluation:
+                            # Evaluation takes some time, so only testing for one method.
+                            if _method == :simple_inductive
+                                # Empirical coverage:
+                                _eval = evaluate!(mach; measure = emp_coverage, verbosity = 0)
+                                Δ = _eval.measurement[1] - _cov     # over-/under-coverage
+                                @test Δ >= -0.05                    # we don't undercover too much
+                                # Size-stratified coverage:
+                                _eval = evaluate!(mach; measure = ssc, verbosity = 0)
+                            end 
+
+                        end
+
                     end
 
                 end
