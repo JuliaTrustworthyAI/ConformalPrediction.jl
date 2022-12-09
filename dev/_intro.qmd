@@ -10,7 +10,13 @@ using ConformalPrediction
 
 `ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) [@blaom2020mlj]. Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic. 
 
-# 📖 Background
+## 🏃 Quick Tour
+
+> First time here? Take a quick interactive [tour](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdev%252Fquick_tour%252Fnotebook.jl) to see what this package can do. 
+
+The [link](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdev%252Fquick_tour%252Fnotebook.jl) takes you to a `Pluto.jl` notebook hosted on binder.org. In my own experience, this may take a while to load, certainly enough time to get yourself a hot beverage ☕. Alternatively, you can clone this repo and run the notebook contained in `dev/quick-tour` locally or skip the tour for now and read on here.
+
+## 📖 Background
 
 Conformal Prediction is a scalable frequentist approach to uncertainty quantification and coverage control. It promises to be an easy-to-understand, distribution-free and model-agnostic way to generate statistically rigorous uncertainty estimates. Interestingly, it can even be used to complement Bayesian methods.
 
