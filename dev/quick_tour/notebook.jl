@@ -40,7 +40,7 @@ Let's start by loading the necessary packages and some helper functions:
 
 # ╔═╡ 2a3570b0-8a1f-4836-965e-2e2740a2e995
 md"""
-## Data
+## 📈 Data
 
 To illustrate the intended use of the package, let's have a quick look at a simple regression problem. We will first generate some synthetic data and then determine indices for our training and test data using [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/). That's all done in the code below.
 
@@ -79,7 +79,7 @@ The slides can be used to change the number of observations `N`, the maximum (an
 # ╔═╡ 931ce259-d5fb-4a56-beb8-61a69a2fc09e
 begin
 	data_dict = Dict(
-		"N" => (10:1000,500),
+		"N" => (500:100:5000,1000),
 		"noise" => (0.1:0.1:1.0,0.5),
 		"xmax" => (1:10,5),
 	)
@@ -101,7 +101,7 @@ Using the slider below you can zoom in and out to see how the function behaves o
 
 # ╔═╡ 787f7ee9-2247-4a1b-9519-51394933428c
 md"""
-## Model Training using [`MLJ`](https://alan-turing-institute.github.io/MLJ.jl/dev/)
+## 🏋️ Model Training using [`MLJ`](https://alan-turing-institute.github.io/MLJ.jl/dev/)
 
 [`ConformalPrediction.jl`]((https://github.com/pat-alt/ConformalPrediction.jl)) is interfaced to [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/): a comprehensive Machine Learning Framework for Julia. `MLJ.jl` provides a large and growing suite of popular machine learning models that can be used for supervised and unsupervised tasks. Conformal Prediction is a model-agnostic approach to uncertainty quantification, so it can be applied to any common supervised machine learning model. 
 
@@ -162,7 +162,7 @@ How is our model doing? It's never quite right, of course, since predictions are
 
 # ╔═╡ 0a9a4c99-4b9e-4fcc-baf0-9e04559ed8ab
 md"""
-## Conformalizing the Model
+## 🔥 Conformalizing the Model
 
 We can turn our `model` into a conformalized model in just one line of code:
 """
@@ -172,6 +172,8 @@ conf_model = conformal_model(model);
 
 # ╔═╡ 32263da3-0520-487f-8bba-3435cfd1e1ca
 md"""
+By default `conformal_model` creates an Inductive Conformal Regressor (more on this below) when called on a `<:Deterministic` model. This behaviour can be changed by using the optional `method` key argument.
+
 To train our conformal model we can once again rely on standard `MLJ.jl` workflows. We first wrap our model in data:
 """
 
@@ -214,7 +216,7 @@ I don't expect you to believe me that the marginal coverage property really hold
 
 # ╔═╡ 98cc9ea7-444d-4449-ab30-e02bfc5b5791
 md"""
-## Evaluation
+## 🧐 Evaluation
 
 To verify the marginal coverage property empirically we can look at the empirical coverage rate of our conformal predictor (see Section 3 of the [tutorial](https://arxiv.org/pdf/2107.07511.pdf) for details). To this end our package provides a custom performance measure `emp_coverage` that is compatible with `MLJ.jl` model evaluation workflows. In particular, we will call `evaluate!` on our conformal model using `emp_coverage` as our performance metric. 
 
@@ -228,9 +230,29 @@ begin
 	println("Coverage per fold: $(round.(model_evaluation.per_fold[1], digits=3))")
 end
 
+# ╔═╡ f742440b-258e-488a-9c8b-c9267cf1fb99
+begin
+	ncal = Int(conf_model.train_ratio * data_specs.N)
+	Markdown.parse("""
+	The empirical coverage rate should be close to the desired level of coverage. In most cases it will be slightly higher, since ``(1-\\alpha)`` is a lower bound.
+	
+	> Found an empirical coverage rate that is slightly lower than desired? The coverage property is "marginal" in the sense that the probability averaged over the randomness in the data. For most purposes a large enough calibration set size (``n>1000``) mitigates that randomness enough. Depending on your choices above, the calibration set may be quite small (currently $ncal), which can lead to **coverage slack** (see Section 3 in the [tutorial](https://arxiv.org/pdf/2107.07511.pdf)).
+	
+	### *So what's happening under the hood?*
+	
+	Inductive Conformal Prediction (also referred to as Split Conformal Prediction) broadly speaking works as follows:
+	
+	1. Partition the training into a proper training set and a separate calibration set
+	2. Train the machine learning model on the proper training set.
+	3. Using some heuristic notion of uncertainty (e.g. absolute error in the regression case) compute nonconformity scores using the calibration data and the fitted model. 
+	4. For the given coverage ratio compute the corresponding quantile of the empirical distribution of nonconformity scores.
+	5. For the given quantile and test sample ``X_{\\text{test}}``, form the corresponding conformal prediction set like so: ``C(X_{\\text{test}})=\\{y:s(X_{\\text{test}},y) \\le \\hat{q}\\}``
+	""")
+end
+
 # ╔═╡ 74444c01-1a0a-47a7-9b14-749946614f07
 md"""
-## Recap
+## 🔃 Recap
 
 This has been a super quick tour of [`ConformalPrediction.jl`](https://github.com/pat-alt/ConformalPrediction.jl). We have seen how the package naturally integrates with [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/), allowing users to generate rigorous predictive uncertainty estimates. 
 
@@ -240,6 +262,9 @@ Quite cool, right? Using a single API call we are able to generate rigorous pred
 
 > The slider below is currently set to `xmax` as specified above. By increase that value, we effectively expand the domain of our input. Let's do that and see how our conformal model does on this new out-of-domain data.
 """
+
+# ╔═╡ d72fdd11-4c4e-45fd-a031-137b39abe895
+
 
 # ╔═╡ 824bd383-2fcb-4888-8ad1-260c85333edf
 @bind xmax_ood Slider(data_specs.xmax:(data_specs.xmax+5), default=(data_specs.xmax), show_value=true)
@@ -261,7 +286,7 @@ By expaning the domain of out inputs, we have violated the exchangebility assump
 
 # ╔═╡ c7fa1889-b0be-4d96-b845-e79fa7932b0c
 md"""
-## Read on
+## 📚 Read on
 
 If you are curious to find out more, be sure to read on in the [docs](https://www.paltmeyer.com/ConformalPrediction.jl/stable/). There are also a number of useful resources to learn more about Conformal Prediction, a few of which I have listed below:
 
@@ -305,7 +330,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.1"
 manifest_format = "2.0"
-project_hash = "2f1ca446ae3f995f9efe2e7f3701e674241a20ee"
+project_hash = "08b9f3ec722695200f200dfee37cb0a51641f796"
 
 [[deps.ARFFFiles]]
 deps = ["CategoricalArrays", "Dates", "Parsers", "Tables"]
@@ -1983,7 +2008,7 @@ version = "1.4.1+0"
 # ╠═aa69f9ef-96c6-4846-9ce7-80dd9945a7a8
 # ╟─2e36ea74-125e-46d6-b558-6e920aa2663c
 # ╟─931ce259-d5fb-4a56-beb8-61a69a2fc09e
-# ╠═f0106aa5-b1c5-4857-af94-2711f80d25a8
+# ╟─f0106aa5-b1c5-4857-af94-2711f80d25a8
 # ╟─2fe1065e-d1b8-4e3c-930c-654f50349222
 # ╟─787f7ee9-2247-4a1b-9519-51394933428c
 # ╠═3a4fe2bc-387c-4d7e-b45f-292075a01bcd
@@ -2009,7 +2034,9 @@ version = "1.4.1+0"
 # ╟─b3a88859-0442-41ff-bfea-313437042830
 # ╟─98cc9ea7-444d-4449-ab30-e02bfc5b5791
 # ╟─d1140af9-608a-4669-9595-aee72ffbaa46
+# ╟─f742440b-258e-488a-9c8b-c9267cf1fb99
 # ╟─74444c01-1a0a-47a7-9b14-749946614f07
+# ╠═d72fdd11-4c4e-45fd-a031-137b39abe895
 # ╟─824bd383-2fcb-4888-8ad1-260c85333edf
 # ╟─072cc72d-20a2-4ee9-954c-7ea70dfb8eea
 # ╟─4f41ec7c-aedd-475f-942d-33e2d1174902

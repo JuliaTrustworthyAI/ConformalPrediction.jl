@@ -4,7 +4,7 @@ function multi_slider(vals::Dict; title="")
         
         inputs = [
             md""" $(_name): $(
-                Child(_name, Slider(_vals[1], default=_vals[2]))
+                Child(_name, Slider(_vals[1], default=_vals[2], show_value=true))
             )"""
             
             for (_name, _vals) in vals
