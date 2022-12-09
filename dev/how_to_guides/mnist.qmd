@@ -14,7 +14,7 @@ using Random
 Random.seed!(2022)
 ```
 
-Deep Learning is popular and --- for some tasks like image classification --- remarkably powerful. But it is also well-known that Deep Neural Networks (DNN) can be unstable [@goodfellow2014explaining] and poorly calibrated. Conformal Prediction can be used to mitigate these pitfalls. This how-to guide demonstrates how you can build an image classifier in `Flux.jl` and conformalize its predictions.
+Deep Learning is popular and --- for some tasks like image classification --- remarkably powerful. But it is also well-known that Deep Neural Networks (DNN) can be unstable [@goodfellow2014explaining] and poorly calibrated. Conformal Prediction can be used to mitigate these pitfalls. This how-to guide demonstrates how you can build an image classifier in `Flux.jl` and conformalize its predictions. For a formal treatment see @angelopoulos2022uncertainty.
 
 ## The Task at Hand 
 
@@ -163,6 +163,8 @@ display(plot_results(mach, X, y; set_size=2))
 display(plot_results(mach, X, y; set_size=3))
 ```
 
+## Evaluation
+
 As always, we can also evaluate our conformal model in terms of coverage (correctness) and size-stratified coverage (adaptiveness).
 
 ```{julia}
@@ -174,8 +176,15 @@ _eval = evaluate!(
     operation=predict,
     measure=[emp_coverage, ssc]
 )
+display(_eval)
 println("Empirical coverage: $(round(_eval.measurement[1], digits=3))")
 println("SSC: $(round(_eval.measurement[2], digits=3))")
+```
+
+```{julia}
+#| echo: false
+
+results = Dict{Symbol,Any}(:simple_inductive => mach) # store results
 ```
 
 Unsurprisingly, we can attain higher adaptivity (SSC) when using adaptive prediction sets:
@@ -192,8 +201,24 @@ _eval = evaluate!(
     operation=predict,
     measure=[emp_coverage, ssc]
 )
+results[:adaptive_inductive] = mach
+display(_eval)
 println("Empirical coverage: $(round(_eval.measurement[1], digits=3))")
 println("SSC: $(round(_eval.measurement[2], digits=3))")
+```
+
+We can also have a look at the resulting set size for both approaches:
+
+```{julia}
+#| output: true
+#| label: fig-setsize
+#| fig-cap: "Prediction interval width."
+
+plt_list = []
+for (_mod, mach) in results
+    push!(plt_list, bar(mach.model, mach.fitresult, X; title=String(_mod)))
+end
+plot(plt_list..., size=(800,300))
 ```
 
 # References
