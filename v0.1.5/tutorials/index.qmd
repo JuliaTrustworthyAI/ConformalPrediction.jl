@@ -1,0 +1,13 @@
+```@meta
+CurrentModule = ConformalPrediction
+```
+
+# Tutorials
+
+In this section you will find a series of tutorials that should help you gain a basic understanding of Conformal Prediction and how to apply it in Julia using this package.
+
+> Tutorials are lessons that take the reader by the hand through a series of steps to complete a project of some kind. Tutorials are learning-oriented.
+>
+> --- [Diátaxis](https://diataxis.fr/tutorials/)
+
+In other words, you come here because you are new to this topic and are looking for a first peek at the methodology and code 🫣
