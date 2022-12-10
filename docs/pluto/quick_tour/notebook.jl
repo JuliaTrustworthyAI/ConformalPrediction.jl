@@ -7,14 +7,7 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
-        local iv = try
-            Base.loaded_modules[Base.PkgId(
-                Base.UUID("6e696c72-6542-2067-7265-42206c756150"),
-                "AbstractPlutoDingetjes",
-            )].Bonds.initial_value
-        catch
-            b -> missing
-        end
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
@@ -24,13 +17,13 @@ end
 # ╔═╡ aad62ef1-4136-4732-a9e6-3746524978ee
 begin
     using ConformalPrediction
+    using DecisionTree: DecisionTreeRegressor
     using Distributions
-    using EvoTrees
-    using LightGBM
-    using MLJ
-    using MLJDecisionTreeInterface
-    using MLJLinearModels
-    using NearestNeighborModels
+    using EvoTrees: EvoTreeRegressor
+    using LightGBM.MLJInterface: LGBMRegressor
+    using MLJBase
+    using MLJModels
+    using NearestNeighborModels: KNNRegressor
     using Plots
     using PlutoUI
     include("utils.jl")
@@ -56,11 +49,11 @@ First, we create a simple helper function that generates our data:
 
 # ╔═╡ 2f1c8da3-77dc-4bd7-8fa4-7669c2861aaa
 begin
-    function get_data(N = 600, xmax = 3.0, noise = 0.5; fun::Function = fun(X) = X * sin(X))
+    function get_data(N=600, xmax=3.0, noise=0.5; fun::Function=fun(X) = X * sin(X))
         # Inputs:
         d = Distributions.Uniform(-xmax, xmax)
         X = rand(d, N)
-        X = MLJ.table(reshape(X, :, 1))
+        X = MLJBase.table(reshape(X, :, 1))
 
         # Outputs:
         ε = randn(N) .* noise
@@ -86,25 +79,25 @@ The slides can be used to change the number of observations `N`, the maximum (an
 # ╔═╡ 931ce259-d5fb-4a56-beb8-61a69a2fc09e
 begin
     data_dict = Dict(
-        "N" => (500:100:5000, 1000),
+        "N" => (100:100:2000, 1000),
         "noise" => (0.1:0.1:1.0, 0.5),
         "xmax" => (1:10, 5),
     )
-    @bind data_specs multi_slider(data_dict, title = "Parameters")
+    @bind data_specs multi_slider(data_dict, title="Parameters")
 end
 
 # ╔═╡ f0106aa5-b1c5-4857-af94-2711f80d25a8
 begin
-    X, y = get_data(data_specs.N, data_specs.xmax, data_specs.noise; fun = f)
-    scatter(X.x1, y, label = "Observed data")
-    xrange = range(-data_specs.xmax, data_specs.xmax, length = 50)
+    X, y = get_data(data_specs.N, data_specs.xmax, data_specs.noise; fun=f)
+    scatter(X.x1, y, label="Observed data")
+    xrange = range(-data_specs.xmax, data_specs.xmax, length=50)
     plot!(
         xrange,
         @.(f(xrange)),
-        lw = 4,
-        label = "Ground truth",
-        ls = :dash,
-        colour = :black,
+        lw=4,
+        label="Ground truth",
+        ls=:dash,
+        colour=:black,
     )
 end
 
@@ -125,7 +118,7 @@ To start with, let's split our data into a training and test set:
 """
 
 # ╔═╡ 3a4fe2bc-387c-4d7e-b45f-292075a01bcd
-train, test = partition(eachindex(y), 0.4, 0.4, shuffle = true);
+train, test = partition(eachindex(y), 0.4, 0.4, shuffle=true);
 
 # ╔═╡ a34b8c07-08e0-4a0e-a0f9-8054b41b038b
 md"Now let's choose a model for our regression task:"
@@ -151,7 +144,7 @@ mach_raw = machine(model, X, y);
 md"Then we fit the machine to the training data:"
 
 # ╔═╡ aabfbbfb-7fb0-4f37-9a05-b96207636232
-MLJ.fit!(mach_raw, rows = train, verbosity = 0);
+MLJBase.fit!(mach_raw, rows=train, verbosity=0);
 
 # ╔═╡ 5506e1b5-5f2f-4972-a845-9c0434d4b31c
 md"""
@@ -160,19 +153,19 @@ The chart below shows the resulting point predictions for the test data set:
 
 # ╔═╡ 9bb977fe-d7e0-4420-b472-a50e8bd6d94f
 begin
-    Xtest = MLJ.matrix(selectrows(X, test))
+    Xtest = MLJBase.matrix(selectrows(X, test))
     ytest = y[test]
-    ŷ = MLJ.predict(mach_raw, Xtest)
-    scatter(vec(Xtest), vec(ytest), label = "Observed")
+    ŷ = MLJBase.predict(mach_raw, Xtest)
+    scatter(vec(Xtest), vec(ytest), label="Observed")
     _order = sortperm(vec(Xtest))
-    plot!(vec(Xtest)[_order], vec(ŷ)[_order], lw = 4, label = "Predicted")
+    plot!(vec(Xtest)[_order], vec(ŷ)[_order], lw=4, label="Predicted")
     plot!(
         xrange,
         @.(f(xrange)),
-        lw = 2,
-        ls = :dash,
-        colour = :black,
-        label = "Ground truth",
+        lw=2,
+        ls=:dash,
+        colour=:black,
+        label="Ground truth",
     )
 end
 
@@ -207,7 +200,7 @@ Then we fit the machine to the data:
 """
 
 # ╔═╡ 6b574688-ff3c-441a-a616-169685731883
-MLJ.fit!(mach, rows = train, verbosity = 0);
+MLJBase.fit!(mach, rows=train, verbosity=0);
 
 # ╔═╡ da6e8f90-a3f9-4d06-86ab-b0f6705bbf54
 md"""
@@ -217,21 +210,21 @@ Now let us look at the predictions for our test data again. The chart below show
 """
 
 # ╔═╡ 797746e9-235f-4fb1-8cdb-9be295b54bbe
-@bind coverage Slider(0.1:0.1:1.0, default = 0.8, show_value = true)
+@bind coverage Slider(0.1:0.1:1.0, default=0.8, show_value=true)
 
 # ╔═╡ ad3e290b-c1f5-4008-81c7-a1a56ab10563
 begin
-    _conf_model = conformal_model(model, coverage = coverage)
+    _conf_model = conformal_model(model, coverage=coverage)
     _mach = machine(_conf_model, X, y)
-    MLJ.fit!(_mach, rows = train, verbosity = 0)
-    plot(_mach.model, _mach.fitresult, Xtest, ytest, zoom = 0, observed_lab = "Test points")
+    MLJBase.fit!(_mach, rows=train, verbosity=0)
+    plot(_mach.model, _mach.fitresult, Xtest, ytest, zoom=0, observed_lab="Test points")
     plot!(
         xrange,
         @.(f(xrange)),
-        lw = 2,
-        ls = :dash,
-        colour = :black,
-        label = "Ground truth",
+        lw=2,
+        ls=:dash,
+        colour=:black,
+        label="Ground truth",
     )
 end
 
@@ -246,7 +239,7 @@ I don't expect you to believe me that the marginal coverage property really hold
 md"""
 ## 🧐 Evaluation
 
-To verify the marginal coverage property empirically we can look at the empirical coverage rate of our conformal predictor (see Section 3 of the [tutorial](https://arxiv.org/pdf/2107.07511.pdf) for details). To this end our package provides a custom performance measure `emp_coverage` that is compatible with `MLJ.jl` model evaluation workflows. In particular, we will call `evaluate!` on our conformal model using `emp_coverage` as our performance metric. 
+To verify the marginal coverage property empirically we can look at the empirical coverage rate of our conformal predictor (see Section 3 of the [tutorial](https://arxiv.org/pdf/2107.07511.pdf) for details). To this end our package provides a custom performance measure `emp_coverage` that is compatible with `MLJ.jl` model evaluation workflows. In particular, we will call `evaluate!` on our conformal model using `emp_coverage` as our performance metric. The resulting empirical coverage rate should then be close to the desired level of coverage.
 
 > Use the slider above again to change the coverage rate. Is the empirical coverage rate in line with expectations?
 """
@@ -254,7 +247,7 @@ To verify the marginal coverage property empirically we can look at the empirica
 # ╔═╡ d1140af9-608a-4669-9595-aee72ffbaa46
 begin
     model_evaluation =
-        evaluate!(_mach, operation = MLJ.predict, measure = emp_coverage, verbosity = 0)
+        evaluate!(_mach, operation=MLJBase.predict, measure=emp_coverage, verbosity=0)
     println("Empirical coverage: $(round(model_evaluation.measurement[1], digits=3))")
     println("Coverage per fold: $(round.(model_evaluation.per_fold[1], digits=3))")
 end
@@ -262,24 +255,37 @@ end
 # ╔═╡ f742440b-258e-488a-9c8b-c9267cf1fb99
 begin
     ncal = Int(conf_model.train_ratio * data_specs.N)
-    Markdown.parse(
-        """
-The empirical coverage rate should be close to the desired level of coverage. In most cases it will be slightly higher, since ``(1-\\alpha)`` is a lower bound.
+	if model_evaluation.measurement[1] < coverage
+	    Markdown.parse(
+	        """
+			> ❌❌❌ Oh no! You got an empirical coverage rate that is slightly lower than desired 🥲 ... what's happenend? 
+			
+			The coverage property is "marginal" in the sense that the probability is averaged over the randomness in the data. For most purposes a large enough calibration set size (``n>1000``) mitigates that randomness enough. Depending on your choices above, the calibration set may be quite small (currently $ncal), which can lead to **coverage slack** (see Section 3 in the [tutorial](https://arxiv.org/pdf/2107.07511.pdf)).
+			"""
+	    )
+	else
+		Markdown.parse(
+			"""
+			> ✅ ✅ ✅  Great! You got an empirical coverage rate that is slightly higher than desired 😁 ... but why isn't it exactly the same? 
+			
+			In most cases it will be slightly higher than desired, since ``(1-\\alpha)`` is a lower bound. But note that it can also be slightly lower than desired. That is because the coverage property is "marginal" in the sense that the probability is averaged over the randomness in the data. For most purposes a large enough calibration set size (``n>1000``) mitigates that randomness enough. Depending on your choices above, the calibration set may be quite small (currently $ncal), which can lead to **coverage slack** (see Section 3 in the [tutorial](https://arxiv.org/pdf/2107.07511.pdf)).
+			"""
+		)
+	end
+end
 
-> Found an empirical coverage rate that is slightly lower than desired? The coverage property is "marginal" in the sense that the probability averaged over the randomness in the data. For most purposes a large enough calibration set size (``n>1000``) mitigates that randomness enough. Depending on your choices above, the calibration set may be quite small (currently $ncal), which can lead to **coverage slack** (see Section 3 in the [tutorial](https://arxiv.org/pdf/2107.07511.pdf)).
-
+# ╔═╡ f7b2296f-919f-4870-aac1-8e36dd694422
+md"""
 ### *So what's happening under the hood?*
-
+		
 Inductive Conformal Prediction (also referred to as Split Conformal Prediction) broadly speaking works as follows:
 
 1. Partition the training into a proper training set and a separate calibration set
 2. Train the machine learning model on the proper training set.
 3. Using some heuristic notion of uncertainty (e.g. absolute error in the regression case) compute nonconformity scores using the calibration data and the fitted model. 
 4. For the given coverage ratio compute the corresponding quantile of the empirical distribution of nonconformity scores.
-5. For the given quantile and test sample ``X_{\\text{test}}``, form the corresponding conformal prediction set like so: ``C(X_{\\text{test}})=\\{y:s(X_{\\text{test}},y) \\le \\hat{q}\\}``
-""",
-    )
-end
+5. For the given quantile and test sample $X_{\text{test}}$, form the corresponding conformal prediction set like so: $C(X_{\text{test}})=\{y:s(X_{\text{test}},y) \le \hat{q}\}$
+"""
 
 # ╔═╡ 74444c01-1a0a-47a7-9b14-749946614f07
 md"""
@@ -291,40 +297,43 @@ This has been a super quick tour of [`ConformalPrediction.jl`](https://github.co
 
 Quite cool, right? Using a single API call we are able to generate rigorous prediction intervals for all kinds of differet regression models. Have we just solved predictive uncertainty quantification once and for all? Do we even need to bother with anything else? Conformal Prediction is a very useful tool, but like so many other things, it is not the final answer to all our problems. In fact, let's see if we can take CP to its limits.
 
-> The slider below is currently set to `xmax` as specified above. By increase that value, we effectively expand the domain of our input. Let's do that and see how our conformal model does on this new out-of-domain data.
+> The slider below is currently set to `xmax` as specified above. By increasing that value, we effectively expand the domain of our input. Let's do that and see how our conformal model does on this new out-of-domain data.
 """
-
-# ╔═╡ d72fdd11-4c4e-45fd-a031-137b39abe895
-
 
 # ╔═╡ 824bd383-2fcb-4888-8ad1-260c85333edf
 @bind xmax_ood Slider(
     data_specs.xmax:(data_specs.xmax+5),
-    default = (data_specs.xmax),
-    show_value = true,
+    default=(data_specs.xmax),
+    show_value=true,
 )
 
 # ╔═╡ 072cc72d-20a2-4ee9-954c-7ea70dfb8eea
 begin
-    Xood, yood = get_data(data_specs.N, xmax_ood, data_specs.noise; fun = f)
-    plot(_mach.model, _mach.fitresult, Xood, yood, zoom = 0, observed_lab = "Test points")
-    xood_range = range(-xmax_ood, xmax_ood, length = 50)
+    Xood, yood = get_data(data_specs.N, xmax_ood, data_specs.noise; fun=f)
+    plot(_mach.model, _mach.fitresult, Xood, yood, zoom=0, observed_lab="Test points")
+    xood_range = range(-xmax_ood, xmax_ood, length=50)
     plot!(
         xood_range,
         @.(f(xood_range)),
-        lw = 2,
-        ls = :dash,
-        colour = :black,
-        label = "Ground truth",
+        lw=2,
+        ls=:dash,
+        colour=:black,
+        label="Ground truth",
     )
 end
 
 # ╔═╡ 4f41ec7c-aedd-475f-942d-33e2d1174902
-md"""
-> Whooooops ... looks like we're in trouble! What happened here?
-
-By expaning the domain of out inputs, we have violated the exchangebility assumption. When that assumption is violated, the marginal coverage property does not hold. But do not despair! There are ways to deal with this. 
-"""
+if xmax_ood > data_specs.xmax
+	Markdown.parse("""
+	> Whooooops 🤕 ... looks like we're in trouble! What happened here?
+	
+	By expaning the domain of out inputs, we have violated the exchangebility assumption. When that assumption is violated, the marginal coverage property does not hold. But do not despair! There are ways to deal with this. 
+	""")
+else
+	Markdown.parse("""
+	> Still looking OK 🤨 ... Try moving the slider above the chart to the right to see what will happen.
+	""")
+end
 
 # ╔═╡ c7fa1889-b0be-4d96-b845-e79fa7932b0c
 md"""
@@ -343,24 +352,24 @@ Enjoy!
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 ConformalPrediction = "98bfc277-1877-43dc-819b-a3e38c30242f"
+DecisionTree = "7806a523-6efd-50cb-b5f6-3fa6f1930dbb"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 EvoTrees = "f6006082-12f8-11e9-0c9c-0d5d367ab1e5"
 LightGBM = "7acf609c-83a4-11e9-1ffb-b912bcd3b04a"
-MLJ = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"
-MLJDecisionTreeInterface = "c6f25543-311c-4c74-83dc-3ea6d1015661"
-MLJLinearModels = "6ee0df7b-362f-4a72-a706-9e79364fb692"
+MLJBase = "a7f614a8-145f-11e9-1d2a-a57a1082229d"
+MLJModels = "d491faf4-2d78-11e9-2867-c94bc002c0b7"
 NearestNeighborModels = "636a865e-7cf4-491e-846c-de09b730eb36"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 
 [compat]
 ConformalPrediction = "~0.1.4"
+DecisionTree = "~0.12.1"
 Distributions = "~0.25.79"
 EvoTrees = "~0.14.2"
 LightGBM = "~0.6.0"
-MLJ = "~0.19.0"
-MLJDecisionTreeInterface = "~0.3.0"
-MLJLinearModels = "~0.8.0"
+MLJBase = "~0.21.3"
+MLJModels = "~0.16.2"
 NearestNeighborModels = "~0.2.1"
 Plots = "~1.37.2"
 PlutoUI = "~0.7.49"
@@ -372,13 +381,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.1"
 manifest_format = "2.0"
-project_hash = "08b9f3ec722695200f200dfee37cb0a51641f796"
-
-[[deps.ARFFFiles]]
-deps = ["CategoricalArrays", "Dates", "Parsers", "Tables"]
-git-tree-sha1 = "e8c8e0a2be6eb4f56b1672e46004463033daa409"
-uuid = "da404889-ca92-49ff-9e8b-0aa6b4d38dc8"
-version = "1.4.1"
+project_hash = "cbf998aa7132b7fe5fbe6a370dc660528b73c26f"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
@@ -588,10 +591,10 @@ uuid = "ed09eef8-17a6-5b46-8889-db040fac31e3"
 version = "0.3.2"
 
 [[deps.ConformalPrediction]]
-deps = ["CategoricalArrays", "MLJ", "MLJBase", "MLJModelInterface", "Plots", "Statistics"]
-git-tree-sha1 = "ebe2bf6634be9622b2a90e13c7ce820d4f5494f5"
+deps = ["CategoricalArrays", "MLJBase", "MLJModelInterface", "NaturalSort", "Plots", "Statistics"]
+git-tree-sha1 = "520277c269dd9169fb5ae4b6eff45eeae46d4900"
 uuid = "98bfc277-1877-43dc-819b-a3e38c30242f"
-version = "0.1.4"
+version = "0.1.5"
 
 [[deps.ConstructionBase]]
 deps = ["LinearAlgebra"]
@@ -702,12 +705,6 @@ git-tree-sha1 = "e3290f2d49e661fbd94046d7e3726ffcb2d41053"
 uuid = "5ae413db-bbd1-5e63-b57d-d24a61df00f5"
 version = "2.2.4+0"
 
-[[deps.EarlyStopping]]
-deps = ["Dates", "Statistics"]
-git-tree-sha1 = "98fdf08b707aaf69f524a6cd0a67858cefe0cfb6"
-uuid = "792122b4-ca99-40de-a6bc-6742525f08b6"
-version = "0.3.0"
-
 [[deps.EvoTrees]]
 deps = ["BSON", "CUDA", "CategoricalArrays", "Distributions", "LoopVectorization", "MLJModelInterface", "NetworkLayout", "Random", "RecipesBase", "Statistics", "StatsBase", "Tables"]
 git-tree-sha1 = "7509d36427e6fd08aa7e591d783713263fdac57e"
@@ -756,12 +753,6 @@ deps = ["LinearAlgebra", "Random", "SparseArrays", "Statistics"]
 git-tree-sha1 = "9a0472ec2f5409db243160a8b030f94c380167a3"
 uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
 version = "0.13.6"
-
-[[deps.FiniteDiff]]
-deps = ["ArrayInterfaceCore", "LinearAlgebra", "Requires", "Setfield", "SparseArrays", "StaticArrays"]
-git-tree-sha1 = "04ed1f0029b6b3af88343e439b995141cb0d0b8d"
-uuid = "6a86dc24-6348-571c-b903-95158fe2bd41"
-version = "2.17.0"
 
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
@@ -957,18 +948,6 @@ git-tree-sha1 = "fa6287a4469f5e048d763df38279ee729fbd44e5"
 uuid = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
 version = "1.4.0"
 
-[[deps.IterationControl]]
-deps = ["EarlyStopping", "InteractiveUtils"]
-git-tree-sha1 = "d7df9a6fdd82a8cfdfe93a94fcce35515be634da"
-uuid = "b3c1a2ee-3fec-4384-bf48-272ea71de57c"
-version = "0.5.3"
-
-[[deps.IterativeSolvers]]
-deps = ["LinearAlgebra", "Printf", "Random", "RecipesBase", "SparseArrays"]
-git-tree-sha1 = "1169632f425f79429f245113b775a0e3d121457c"
-uuid = "42fd0dbc-a981-5370-80f2-aaf504508153"
-version = "0.9.2"
-
 [[deps.IteratorInterfaceExtensions]]
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
@@ -1038,12 +1017,6 @@ deps = ["Formatting", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdow
 git-tree-sha1 = "ab9aa169d2160129beb241cb2750ca499b4e90e9"
 uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
 version = "0.15.17"
-
-[[deps.LatinHypercubeSampling]]
-deps = ["Random", "StableRNGs", "StatsBase", "Test"]
-git-tree-sha1 = "42938ab65e9ed3c3029a8d2c58382ca75bdab243"
-uuid = "a5e1c1ea-c99a-51d3-a14d-a9a37257b02d"
-version = "1.8.0"
 
 [[deps.LayoutPointers]]
 deps = ["ArrayInterface", "ArrayInterfaceOffsetArrays", "ArrayInterfaceStaticArrays", "LinearAlgebra", "ManualMemory", "SIMDTypes", "Static"]
@@ -1131,21 +1104,9 @@ git-tree-sha1 = "658faa6a229fb5bb4aea5cc897cd99db66aafb51"
 uuid = "7acf609c-83a4-11e9-1ffb-b912bcd3b04a"
 version = "0.6.0"
 
-[[deps.LineSearches]]
-deps = ["LinearAlgebra", "NLSolversBase", "NaNMath", "Parameters", "Printf"]
-git-tree-sha1 = "7bbea35cec17305fc70a0e5b4641477dc0789d9d"
-uuid = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
-version = "7.2.0"
-
 [[deps.LinearAlgebra]]
 deps = ["Libdl", "libblastrampoline_jll"]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
-
-[[deps.LinearMaps]]
-deps = ["LinearAlgebra", "SparseArrays", "Statistics"]
-git-tree-sha1 = "d1b46faefb7c2f48fdec69e6f3cc34857769bc15"
-uuid = "7a12625a-238d-50fd-b39a-03d52299707e"
-version = "3.8.0"
 
 [[deps.LogExpFunctions]]
 deps = ["ChainRulesCore", "ChangesOfVariables", "DocStringExtensions", "InverseFunctions", "IrrationalConstants", "LinearAlgebra"]
@@ -1179,41 +1140,11 @@ git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
 uuid = "6c6e2e6c-3030-632d-7369-2d6c69616d65"
 version = "0.1.4"
 
-[[deps.MLJ]]
-deps = ["CategoricalArrays", "ComputationalResources", "Distributed", "Distributions", "LinearAlgebra", "MLJBase", "MLJEnsembles", "MLJIteration", "MLJModels", "MLJTuning", "OpenML", "Pkg", "ProgressMeter", "Random", "ScientificTypes", "Statistics", "StatsBase", "Tables"]
-git-tree-sha1 = "9d79ef8684eb15a6fe4c3654cdb9c5de4868a81e"
-uuid = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"
-version = "0.19.0"
-
 [[deps.MLJBase]]
 deps = ["CategoricalArrays", "CategoricalDistributions", "ComputationalResources", "Dates", "DelimitedFiles", "Distributed", "Distributions", "InteractiveUtils", "InvertedIndices", "LinearAlgebra", "LossFunctions", "MLJModelInterface", "Missings", "OrderedCollections", "Parameters", "PrettyTables", "ProgressMeter", "Random", "ScientificTypes", "Serialization", "StatisticalTraits", "Statistics", "StatsBase", "Tables"]
 git-tree-sha1 = "645ad8980fbd61321dc16dc072f97099d9cf60c9"
 uuid = "a7f614a8-145f-11e9-1d2a-a57a1082229d"
 version = "0.21.3"
-
-[[deps.MLJDecisionTreeInterface]]
-deps = ["DecisionTree", "MLJModelInterface", "Random", "Tables"]
-git-tree-sha1 = "74e8076ea6f64fcb490783f2033070b18fa3466f"
-uuid = "c6f25543-311c-4c74-83dc-3ea6d1015661"
-version = "0.3.0"
-
-[[deps.MLJEnsembles]]
-deps = ["CategoricalArrays", "CategoricalDistributions", "ComputationalResources", "Distributed", "Distributions", "MLJBase", "MLJModelInterface", "ProgressMeter", "Random", "ScientificTypesBase", "StatsBase"]
-git-tree-sha1 = "bb8a1056b1d8b40f2f27167fc3ef6412a6719fbf"
-uuid = "50ed68f4-41fd-4504-931a-ed422449fee0"
-version = "0.3.2"
-
-[[deps.MLJIteration]]
-deps = ["IterationControl", "MLJBase", "Random", "Serialization"]
-git-tree-sha1 = "be6d5c71ab499a59e82d65e00a89ceba8732fcd5"
-uuid = "614be32b-d00c-4edb-bd02-1eb411ab5e55"
-version = "0.5.1"
-
-[[deps.MLJLinearModels]]
-deps = ["DocStringExtensions", "IterativeSolvers", "LinearAlgebra", "LinearMaps", "MLJModelInterface", "Optim", "Parameters"]
-git-tree-sha1 = "7c191a2975e05387da3cd12a4c8a835a3d5186f4"
-uuid = "6ee0df7b-362f-4a72-a706-9e79364fb692"
-version = "0.8.0"
 
 [[deps.MLJModelInterface]]
 deps = ["Random", "ScientificTypesBase", "StatisticalTraits"]
@@ -1226,12 +1157,6 @@ deps = ["CategoricalArrays", "CategoricalDistributions", "Combinatorics", "Dates
 git-tree-sha1 = "08203fc87a7f992cee24e7a1b2353e594c73c41c"
 uuid = "d491faf4-2d78-11e9-2867-c94bc002c0b7"
 version = "0.16.2"
-
-[[deps.MLJTuning]]
-deps = ["ComputationalResources", "Distributed", "Distributions", "LatinHypercubeSampling", "MLJBase", "ProgressMeter", "Random", "RecipesBase"]
-git-tree-sha1 = "02688098bd77827b64ed8ad747c14f715f98cfc4"
-uuid = "03970b2e-30c4-11ea-3135-d1576263f10f"
-version = "0.7.4"
 
 [[deps.MacroTools]]
 deps = ["Markdown", "Random"]
@@ -1283,17 +1208,16 @@ uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
 version = "2022.2.1"
 
-[[deps.NLSolversBase]]
-deps = ["DiffResults", "Distributed", "FiniteDiff", "ForwardDiff"]
-git-tree-sha1 = "a0b464d183da839699f4c79e7606d9d186ec172c"
-uuid = "d41bc354-129a-5804-8e4c-c37616107c6c"
-version = "7.8.3"
-
 [[deps.NaNMath]]
 deps = ["OpenLibm_jll"]
 git-tree-sha1 = "a7c3d1da1189a1c2fe843a3bfa04d18d20eb3211"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 version = "1.0.1"
+
+[[deps.NaturalSort]]
+git-tree-sha1 = "eda490d06b9f7c00752ee81cfa451efe55521e21"
+uuid = "c020b1a1-e9b0-503a-9c33-f039bfc54a85"
+version = "1.0.0"
 
 [[deps.NearestNeighborModels]]
 deps = ["Distances", "FillArrays", "InteractiveUtils", "LinearAlgebra", "MLJModelInterface", "NearestNeighbors", "Statistics", "StatsBase", "Tables"]
@@ -1339,12 +1263,6 @@ deps = ["Artifacts", "Libdl"]
 uuid = "05823500-19ac-5b8b-9628-191a04bc5112"
 version = "0.8.1+0"
 
-[[deps.OpenML]]
-deps = ["ARFFFiles", "HTTP", "JSON", "Markdown", "Pkg"]
-git-tree-sha1 = "88dfa70c818f7a4728c6b82a72a0e597e083938b"
-uuid = "8b6db2d4-7670-4922-a472-f9537c81ab66"
-version = "0.3.0"
-
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
 git-tree-sha1 = "df6830e37943c7aaa10023471ca47fb3065cc3c4"
@@ -1362,12 +1280,6 @@ deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Pk
 git-tree-sha1 = "13652491f6856acfd2db29360e1bbcd4565d04f1"
 uuid = "efe28fd5-8261-553b-a9e1-b2916fc3738e"
 version = "0.5.5+0"
-
-[[deps.Optim]]
-deps = ["Compat", "FillArrays", "ForwardDiff", "LineSearches", "LinearAlgebra", "NLSolversBase", "NaNMath", "Parameters", "PositiveFactorizations", "Printf", "SparseArrays", "StatsBase"]
-git-tree-sha1 = "1903afc76b7d01719d9c30d3c7d501b61db96721"
-uuid = "429524aa-4258-5aef-a3af-852621145aeb"
-version = "1.7.4"
 
 [[deps.Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1448,12 +1360,6 @@ deps = ["BitTwiddlingConvenienceFunctions", "CPUSummary", "IfElse", "Static", "T
 git-tree-sha1 = "050ca4aa2ca31484b51b849d8180caf8e4449c49"
 uuid = "1d0040c9-8b98-4ee7-8388-3f51789ca0ad"
 version = "0.1.11"
-
-[[deps.PositiveFactorizations]]
-deps = ["LinearAlgebra"]
-git-tree-sha1 = "17275485f373e6673f7e7f97051f703ed5b15b20"
-uuid = "85a6dd25-e78a-55b7-8502-1745935b8125"
-version = "0.2.4"
 
 [[deps.Preferences]]
 deps = ["TOML"]
@@ -1602,12 +1508,6 @@ version = "1.1.1"
 [[deps.Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 
-[[deps.Setfield]]
-deps = ["ConstructionBase", "Future", "MacroTools", "StaticArraysCore"]
-git-tree-sha1 = "e2cc6d8c88613c05e1defb55170bf5ff211fbeac"
-uuid = "efcf1570-3423-57d1-acb7-fd33fddbac46"
-version = "1.1.1"
-
 [[deps.Showoff]]
 deps = ["Dates", "Grisu"]
 git-tree-sha1 = "91eddf657aca81df9ae6ceb20b959ae5653ad1de"
@@ -1642,12 +1542,6 @@ deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jl
 git-tree-sha1 = "d75bda01f8c31ebb72df80a46c88b25d1c79c56d"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
 version = "2.1.7"
-
-[[deps.StableRNGs]]
-deps = ["Random", "Test"]
-git-tree-sha1 = "3be7d49667040add7ee151fefaf1f8c04c8c8276"
-uuid = "860ef19b-820b-49d6-a774-d7a799459cd3"
-version = "1.0.0"
 
 [[deps.Static]]
 deps = ["IfElse"]
@@ -2077,8 +1971,8 @@ version = "1.4.1+0"
 # ╟─98cc9ea7-444d-4449-ab30-e02bfc5b5791
 # ╟─d1140af9-608a-4669-9595-aee72ffbaa46
 # ╟─f742440b-258e-488a-9c8b-c9267cf1fb99
+# ╟─f7b2296f-919f-4870-aac1-8e36dd694422
 # ╟─74444c01-1a0a-47a7-9b14-749946614f07
-# ╠═d72fdd11-4c4e-45fd-a031-137b39abe895
 # ╟─824bd383-2fcb-4888-8ad1-260c85333edf
 # ╟─072cc72d-20a2-4ee9-954c-7ea70dfb8eea
 # ╟─4f41ec7c-aedd-475f-942d-33e2d1174902
