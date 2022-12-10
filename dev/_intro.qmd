@@ -177,7 +177,7 @@ Contributions are welcome! A good place to start is the [list](https://github.co
 
 ## 🙏 Thanks
 
-To build this package we have made heavy use of this amazing [tutorial](https://arxiv.org/abs/2107.07511) [@angelopoulos2021gentle] and also this research [paper](https://arxiv.org/abs/1905.02928). The Awesome Conformal Prediction [repository](https://github.com/valeman/awesome-conformal-prediction) [@manokhin2022awesome] has also been a fantastic place to get started. Special thanks also to [\@aangelopoulos](https://github.com/aangelopoulos), [\@valeman](https://github.com/valeman) and others for actively contributing to discussions on here. 
+To build this package we have made heavy use of this amazing [tutorial](https://arxiv.org/abs/2107.07511) [@angelopoulos2021gentle] and also this research [paper](https://arxiv.org/abs/1905.02928). The Awesome Conformal Prediction [repository](https://github.com/valeman/awesome-conformal-prediction) [@manokhin2022awesome] has also been a fantastic place to get started. Special thanks also to [\@aangelopoulos](https://github.com/aangelopoulos), [\@valeman](https://github.com/valeman) and others for actively contributing to discussions on here. Finally, many thanks to Anthony Blaom ([\@ablaom](https://github.com/ablaom)) for many helpful discussions about how to interface this package to `MLJ.jl`.
 
 ## 🎓 References 
 
