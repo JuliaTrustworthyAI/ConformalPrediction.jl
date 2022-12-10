@@ -26,25 +26,61 @@ begin
     using NearestNeighborModels: KNNRegressor
     using Plots
     using PlutoUI
-    include("utils.jl")
 end;
 
 # ╔═╡ bc0d7575-dabd-472d-a0ce-db69d242ced8
 md"""
 # Welcome to `ConformalPrediction.jl`
 
-[`ConformalPrediction.jl`](https://github.com/pat-alt/ConformalPrediction.jl) is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic. This notebook provides a very quick tour of the package functionality.
+[`ConformalPrediction.jl`](https://github.com/pat-alt/ConformalPrediction.jl) is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic. This notebook provides a very quick tour of the package functionality.
 
-Let's start by loading the necessary packages and some helper functions:
+Let's start by loading the necessary packages:
+"""
+
+# ╔═╡ 55a7c16b-a526-41d9-9d73-a0591ad006ce
+# helper functions
+begin
+	function multi_slider(vals::Dict; title = "")
+
+	    return PlutoUI.combine() do Child
+	
+	        inputs = [
+	            md""" $(_name): $(
+	                Child(_name, Slider(_vals[1], default=_vals[2], show_value=true))
+	            )"""
+	
+	            for (_name, _vals) in vals
+	        ]
+	
+	        md"""
+	        #### $title
+	        $(inputs)
+	        """
+	    end
+	
+	end
+end;
+
+# ╔═╡ be8b2fbb-3b3d-496e-9041-9b8f50872350
+md"""
+## 📖 Background
+
+Don't worry, we're not about to deep-dive into methodology. But just to give you a high-level description of Conformal Prediction (CP) upfront:
+
+> Conformal prediction (a.k.a. conformal inference) is a user-friendly paradigm for creating statistically rigorous uncertainty sets/intervals for the predictions of such models. Critically, the sets are valid in a distribution-free sense: they possess explicit, non-asymptotic guarantees even without distributional assumptions or model assumptions.
+>
+> --- Angelopoulos and Bates ([2022](https://arxiv.org/pdf/2107.07511.pdf))
+
+Intuitively, CP works under the premise of turning heuristic notions of uncertainty into rigorous uncertainty estimates through repeated sampling or the use of dedicated calibration data. 
+
+In what follows we will explore what CP can do by going through a standard machine learning workflow using [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/) and [`ConformalPrediction.jl`](https://github.com/pat-alt/ConformalPrediction.jl). There will be less focus on how exactly CP works, but references will point you to additional resources.
 """
 
 # ╔═╡ 2a3570b0-8a1f-4836-965e-2e2740a2e995
 md"""
 ## 📈 Data
 
-To illustrate the intended use of the package, let's have a quick look at a simple regression problem. We will first generate some synthetic data and then determine indices for our training and test data using [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/). That's all done in the code below.
-
-First, we create a simple helper function that generates our data:
+Most machine learning workflows start with data. In this tutorial you have full control over that aspect: in fact, you will generate synthetic data for a supervised learning problem yourself. To help you with that we have provided the helper function below that generates regression data:
 """
 
 # ╔═╡ 2f1c8da3-77dc-4bd7-8fa4-7669c2861aaa
@@ -65,15 +101,15 @@ end;
 
 # ╔═╡ eb251479-ce0f-4158-8627-099da3516c73
 md"""
-Below you can specify the functional form of you data, if you like:
+You're in control of the groun-truth that generates the data. In particular, you can modify the code cell below to modify the mapping from inputs to outputs: $f: \mathcal{X} \mapsto \mathcal{Y}$:
 """
 
 # ╔═╡ aa69f9ef-96c6-4846-9ce7-80dd9945a7a8
-f(X) = X * cos(X);
+f(X) = X * cos(X); # 𝒻: 𝒳 ↦ 𝒴
 
 # ╔═╡ 2e36ea74-125e-46d6-b558-6e920aa2663c
 md"""
-The slides can be used to change the number of observations `N`, the maximum (and minimum) input value `xmax` and the observational `noise`:
+The sliders below can be used to change the number of observations `N`, the maximum (and minimum) input value `xmax` and the observational `noise`:
 """
 
 # ╔═╡ 931ce259-d5fb-4a56-beb8-61a69a2fc09e
@@ -1938,6 +1974,8 @@ version = "1.4.1+0"
 # ╔═╡ Cell order:
 # ╟─bc0d7575-dabd-472d-a0ce-db69d242ced8
 # ╠═aad62ef1-4136-4732-a9e6-3746524978ee
+# ╟─55a7c16b-a526-41d9-9d73-a0591ad006ce
+# ╟─be8b2fbb-3b3d-496e-9041-9b8f50872350
 # ╟─2a3570b0-8a1f-4836-965e-2e2740a2e995
 # ╠═2f1c8da3-77dc-4bd7-8fa4-7669c2861aaa
 # ╟─eb251479-ce0f-4158-8627-099da3516c73
