@@ -7,9 +7,9 @@
 
 ## 🏃 Quick Tour
 
-> First time here? Take a quick interactive [tour](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fquick_tour%252Fnotebook.jl) to see what this package can do.
+> First time here? Take a quick interactive [tour](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl) to see what this package can do.
 
-The [link](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fquick_tour%252Fnotebook.jl) takes you to a `Pluto.jl` notebook hosted on binder.org. In my own experience, this may take a while to load, certainly enough time to get yourself a hot beverage ☕. Alternatively, you can run the notebook locally or skip the tour for now and read on below.
+The [link](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl) takes you to a [`Pluto.jl`](https://github.com/fonsp/Pluto.jl) 🎈 notebook hosted on [binder](https://mybinder.org/). In my own experience, this may take some time to load, certainly long enough to get yourself a hot beverage ☕. Alternatively, you can run the notebook locally or skip the tour for now and read on below.
 
 ### Local Tour
 
@@ -100,11 +100,11 @@ ŷ[1:show_first]
 ```
 
     5-element Vector{Tuple{Float64, Float64}}:
-     (0.325476135568554, 2.5420611849529986)
-     (-0.8093221495344456, 1.513229072277355)
-     (0.24246467414510378, 2.531848511672005)
-     (-0.37629465789570005, 1.9144457517084361)
-     (-0.5411423339519135, 1.712803571302072)
+     (0.5113539995719073, 2.7791173590180245)
+     (0.15501260477711076, 2.491986075800726)
+     (-0.32783606947941524, 1.9302674946467009)
+     (-0.13732511816023366, 2.141708832043786)
+     (0.5089900787456267, 2.7771571126470387)
 
 For simple models like this one, we can call a custom `Plots` recipe on our instance, fit result and data to generate the chart below:
 
@@ -135,13 +135,13 @@ println("SSC: $(round(_eval.measurement[2], digits=3))")
     ┌───────────────────────────────────────────────────────────┬───────────┬───────
     │ measure                                                   │ operation │ meas ⋯
     ├───────────────────────────────────────────────────────────┼───────────┼───────
-    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.95 ⋯
-    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.90 ⋯
+    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.94 ⋯
+    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.76 ⋯
     └───────────────────────────────────────────────────────────┴───────────┴───────
                                                                    3 columns omitted
 
-    Empirical coverage: 0.957
-    SSC: 0.907
+    Empirical coverage: 0.947
+    SSC: 0.762
 
 ## 🔁 Status
 

@@ -11,9 +11,9 @@ Documentation for [ConformalPrediction.jl](https://github.com/pat-alt/ConformalP
 
 ## 🏃 Quick Tour
 
-> First time here? Take a quick interactive [tour](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fquick_tour%252Fnotebook.jl) to see what this package can do.
+> First time here? Take a quick interactive [tour](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl) to see what this package can do.
 
-The [link](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fquick_tour%252Fnotebook.jl) takes you to a `Pluto.jl` notebook hosted on binder.org. In my own experience, this may take a while to load, certainly enough time to get yourself a hot beverage ☕. Alternatively, you can run the notebook locally or skip the tour for now and read on below.
+The [link](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl) takes you to a [`Pluto.jl`](https://github.com/fonsp/Pluto.jl) 🎈 notebook hosted on [binder](https://mybinder.org/). In my own experience, this may take some time to load, certainly long enough to get yourself a hot beverage ☕. Alternatively, you can run the notebook locally or skip the tour for now and read on below.
 
 ### Local Tour
 
