@@ -318,7 +318,7 @@ Inductive Conformal Prediction (also referred to as Split Conformal Prediction) 
 
 1. Partition the training into a proper training set and a separate calibration set
 2. Train the machine learning model on the proper training set.
-3. Using some heuristic notion of uncertainty (e.g. absolute error in the regression case) compute nonconformity scores using the calibration data and the fitted model. 
+3. Using some heuristic notion of uncertainty (e.g., absolute error in the regression case), compute nonconformity scores using the calibration data and the fitted model.
 4. For the given coverage ratio compute the corresponding quantile of the empirical distribution of nonconformity scores.
 5. For the given quantile and test sample $X_{\text{test}}$, form the corresponding conformal prediction set like so: $C(X_{\text{test}})=\{y:s(X_{\text{test}},y) \le \hat{q}\}$
 """
@@ -331,7 +331,7 @@ This has been a super quick tour of [`ConformalPrediction.jl`](https://github.co
 
 ### *Are we done?*
 
-Quite cool, right? Using a single API call we are able to generate rigorous prediction intervals for all kinds of differet regression models. Have we just solved predictive uncertainty quantification once and for all? Do we even need to bother with anything else? Conformal Prediction is a very useful tool, but like so many other things, it is not the final answer to all our problems. In fact, let's see if we can take CP to its limits.
+Quite cool, right? Using a single API call we are able to generate rigorous prediction intervals for all kinds of different regression models. Have we just solved predictive uncertainty quantification once and for all? Do we even need to bother with anything else? Conformal Prediction is a very useful tool, but like so many other things, it is not the final answer to all our problems. In fact, let's see if we can take CP to its limits.
 
 > The slider below is currently set to `xmax` as specified above. By increasing that value, we effectively expand the domain of our input. Let's do that and see how our conformal model does on this new out-of-domain data.
 """
