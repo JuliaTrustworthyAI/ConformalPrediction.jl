@@ -101,7 +101,7 @@ end;
 
 # ╔═╡ eb251479-ce0f-4158-8627-099da3516c73
 md"""
-You're in control of the groun-truth that generates the data. In particular, you can modify the code cell below to modify the mapping from inputs to outputs: $f: \mathcal{X} \mapsto \mathcal{Y}$:
+You're in control of the ground-truth that generates the data. In particular, you can modify the code cell below to modify the mapping from inputs to outputs: $f: \mathcal{X} \mapsto \mathcal{Y}$:
 """
 
 # ╔═╡ aa69f9ef-96c6-4846-9ce7-80dd9945a7a8
@@ -207,7 +207,7 @@ end
 
 # ╔═╡ 36eef47f-ad55-49be-ac60-7aa1cf50e61a
 md"""
-How is our model doing? It's never quite right, of course, since predictions are estimates and therfore uncertain. Let's see how we can use Conformal Prediction to express that uncertainty.
+How is our model doing? It's never quite right, of course, since predictions are estimates and therefore uncertain. Let's see how we can use Conformal Prediction to express that uncertainty.
 """
 
 # ╔═╡ 0a9a4c99-4b9e-4fcc-baf0-9e04559ed8ab
@@ -240,7 +240,7 @@ MLJBase.fit!(mach, rows=train, verbosity=0);
 
 # ╔═╡ da6e8f90-a3f9-4d06-86ab-b0f6705bbf54
 md"""
-Now let us look at the predictions for our test data again. The chart below shows the results for our conformalised model. Predictions from conformal regressors are range-valued: for each new sample the model returns an interval $(y_{\text{lb}},y_{\text{ub}})\in\mathcal{Y}$ that covers the test sample with a user-specified probability $(1-\alpha)$, where $\alpha$ is the expected error rate. This is known as the **marginal coverage guarantee** and it is proven to hold under the assumption that training and test data are exchangable. 
+Now let us look at the predictions for our test data again. The chart below shows the results for our conformalized model. Predictions from conformal regressors are range-valued: for each new sample the model returns an interval $(y_{\text{lb}},y_{\text{ub}})\in\mathcal{Y}$ that covers the test sample with a user-specified probability $(1-\alpha)$, where $\alpha$ is the expected error rate. This is known as the **marginal coverage guarantee** and it is proven to hold under the assumption that training and test data are exchangeable. 
 
 > You can increase or decrease the coverage rate for our conformal model by moving the slider below:
 """
@@ -268,7 +268,7 @@ end
 md"""
 Intuitively, a higher coverage rate leads to larger prediction intervals: since a larger interval covers a larger subspace of $\mathcal{Y}$, it is more likely to cover the true value.
 
-I don't expect you to believe me that the marginal coverage property really holds. In fact, I couldn't believe it myself when I first learned about it. If you like mathematical proofs, you can find one in this [tutorial](https://arxiv.org/pdf/2107.07511.pdf), for example. If you like convinving yourself through empirical observations, read on below ...
+I don't expect you to believe me that the marginal coverage property really holds. In fact, I couldn't believe it myself when I first learned about it. If you like mathematical proofs, you can find one in this [tutorial](https://arxiv.org/pdf/2107.07511.pdf), for example. If you like convincing yourself through empirical observations, read on below ...
 """
 
 # ╔═╡ 98cc9ea7-444d-4449-ab30-e02bfc5b5791
@@ -294,7 +294,7 @@ begin
 	if model_evaluation.measurement[1] < coverage
 	    Markdown.parse(
 	        """
-			> ❌❌❌ Oh no! You got an empirical coverage rate that is slightly lower than desired 🥲 ... what's happenend? 
+			> ❌❌❌ Oh no! You got an empirical coverage rate that is slightly lower than desired 🥲 ... what's happened? 
 			
 			The coverage property is "marginal" in the sense that the probability is averaged over the randomness in the data. For most purposes a large enough calibration set size (``n>1000``) mitigates that randomness enough. Depending on your choices above, the calibration set may be quite small (currently $ncal), which can lead to **coverage slack** (see Section 3 in the [tutorial](https://arxiv.org/pdf/2107.07511.pdf)).
 			"""
@@ -363,7 +363,7 @@ if xmax_ood > data_specs.xmax
 	Markdown.parse("""
 	> Whooooops 🤕 ... looks like we're in trouble! What happened here?
 	
-	By expaning the domain of out inputs, we have violated the exchangebility assumption. When that assumption is violated, the marginal coverage property does not hold. But do not despair! There are ways to deal with this. 
+	By expaning the domain of out inputs, we have violated the exchangeability assumption. When that assumption is violated, the marginal coverage property does not hold. But do not despair! There are ways to deal with this. 
 	""")
 else
 	Markdown.parse("""

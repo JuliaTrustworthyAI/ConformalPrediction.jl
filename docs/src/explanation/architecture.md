@@ -7,7 +7,7 @@ The goal is to make this package as compatible as possible with MLJ to tab into 
 
 ![](architecture_files/figure-commonmark/mermaid-figure-1.png)
 
-## Abstract Suptypes
+## Abstract Subtypes
 
 Currently I intend to work with three different abstract subtypes:
 
