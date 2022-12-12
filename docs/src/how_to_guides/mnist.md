@@ -112,7 +112,7 @@ The following two rows display increasingly uncertain predictions of set size tw
 
 ![Figure 4: Plot 3](mnist_files/figure-commonmark/fig-plots-output-3.svg)
 
-Conformalised predictions from an image classifier.
+Conformalized predictions from an image classifier.
 
 ## Evaluation
 

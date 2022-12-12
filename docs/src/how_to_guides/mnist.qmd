@@ -150,7 +150,7 @@ The following two rows display increasingly uncertain predictions of set size tw
 ```{julia}
 #| output: true
 #| label: fig-plots
-#| fig-cap: Conformalised predictions from an image classifier.
+#| fig-cap: Conformalized predictions from an image classifier.
 #| fig-subcap:
 #|   - "Plot 1"
 #|   - "Plot 2"

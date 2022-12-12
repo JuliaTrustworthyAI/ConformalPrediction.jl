@@ -12,7 +12,7 @@ end
 """
     size_stratified_coverage(ŷ, y)
 
-Computes the size-stratisfied coverage for conformal predictions `ŷ`.
+Computes the size-stratified coverage for conformal predictions `ŷ`.
 """
 function size_stratified_coverage(ŷ, y)
 
