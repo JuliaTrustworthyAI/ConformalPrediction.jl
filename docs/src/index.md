@@ -11,9 +11,9 @@ Documentation for [ConformalPrediction.jl](https://github.com/pat-alt/ConformalP
 
 ## 🏃 Quick Tour
 
-> First time here? Take a quick interactive [tour](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl) to see what this package can do.
+> First time here? Take a quick interactive [tour](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl) to see what this package can do: [![Binder](https://mybinder.org/badge_logo.svg)](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl)
 
-The [link](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl) takes you to a [`Pluto.jl`](https://github.com/fonsp/Pluto.jl) 🎈 notebook hosted on [binder](https://mybinder.org/). In my own experience, this may take some time to load, certainly long enough to get yourself a hot beverage ☕. Alternatively, you can run the notebook locally or skip the tour for now and read on below.
+The button takes you to a [`Pluto.jl`](https://github.com/fonsp/Pluto.jl) 🎈 notebook hosted on [binder](https://mybinder.org/). In my own experience, this may take some time to load, certainly long enough to get yourself a hot beverage ☕. Alternatively, you can run the notebook locally or skip the tour for now and read on below.
 
 ### Local Tour
 
@@ -29,11 +29,17 @@ All notebooks are contained in `docs/pluto`.
 
 ## 📖 Background
 
-Conformal Prediction is a scalable frequentist approach to uncertainty quantification and coverage control. It promises to be an easy-to-understand, distribution-free and model-agnostic way to generate statistically rigorous uncertainty estimates. Interestingly, it can even be used to complement Bayesian methods.
+Don’t worry, we’re not about to deep-dive into methodology. But just to give you a high-level description of Conformal Prediction (CP) upfront:
 
-The animation below is lifted from a small blog post that introduces the topic and the package (\[[TDS](https://towardsdatascience.com/conformal-prediction-in-julia-351b81309e30)\], \[[Quarto](https://www.paltmeyer.com/blog/posts/conformal-prediction/#fig-anim)\]). It shows conformal prediction sets for two different samples and changing coverage rates. Standard conformal classifiers produce set-valued predictions: for ambiguous samples these sets are typically large (for high coverage) or empty (for low coverage).
+> Conformal prediction (a.k.a. conformal inference) is a user-friendly paradigm for creating statistically rigorous uncertainty sets/intervals for the predictions of such models. Critically, the sets are valid in a distribution-free sense: they possess explicit, non-asymptotic guarantees even without distributional assumptions or model assumptions.
+>
+> — Angelopoulos and Bates (2021)
 
-![Conformal Prediction in action: Prediction sets for two different samples and changing coverage rates. As coverage grows, so does the size of the prediction sets.](https://raw.githubusercontent.com/pat-alt/blog/main/posts/conformal-prediction/www/medium.gif)
+Intuitively, CP works under the premise of turning heuristic notions of uncertainty into rigorous uncertainty estimates through repeated sampling or the use of dedicated calibration data.
+
+![Conformal Prediction in action: prediction intervals at varying coverage rates. As coverage grows, so does the width of the prediction interval.](https://raw.githubusercontent.com/pat-alt/pat-alt.github.io/main/blog/posts/conformal-regression/www/medium.gif)
+
+The animation above is lifted from a small blog [post](https://www.paltmeyer.com/blog/posts/conformal-regression/) that introduces Conformal Prediction and this package in the context of regression. It shows how the prediction interval and the test points that it covers varies in size as the user-specified coverage rate changes.
 
 ## 🚩 Installation
 
@@ -114,7 +120,7 @@ For simple models like this one, we can call a custom `Plots` recipe on our inst
 
 ``` julia
 using Plots
-zoom = -0.5
+zoom = 0
 plt = plot(mach.model, mach.fitresult, Xtest, ytest, zoom=zoom, observed_lab="Test points")
 xrange = range(-xmax+zoom,xmax-zoom,length=N)
 plot!(plt, xrange, @.(fun(xrange)), lw=1, ls=:dash, colour=:black, label="Ground truth")
@@ -147,6 +153,21 @@ println("SSC: $(round(_eval.measurement[2], digits=3))")
     Empirical coverage: 0.957
     SSC: 0.907
 
+## 📚 Read on
+
+If after reading the usage example above you are just left with more questions about the topic, that’s normal. Below we have have collected a number of further resources to help you get started with this package and the topic itself:
+
+1.  Blog post introducing conformal classifiers: \[[Quarto](https://www.paltmeyer.com/blog/posts/conformal-prediction/)\], \[[TDS](https://medium.com/towards-data-science/conformal-prediction-in-julia-351b81309e30)\], \[[Forem](https://forem.julialang.org/patalt/conformal-prediction-in-julia-h9n)\].
+2.  Blog post applying CP to a deep learning image classifier: \[[Quarto](https://www.paltmeyer.com/blog/posts/conformal-image-classifier/)\], \[[TDS](https://medium.com/towards-data-science/how-to-conformalize-a-deep-image-classifier-14ead4e1a5a0)\], \[[Forem](https://forem.julialang.org/patalt/how-to-conformalize-a-deep-image-classifier-50p2)\].
+3.  The package [docs](https://pat-alt.github.io/ConformalPrediction.jl/dev/) and in particular the [FAQ](https://www.paltmeyer.com/ConformalPrediction.jl/dev/faq/).
+
+### External Resources
+
+- *A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification* by Angelopoulos and Bates (2021) ([pdf](https://arxiv.org/pdf/2107.07511.pdf)).
+- *Predictive inference with the jackknife+* by Barber et al. (2021) ([pdf](https://projecteuclid.org/journals/annals-of-statistics/volume-49/issue-1/Predictive-inference-with-the-jackknife/10.1214/20-AOS1965.full))
+- *Awesome Conformal Prediction* repository by Valery Manokhin ([repo](https://github.com/valeman/awesome-conformal-prediction)).
+- [Documentation](https://mapie.readthedocs.io/en/latest/index.html) for the Python package MAPIE.
+
 ## 🔁 Status
 
 This package is in its early stages of development and therefore still subject to changes to the core architecture and API.
@@ -167,7 +188,7 @@ The following CP approaches have been implemented:
 
 **Classification**:
 
-- Inductive (LABEL (Sadinle, Lei, and Wasserman 2019))
+- Inductive
 - Naive Transductive
 - Adaptive Inductive
 
@@ -220,14 +241,14 @@ Contributions are welcome! A good place to start is the [list](https://github.co
 
 ## 🙏 Thanks
 
-To build this package we have made heavy use of this amazing [tutorial](https://arxiv.org/abs/2107.07511) (Angelopoulos and Bates 2021) and also this research [paper](https://arxiv.org/abs/1905.02928). The Awesome Conformal Prediction [repository](https://github.com/valeman/awesome-conformal-prediction) (Manokhin, n.d.) has also been a fantastic place to get started. Special thanks also to [@aangelopoulos](https://github.com/aangelopoulos), [@valeman](https://github.com/valeman) and others for actively contributing to discussions on here. Finally, many thanks to Anthony Blaom ([@ablaom](https://github.com/ablaom)) for many helpful discussions about how to interface this package to `MLJ.jl`.
+To build this package I have read and re-read both Angelopoulos and Bates (2021) and Barber et al. (2021). The Awesome Conformal Prediction [repository](https://github.com/valeman/awesome-conformal-prediction) (Manokhin, n.d.) has also been a fantastic place to get started. Thanks also to [@aangelopoulos](https://github.com/aangelopoulos), [@valeman](https://github.com/valeman) and others for actively contributing to discussions on here. Quite a few people have also recently started using and contributing to the package for which I am very grateful. Finally, many thanks to Anthony Blaom ([@ablaom](https://github.com/ablaom)) for many helpful discussions about how to interface this package to `MLJ.jl`.
 
 ## 🎓 References
 
 Angelopoulos, Anastasios N., and Stephen Bates. 2021. “A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification.” <https://arxiv.org/abs/2107.07511>.
 
+Barber, Rina Foygel, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani. 2021. “Predictive Inference with the Jackknife+.” *The Annals of Statistics* 49 (1): 486–507. <https://doi.org/10.1214/20-AOS1965>.
+
 Blaom, Anthony D., Franz Kiraly, Thibaut Lienart, Yiannis Simillides, Diego Arenas, and Sebastian J. Vollmer. 2020. “MLJ: A Julia Package for Composable Machine Learning.” *Journal of Open Source Software* 5 (55): 2704. <https://doi.org/10.21105/joss.02704>.
 
 Manokhin, Valery. n.d. “Awesome Conformal Prediction.”
-
-Sadinle, Mauricio, Jing Lei, and Larry Wasserman. 2019. “Least Ambiguous Set-Valued Classifiers with Bounded Error Levels.” *Journal of the American Statistical Association* 114 (525): 223–34.
