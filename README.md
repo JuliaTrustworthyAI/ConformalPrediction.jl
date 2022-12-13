@@ -13,7 +13,7 @@ The [link](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.
 
 ### Local Tour
 
-To run the tour locally, just clone this repo start `Pluto.jl` as follows:
+To run the tour locally, just clone this repo and start `Pluto.jl` as follows:
 
 ``` julia
 ] add Pluto
@@ -100,11 +100,11 @@ ŷ[1:show_first]
 ```
 
     5-element Vector{Tuple{Float64, Float64}}:
-     (0.5113539995719073, 2.7791173590180245)
-     (0.15501260477711076, 2.491986075800726)
-     (-0.32783606947941524, 1.9302674946467009)
-     (-0.13732511816023366, 2.141708832043786)
-     (0.5089900787456267, 2.7771571126470387)
+     (0.325476135568554, 2.5420611849529986)
+     (-0.8093221495344456, 1.513229072277355)
+     (0.24246467414510378, 2.531848511672005)
+     (-0.37629465789570005, 1.9144457517084361)
+     (-0.5411423339519135, 1.712803571302072)
 
 For simple models like this one, we can call a custom `Plots` recipe on our instance, fit result and data to generate the chart below:
 
@@ -135,13 +135,13 @@ println("SSC: $(round(_eval.measurement[2], digits=3))")
     ┌───────────────────────────────────────────────────────────┬───────────┬───────
     │ measure                                                   │ operation │ meas ⋯
     ├───────────────────────────────────────────────────────────┼───────────┼───────
-    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.94 ⋯
-    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.76 ⋯
+    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.95 ⋯
+    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.90 ⋯
     └───────────────────────────────────────────────────────────┴───────────┴───────
                                                                    3 columns omitted
 
-    Empirical coverage: 0.947
-    SSC: 0.762
+    Empirical coverage: 0.957
+    SSC: 0.907
 
 ## 🔁 Status
 

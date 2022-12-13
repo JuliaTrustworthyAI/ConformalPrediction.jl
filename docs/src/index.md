@@ -17,7 +17,7 @@ The [link](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.
 
 ### Local Tour
 
-To run the tour locally, just clone this repo start `Pluto.jl` as follows:
+To run the tour locally, just clone this repo and start `Pluto.jl` as follows:
 
 ``` julia
 ] add Pluto
