@@ -84,6 +84,7 @@ const available_models = Dict(
             :jackknife_minmax => JackknifeMinMaxRegressor,
             :cv_plus => CVPlusRegressor,
             :cv_minmax => CVMinMaxRegressor,
+            :jackknife_plus_ab => JackknifePlusAbRegressor,
         ),
         :inductive => Dict(:simple_inductive => SimpleInductiveRegressor),
     ),

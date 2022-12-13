@@ -541,3 +541,95 @@ function MMI.predict(conf_model::CVMinMaxRegressor, fitresult, Xnew)
     ŷ = map(yᵢ -> (minimum(yᵢ .- q̂), maximum(yᵢ .+ q̂)), eachrow(ŷ))
     return ŷ
 end
+
+
+# Jackknife_plus_after_bootstrapping
+"Constructor for `JackknifePlusAbPlusRegressor`."
+mutable struct JackknifePlusAbRegressor{Model <: Supervised} <: ConformalInterval
+    model::Model
+    coverage::AbstractFloat
+    scores::Union{Nothing,AbstractArray}
+    heuristic::Function
+    nsampling::Int16
+    replacement:: Bool
+    aggregate:: String
+end
+
+function JackknifePlusAbRegressor(model::Supervised; 
+                                coverage::AbstractFloat=0.95, 
+                                heuristic::Function=f(y,ŷ)=abs(y-ŷ), 
+                                nsampling::Int16, 
+                                replacement::Bool=False, 
+                                aggregate:: String)
+    return JackknifePlusABRegressor(model, coverage, nothing, heuristic, nsampling, replacement, aggregate)
+end
+
+@doc raw"""
+    MMI.fit(conf_model::JackknifePlusAbRegressor, verbosity, X, y)
+
+For the [`JackknifePlusAbRegressor`](@ref) nonconformity scores are computed in the same way as for the [`JackknifeRegressor`](@ref). Specifically, we have,
+
+``
+S_i^{\text{LOO}} = s(X_i, Y_i) = h(\hat\mu_{-i}(X_i), Y_i), \ i \in \mathcal{D}_{\text{train}}
+``
+
+where ``\hat\mu_{-i}(X_i)`` denotes the leave-one-out prediction for ``X_i``. In other words, for each training instance ``i=1,...,n`` the model is trained on all training data excluding ``i``. The fitted model is then used to predict out-of-sample from ``X_i``. The corresponding nonconformity score is then computed by applying a heuristic uncertainty measure ``h(\cdot)`` to the fitted value ``\hat\mu_{-i}(X_i)`` and the true value ``Y_i``.
+"""
+function MMI.fit(conf_model::JackknifePlusAbRegressor, verbosity, X, y)
+    
+    samples, fitresult, cache, report = ([],[],[],[])
+    T = size(y,1)
+    if replacement
+        m = T/2
+    else
+        m = T
+    end
+
+    for _ in 1:nsampling
+        sample₋ᵢ = sample(1:T, m, replace=replacement)
+        y₋ᵢ = y[sample₋ᵢ]
+        X₋ᵢ = selectrows(X, sample₋ᵢ)
+        μ̂₋ᵢ, cache₋ᵢ, report₋ᵢ = MMI.fit(conf_model.model, 0, MMI.reformat(conf_model.model, X₋ᵢ, y₋ᵢ)...)
+        push!(samples, sample₋ᵢ)
+        push!(fitresult, μ̂₋ᵢ)
+        push!(cache, cache₋ᵢ)
+        push!(report, report₋ᵢ)
+    end
+    
+    for t in 1:T
+        index_samples = indexin([v for v in samples if !(t in v)], samples)
+        selected_models = fitresult[index_samples]
+        Xᵢ = selectrows(X, t)
+        yᵢ = y[t]
+        ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xᵢ)...)) for μ̂₋ᵢ in selected_models] 
+        ŷᵢ = mean(ŷ)
+        push!(scores,@.(conf_model.heuristic(yᵢ, ŷᵢ))...)
+    end
+    conf_model.scores = scores
+    return (fitresult, cache, report)
+end
+
+# Prediction
+@doc raw"""
+    MMI.predict(conf_model::JackknifePlusAbRegressor, fitresult, Xnew)
+
+For the [`JackknifePlusAbRegressor`](@ref) prediction intervals are computed as follows,
+
+``
+\hat{C}_{n,\alpha}(X_{n+1}) = \left[ \hat{q}_{n, α}^{-} \{\hat\mu_ϕ\i}(X_{n+1}) - R_i \}, \hat{q}_{n,α}^{+} \{\hat\mu_ϕ\i}(X_{n+1}) + R_i \} \right] , i \in \mathcal{D}_{\text{train}}
+``
+
+where ``\hat\mu_{ϕ\i}`` denotes the aggregated models ``\hat\mu_{1}, ...., \hat\mu_{B}`` fitted on bootstrapped data where S_{b} does not include the ``i``th  data point. The jackknife``+`` procedure is more stable than the [`JackknifeRegressor`](@ref).
+"""
+function MMI.predict(conf_model::JackknifePlusAbRegressor, fitresult, Xnew)
+    # Get all bootstrapped predictions for each Xnew:
+    ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)) for μ̂₋ᵢ in fitresult] 
+    # Applying aggregation function on bootstrapped predictions across columns for each Xnew across rows:
+    ŷ = mean(ŷ)
+    # For each Xnew compute ( q̂⁻(μ̂_ϕ\ᵢ(xnew)-Rᵢ) , q̂⁺(μ̂_ϕ\ᵢ(xnew)+Rᵢ) ):
+    v = conf_model.scores
+    q̂ = Statistics.quantile(v, conf_model.coverage)
+    ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
+    ŷ = reformat_interval(ŷ)
+    return ŷ
+end
