@@ -30,12 +30,13 @@ function get_data(N=500; xmax=2.0, noise=0.5, fun::Function=f)
     return x, y
 end
 
-function logo_picture(;
+function logo_picture(
+    ;
     ndots = 3,
     frame_size = 500,
-    ms = 15,
+    ms = frame_size//10,
     mcolor = (:red, :green, :purple),
-    margin = 0.0,
+    margin = 0.1,
     fun=f(x) = x * cos(x),
     xmax = 2.5,
     noise = 0.5,
@@ -46,7 +47,7 @@ function logo_picture(;
     interval_color = julia_colors[:blue],
     interval_alpha = 0.2,
     seed = 2022
-    )
+)
 
     # Setup
     n_mcolor = length(mcolor)
@@ -80,7 +81,7 @@ function logo_picture(;
     setline(gt_stroke_size)
     sethue(gt_color)
     true_points = [Point((_scale .* (x,y))...) for (x,y) in zip(xtrue,ytrue)]
-    poly(true_points, action = :stroke)
+    poly(true_points[1:(end-1)], action = :stroke)
 
     # Data
     data_plot = zip(xplot,yplot)
