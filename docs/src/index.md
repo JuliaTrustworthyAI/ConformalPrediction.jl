@@ -3,7 +3,7 @@
 CurrentModule = ConformalPrediction
 ```
 
-![](../../dev/logo/wide_logo.png)
+![](assets/wide_logo.png)
 
 Documentation for [ConformalPrediction.jl](https://github.com/pat-alt/ConformalPrediction.jl).
 
