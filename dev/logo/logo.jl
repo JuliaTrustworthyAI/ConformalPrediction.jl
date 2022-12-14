@@ -98,7 +98,6 @@ function logo_picture(;
 
 end
 
-# DRAWING:
 function draw_small_logo(filename="dev/logo/small_logo.png";width=500)
     frame_size = width
     Drawing(frame_size, frame_size, filename)
@@ -108,51 +107,42 @@ function draw_small_logo(filename="dev/logo/small_logo.png";width=500)
     preview()
 end
 
-function pkg_name(
-    name="ConformalPrediction";
-    fs=200,
-    fill_color="black",
-    stroke_color="black",
-    font_family="Tamil MN"
-)
-    fontface(font_family)
-    fontsize(fs)
-    setline(4)
-    sethue(fill_color)
-    textoutlines(name, O, :path, valign=:middle, halign=:center)
-    fillpreserve()
-    sethue(stroke_color)
-    strokepath()
-end
-
-# DRAWING:
-function draw_wide_logo(filename = "dev/logo/wide_logo.png"; _pkg_name="ConformalPrediction", fs=200, font_family="Tamil MN", picture_kwargs=(), name_kwargs=(), bg_color="transparent")
+function draw_wide_logo_new(filename = "dev/logo/wide_logo.png"; _pkg_name="Conformal Prediction.jl", font_size=150, font_family="Tamil MN", picture_kwargs=(), name_kwargs=(), bg_color="white")
 
     # Setup:
-    fontsize(fs)
+    height = Int(round(font_size*2.4))
+    fontsize(font_size)
     fontface(font_family)
-    w, h = textextents(_pkg_name)[3:4]              # get width and height
-    scale_up_h = 1.3
-    scale_up_w = 1.15
-    height = Int(round(scale_up_h * h))
-    width = Int(round(scale_up_w * w))
-    ms = Int(round(fs/10))
+    strs = split(_pkg_name)
+    text_col_width = Int(round(maximum(map(str -> textextents(str)[3], strs)) * 1.05))
+    width = Int(round(height + text_col_width))
+    cw = [height, text_col_width]
+    cells = Luxor.Table(height, cw)
+    ms = Int(round(height/10))
 
     Drawing(width, height, filename)
     origin()
     background(bg_color)
+
+    # Picture:
     @layer begin
-        frame_size = height
-        _margin = (0.25 * frame_size)/2
-        translate(- (width/2 - 0.5 * frame_size - _margin), 0)
-        logo_picture(; frame_size=height, ms=ms, picture_kwargs...)
+        translate(cells[1])
+        logo_picture(frame_size = height, margin=0.1, ms=ms)
     end
+
+    # Text:
     @layer begin
-        translate(0.5 * frame_size + _margin/2, 0)
-        pkg_name(_pkg_name; fs = fs, font_family, name_kwargs...)
+        translate(cells[2])
+        fontsize(font_size)
+        fontface(font_family)
+        tiles = Tiler(cells.colwidths[2], height, length(strs), 1)
+        for (pos, n) in tiles
+            text(string(strs[n]), pos, halign=:center, valign = :middle)
+        end
     end
+
     finish()
     preview()
 end
 
-draw_wide_logo(fs=200)
+draw_wide_logo_new()
