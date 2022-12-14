@@ -1,6 +1,7 @@
 
 using Pkg; Pkg.activate("dev")
 
+using Colors
 using ConformalPrediction
 using Distributions
 using Luxor
@@ -36,13 +37,14 @@ function logo_picture(;
     mcolor = (:red, :green, :purple),
     margin = 0.0,
     fun=f(x) = x * cos(x),
-    xmax = 2.0,
+    xmax = 2.5,
     noise = 0.5,
     ged_data = get_data,
     ntrue = 50,
     gt_color = julia_colors[:blue],
+    gt_stroke_size = 5,
     interval_color = julia_colors[:blue],
-    interval_alpha = 0.1,
+    interval_alpha = 0.2,
     seed = 2022
     )
 
@@ -75,6 +77,7 @@ function logo_picture(;
     _scale = (frame_size/(2*maximum(x))) * (1 - margin)
 
     # Ground truth:
+    setline(gt_stroke_size)
     sethue(gt_color)
     true_points = [Point((_scale .* (x,y))...) for (x,y) in zip(xtrue,ytrue)]
     poly(true_points, action = :stroke)
@@ -107,7 +110,10 @@ function draw_small_logo(filename="dev/logo/small_logo.png";width=500)
     preview()
 end
 
-function draw_wide_logo_new(filename = "dev/logo/wide_logo.png"; _pkg_name="Conformal Prediction.jl", font_size=150, font_family="Tamil MN", picture_kwargs=(), name_kwargs=(), bg_color="white")
+function draw_wide_logo_new(
+    filename = "dev/logo/wide_logo.png"; _pkg_name="Conformal Prediction", font_size=150, font_family="Tamil MN", font_fill="transparent", font_color=Luxor.julia_blue, bg_color="transparent",
+    picture_kwargs...
+)
 
     # Setup:
     height = Int(round(font_size*2.4))
@@ -119,6 +125,7 @@ function draw_wide_logo_new(filename = "dev/logo/wide_logo.png"; _pkg_name="Conf
     cw = [height, text_col_width]
     cells = Luxor.Table(height, cw)
     ms = Int(round(height/10))
+    gt_stroke_size = Int(round(height/50))
 
     Drawing(width, height, filename)
     origin()
@@ -127,7 +134,10 @@ function draw_wide_logo_new(filename = "dev/logo/wide_logo.png"; _pkg_name="Conf
     # Picture:
     @layer begin
         translate(cells[1])
-        logo_picture(frame_size = height, margin=0.1, ms=ms)
+        logo_picture(
+            frame_size = height, margin=0.1, ms=ms, gt_stroke_size=gt_stroke_size,
+            picture_kwargs...
+        )
     end
 
     # Text:
@@ -137,7 +147,14 @@ function draw_wide_logo_new(filename = "dev/logo/wide_logo.png"; _pkg_name="Conf
         fontface(font_family)
         tiles = Tiler(cells.colwidths[2], height, length(strs), 1)
         for (pos, n) in tiles
-            text(string(strs[n]), pos, halign=:center, valign = :middle)
+            @layer begin
+                translate(pos)
+                setline(Int(round(gt_stroke_size/5)))
+                sethue(font_fill)
+                textoutlines(strs[n], O, :path, valign=:middle, halign=:center)
+                sethue(font_color)
+                strokepath()
+            end
         end
     end
 
