@@ -1,5 +1,5 @@
 
-# ConformalPrediction
+![](dev/logo/wide_logo.png)
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/stable/) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/dev/) [![Build Status](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/pat-alt/ConformalPrediction.jl/actions/workflows/CI.yml?query=branch%3Amain) [![Coverage](https://codecov.io/gh/pat-alt/ConformalPrediction.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/pat-alt/ConformalPrediction.jl) [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle) [![ColPrac: Contributor’s Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet.png)](https://github.com/SciML/ColPrac) [![Twitter Badge](https://img.shields.io/twitter/url/https/twitter.com/paltmey.svg?style=social&label=Follow%20%40paltmey)](https://twitter.com/paltmey)
 
@@ -106,11 +106,11 @@ ŷ[1:show_first]
 ```
 
     5-element Vector{Tuple{Float64, Float64}}:
-     (0.5113539995719073, 2.7791173590180245)
-     (0.15501260477711076, 2.491986075800726)
-     (-0.32783606947941524, 1.9302674946467009)
-     (-0.13732511816023366, 2.141708832043786)
-     (0.5089900787456267, 2.7771571126470387)
+     (0.325476135568554, 2.5420611849529986)
+     (-0.8093221495344456, 1.513229072277355)
+     (0.24246467414510378, 2.531848511672005)
+     (-0.37629465789570005, 1.9144457517084361)
+     (-0.5411423339519135, 1.712803571302072)
 
 For simple models like this one, we can call a custom `Plots` recipe on our instance, fit result and data to generate the chart below:
 
@@ -141,13 +141,13 @@ println("SSC: $(round(_eval.measurement[2], digits=3))")
     ┌───────────────────────────────────────────────────────────┬───────────┬───────
     │ measure                                                   │ operation │ meas ⋯
     ├───────────────────────────────────────────────────────────┼───────────┼───────
-    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.94 ⋯
-    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.76 ⋯
+    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.95 ⋯
+    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.90 ⋯
     └───────────────────────────────────────────────────────────┴───────────┴───────
                                                                    3 columns omitted
 
-    Empirical coverage: 0.947
-    SSC: 0.762
+    Empirical coverage: 0.957
+    SSC: 0.907
 
 ## 📚 Read on
 

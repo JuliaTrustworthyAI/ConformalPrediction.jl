@@ -15,7 +15,7 @@ bibliography: https://raw.githubusercontent.com/pat-alt/bib/main/bib.bib
 jupyter: julia-1.8
 ---
 
-# ConformalPrediction
+![](dev/logo/wide_logo.png)
 
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/stable/)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://pat-alt.github.io/ConformalPrediction.jl/dev/)
