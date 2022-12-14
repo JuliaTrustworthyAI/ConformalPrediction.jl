@@ -102,7 +102,7 @@ function logo_picture(
 
 end
 
-function draw_small_logo(filename="dev/logo/small_logo.png";width=500)
+function draw_small_logo(filename="docs/src/assets/logo.svg";width=500)
     frame_size = width
     Drawing(frame_size, frame_size, filename)
     origin()
