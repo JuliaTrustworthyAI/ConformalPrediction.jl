@@ -109,11 +109,11 @@ function draw_small_logo(filename="dev/logo/small_logo.png";width=500)
 end
 
 function pkg_name(
-    name="ConformalPrediction.jl";
+    name="ConformalPrediction";
     fs=200,
     fill_color="black",
     stroke_color="black",
-    font_family="Times"
+    font_family="Tamil MN"
 )
     fontface(font_family)
     fontsize(fs)
@@ -126,13 +126,13 @@ function pkg_name(
 end
 
 # DRAWING:
-function draw_wide_logo(filename = "dev/logo/wide_logo.png"; _pkg_name="ConformalPrediction.jl", fs=200, font_family="Times", picture_kwargs=(), name_kwargs=())
+function draw_wide_logo(filename = "dev/logo/wide_logo.png"; _pkg_name="ConformalPrediction", fs=200, font_family="Tamil MN", picture_kwargs=(), name_kwargs=(), bg_color="transparent")
 
     # Setup:
     fontsize(fs)
     fontface(font_family)
     w, h = textextents(_pkg_name)[3:4]              # get width and height
-    scale_up_h = 1.2
+    scale_up_h = 1.3
     scale_up_w = 1.15
     height = Int(round(scale_up_h * h))
     width = Int(round(scale_up_w * w))
@@ -140,7 +140,7 @@ function draw_wide_logo(filename = "dev/logo/wide_logo.png"; _pkg_name="Conforma
 
     Drawing(width, height, filename)
     origin()
-    background("antiquewhite")
+    background(bg_color)
     @layer begin
         frame_size = height
         _margin = (0.25 * frame_size)/2
