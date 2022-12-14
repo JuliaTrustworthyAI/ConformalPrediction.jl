@@ -112,7 +112,7 @@ function draw_small_logo(filename="dev/logo/small_logo.png";width=500)
 end
 
 function draw_wide_logo_new(
-    filename = "dev/logo/wide_logo.png"; _pkg_name="Conformal Prediction", font_size=150, font_family="Tamil MN", font_fill="transparent", font_color=Luxor.julia_blue, bg_color="transparent",
+    filename = "docs/src/assets/wide_logo.png"; _pkg_name="Conformal Prediction", font_size=150, font_family="Tamil MN", font_fill="transparent", font_color=Luxor.julia_blue, bg_color="transparent",
     picture_kwargs...
 )
 
