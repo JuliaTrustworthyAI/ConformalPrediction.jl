@@ -9,7 +9,7 @@ data_specs = (
 )
 data_sets = Dict{String,Any}()
 for (k, v) in data_specs
-    X, y = MLJ.make_blobs(500, v[1], centers = v[2])
+    X, y = MLJ.make_blobs(1000, v[1], centers = v[2])
     X = MLJ.table(MLJ.matrix(X))
     train, test = partition(eachindex(y), 0.8)
     _set = Dict(:data => (X, y), :split => (train, test), :specs => v)
