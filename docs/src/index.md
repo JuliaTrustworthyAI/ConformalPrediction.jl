@@ -7,7 +7,7 @@ CurrentModule = ConformalPrediction
 
 Documentation for [ConformalPrediction.jl](https://github.com/pat-alt/ConformalPrediction.jl).
 
-`ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) (Blaom et al. 2020). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic.
+`ConformalPrediction.jl` is a package for Predictive Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) (Blaom et al. 2020). Conformal Prediction is easy-to-understand, easy-to-use and model-agnostic and it works under minimal distributional assumptions.
 
 ## 🏃 Quick Tour
 
@@ -110,11 +110,11 @@ ŷ[1:show_first]
 ```
 
     5-element Vector{Tuple{Float64, Float64}}:
-     (0.325476135568554, 2.5420611849529986)
-     (-0.8093221495344456, 1.513229072277355)
-     (0.24246467414510378, 2.531848511672005)
-     (-0.37629465789570005, 1.9144457517084361)
-     (-0.5411423339519135, 1.712803571302072)
+     (0.5113539995719073, 2.7791173590180245)
+     (0.15501260477711076, 2.491986075800726)
+     (-0.32783606947941524, 1.9302674946467009)
+     (-0.13732511816023366, 2.141708832043786)
+     (0.5089900787456267, 2.7771571126470387)
 
 For simple models like this one, we can call a custom `Plots` recipe on our instance, fit result and data to generate the chart below:
 
@@ -145,13 +145,13 @@ println("SSC: $(round(_eval.measurement[2], digits=3))")
     ┌───────────────────────────────────────────────────────────┬───────────┬───────
     │ measure                                                   │ operation │ meas ⋯
     ├───────────────────────────────────────────────────────────┼───────────┼───────
-    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.95 ⋯
-    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.90 ⋯
+    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.94 ⋯
+    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.76 ⋯
     └───────────────────────────────────────────────────────────┴───────────┴───────
                                                                    3 columns omitted
 
-    Empirical coverage: 0.957
-    SSC: 0.907
+    Empirical coverage: 0.947
+    SSC: 0.762
 
 ## 📚 Read on
 

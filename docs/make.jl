@@ -48,7 +48,7 @@ makedocs(;
         ],
         "🧐 Reference" => "_reference.md",
         "🛠 Contribute" => "contribute.md",
-        "❓ FAQ" => "faq.md",
+        "❓ FAQ" => "_faq.md",
     ],
 )
 

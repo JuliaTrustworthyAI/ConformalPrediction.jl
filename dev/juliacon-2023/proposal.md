@@ -1,15 +1,15 @@
-Uncertainty Quantification in ML through Conformal Prediction
+Predictive Uncertainty Quantification in Machine Learning
 ================
 
 ### Abstract
 
-We propose [`ConformalPrediction.jl`](https://github.com/pat-alt/ConformalPrediction.jl): a Julia package for Uncertainty Quantification in Machine Learning (ML) through Conformal Prediction. It is designed to work with supervised models trained in [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/) (Blaom et al. 2020), a popular and comprehensive ML framework for Julia. Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic.
+We propose [`ConformalPrediction.jl`](https://github.com/pat-alt/ConformalPrediction.jl): a Julia package for Predictive Uncertainty Quantification in Machine Learning (ML) through Conformal Prediction. It works with supervised models trained in [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/) (Blaom et al. 2020), a comprehensive ML framework for Julia. Conformal Prediction is easy-to-understand, easy-to-use and model-agnostic and it works under minimal distributional assumptions.
 
-### 📈 The Need for Uncertainty Quantification
+### 📈 The Need for Predictive Uncertainty Quantification
 
 A first crucial step towards building trustworthy AI systems is to be transparent about predictive uncertainty. Machine Learning model parameters are random variables and their values are estimated from noisy data. That inherent stochasticity feeds through to model predictions and should to be addressed, at the very least in order to avoid overconfidence in models.
 
-Beyond that obvious concern, it turns out that quantifying model uncertainty actually opens up a myriad of possibilities to improve up- and down-stream modeling tasks like active learning and model robustness. In Bayesian Active Learning, for example, uncertainty estimates are used to guide the search for new input samples, which can make ground-truthing tasks more efficient (Houlsby et al. 2011). With respect to model performance in downstream tasks, uncertainty quantification can be used to improve model calibration and robustness (Lakshminarayanan, Pritzel, and Blundell 2016).
+Beyond that obvious concern, it turns out that quantifying model uncertainty actually opens up a myriad of possibilities to improve up- and down-stream modeling tasks like active learning and model robustness. In Bayesian Active Learning, for example, uncertainty estimates are used to guide the search for new input samples, which can make ground-truthing tasks more efficient (Houlsby et al. 2011). With respect to model performance in downstream tasks, predictive uncertainty quantification can be used to improve model calibration and robustness (Lakshminarayanan, Pritzel, and Blundell 2016).
 
 ### 👉 Enter: Conformal Prediction
 
