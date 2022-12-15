@@ -14,7 +14,7 @@ Random.seed!(2022)
 www_path = "docs/src/www"   # output path for files don't get automatically saved in auto-generated path (e.g. GIFs)
 ```
 
-In this section we attempt to provide some reflections on frequently asked questions about the package and implemented methodologies. If you have a particular question that is not listed here, please feel free to also open an issue. While can answer questions regarding the package with a certain degree of confidence, I **do not pretend** to have any definite answers to methodological questions, but merely reflections (more on this below). 
+In this section we attempt to provide some reflections on frequently asked questions about the package and implemented methodologies. If you have a particular question that is not listed here, please feel free to also open an issue. While can answer questions regarding the package with a certain degree of confidence, I **do not pretend** to have any definite answers to methodological questions, but merely reflections (see the disclaimer below). 
 
 ## Package
 
@@ -32,7 +32,9 @@ Distribution-Free Uncertainty Quantification"](https://arxiv.org/pdf/2107.07511.
 
 ### What is Predictive Uncertainty Quantification?
 
-Predictive Uncertainty Quantification deals with quantifying the uncertainty around predictions for the output variable of a supervised model. It is a subset of Uncertainty Quantification, which can also relate to uncertainty around model parameters, for example. Uncertainty of model parameters is a very important topic itself: we might be interested in understanding, for example, if the estimated effect $\theta$ of some input variable $x$ on the output variable $y$ is statistically significant. This typically hinges on being able to quantify the uncertainty around the parameter $\theta$. This package does not offer this sort of functionality. I have so far not come across any work on Conformal Inference that deals with parameter uncertainty, but I also haven't properly looked for it. 
+Predictive Uncertainty Quantification deals with quantifying the uncertainty around predictions for the output variable of a supervised model. It is a subset of Uncertainty Quantification, which can also relate to uncertainty around model parameters, for example. I will sometimes use both terms interchangeably, even though I shouldn't (please bare with me, or if you're bothered by a particular slip-up, open a PR). 
+
+Uncertainty of model parameters is a very important topic itself: we might be interested in understanding, for example, if the estimated effect $\theta$ of some input variable $x$ on the output variable $y$ is statistically significant. This typically hinges on being able to quantify the uncertainty around the parameter $\theta$. This package does not offer this sort of functionality. I have so far not come across any work on Conformal Inference that deals with parameter uncertainty, but I also haven't properly looked for it. 
 
 ### What is the (marginal) coverage guarantee?
 

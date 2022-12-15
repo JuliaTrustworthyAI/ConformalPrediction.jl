@@ -5,7 +5,7 @@
 CurrentModule = ConformalPrediction
 ```
 
-In this section we attempt to provide some reflections on frequently asked questions about the package and implemented methodologies. If you have a particular question that is not listed here, please feel free to also open an issue. While can answer questions regarding the package with a certain degree of confidence, I **do not pretend** to have any definite answers to methodological questions, but merely reflections (more on this below).
+In this section we attempt to provide some reflections on frequently asked questions about the package and implemented methodologies. If you have a particular question that is not listed here, please feel free to also open an issue. While can answer questions regarding the package with a certain degree of confidence, I **do not pretend** to have any definite answers to methodological questions, but merely reflections (see the disclaimer below).
 
 ## Package
 
@@ -18,11 +18,13 @@ An important design choice. `MLJ.jl` is a one-stop shop for common machine learn
 For methodological questions about Conformal Prediction, my best advice is to consult the literature on the topic. A good place to start is [“A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification”](https://arxiv.org/pdf/2107.07511.pdf) (Angelopoulos and Bates 2021): the tutorial is comprehensive, accessible and continuously updated. Below you will find a list of high-level questions and reflections.
 
 !!! warning "Disclaimer"  
-    I want to emphasize that these are merely my own **reflections**. I provide these to the best of my knowledge and understanding of the topic, but please be aware that I am still on a learning journey myself. I have not read the entire literature on this topic (and won’t be able to in the future either). If you spot anything that doesn’t look right or sits at odds with something your read in the literature, please open an issue. Even better: if you want to add your own reflections and thoughts, feel free to open a pull request.
+    I want to emphasize that these are merely my own **reflections**. I provide these to the best of my knowledge and understanding of the topic, but please be aware that I am still on a learning journey myself. I have not read the entire literature on this topic (and won’t be able to in the future either). If you spot anything that doesn’t look right or sits at odds with something your read in the literature, please open an issue. Even better: if you want to add your own reflections and thoughts, feel free to open a pull request.
 
 ### What is Predictive Uncertainty Quantification?
 
-Predictive Uncertainty Quantification deals with quantifying the uncertainty around predictions for the output variable of a supervised model. It is a subset of Uncertainty Quantification, which can also relate to uncertainty around model parameters, for example. Uncertainty of model parameters is a very important topic itself: we might be interested in understanding, for example, if the estimated effect *θ* of some input variable *x* on the output variable *y* is statistically significant. This typically hinges on being able to quantify the uncertainty around the parameter *θ*. This package does not offer this sort of functionality. I have so far not come across any work on Conformal Inference that deals with parameter uncertainty, but I also haven’t properly looked for it.
+Predictive Uncertainty Quantification deals with quantifying the uncertainty around predictions for the output variable of a supervised model. It is a subset of Uncertainty Quantification, which can also relate to uncertainty around model parameters, for example. I will sometimes use both terms interchangeably, even though I shouldn’t (please bare with me, or if you’re bothered by a particular slip-up, open a PR).
+
+Uncertainty of model parameters is a very important topic itself: we might be interested in understanding, for example, if the estimated effect *θ* of some input variable *x* on the output variable *y* is statistically significant. This typically hinges on being able to quantify the uncertainty around the parameter *θ*. This package does not offer this sort of functionality. I have so far not come across any work on Conformal Inference that deals with parameter uncertainty, but I also haven’t properly looked for it.
 
 ### What is the (marginal) coverage guarantee?
 
