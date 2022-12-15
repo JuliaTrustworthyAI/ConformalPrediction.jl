@@ -8,7 +8,7 @@ Random.seed!(123)
 using ConformalPrediction
 ```
 
-`ConformalPrediction.jl` is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) [@blaom2020mlj]. Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic. 
+`ConformalPrediction.jl` is a package for Predictive Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) [@blaom2020mlj]. Conformal Prediction is easy-to-understand, easy-to-use and model-agnostic and it works under minimal distributional assumptions. 
 
 ## 🏃 Quick Tour
 
