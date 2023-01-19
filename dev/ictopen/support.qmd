@@ -1,0 +1,49 @@
+---
+format:
+  pdf:
+    number-sections: true
+    fontsize: 10pt
+bibliography: ../../../bib.bib
+---
+
+## Endogenous Macrodynamics in Algorithmic Recourse {-}
+
+This supporting document presents a proof-of-concept that mimics the application of Algorithmic Recourse (AR) in practice. It illustrates the main observation that our paper is built on: applying AR in practice to groups of individuals may induce substantial data and model shift. We then highlight some of our key findings. Finally, we showcase our proposed mitigation strategies.
+
+## Proof-of-Concept
+
+@fig-poc illustrates what we define as Endogenous Macrodynamics in Algorithmic Recourse: (a) we have a simple linear classifier trained for binary classification where samples from the negative class ($y=0$) are marked in orange and samples of the positive class ($y=1$) are marked in blue; (b) the implementation of AR for a random subset of individuals in the non-target class leads to a noticeable domain shift; (c) as the classifier is retrained we observe a corresponding model shift; (d) as this process is repeated, the decision boundary moves away from the target class.
+
+:::{#exm-credit}
+
+## Consumer Credit 
+
+Suppose @fig-poc relates to an automated decision-making system used by a retail bank to evaluate credit applicants with respect to their creditworthiness. Assume that the two features are meaningful in the sense that creditworthiness decreases in the South-East direction. Then we can think of the outcome in panel (d) as representing a situation where the bank supplies credit to more borrowers (blue), but these borrowers are on average less creditworthy and more of them can be expected to default on their loan. This represents a cost to the retail bank.
+
+:::
+
+![Proof-of-Concept --- Applying Algorithmic Recourse in practice. Image by author.](../../../paper/www/poc.png){#fig-poc width="400"}
+
+## Key Findings
+
+Through simulation experiments involving various state-of-the-art counterfactual generators and several benchmark datasets, we generate large numbers of counterfactuals and study the resulting domain and model shifts.
+
+- Our findings indicate that state-of-the-art approaches to Algorithmic Recourse induce substantial domain and model shifts.
+- We would argue that the expected external costs of individual recourse should be shared by all stakeholders.
+- A straightforward way to achieve this is to penalize external costs in the counterfactual search objective function.
+
+As we will touch on briefly below we also find that:
+
+- Various simple strategies based on this notion can be effectively used to mitigate shifts.
+
+## Proposed Mitigation Strategies
+
+By introducing a second penalty term in the counterfactual search objective, we can explicitly penalize external costs: that is, costs that affect the broad group of stakeholders. @fig-mitigate illustrates how our mitigation strategies compare to the baseline approach, that is, **Generic** with a decision threshold of $0.5$ [@wachter2017counterfactual]: choosing a higher decision threshold pushes the counterfactual a little further into the target domain; this effect is even stronger for **ClaPROAR** --- our proposed classifier-preserving version of ROAR [@upadhyay2021robust]; finally, using our proposed **Gravitational** generator the counterfactual ends up deep inside the target domain. 
+
+![Our proposed mitigation strategies.](../../../paper/www/mitigation.png){#fig-mitigate width="400"}
+
+## IEEE SaTML 2023
+
+This work will be presented at the first [IEEE Conference on Secure and Trustworthy Machine Learning](https://satml.org/). You can find out more about our work in this GitHub repository: [https://github.com/pat-alt/endogenous-macrodynamics-in-algorithmic-recourse](https://github.com/pat-alt/endogenous-macrodynamics-in-algorithmic-recourse). 
+
+## References {-}
