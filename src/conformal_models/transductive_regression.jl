@@ -1,5 +1,6 @@
 using MLJBase: CV
-
+using Distributions
+using StatsBase
 # Naive
 """
 The `NaiveRegressor` for conformal prediction is the simplest approach to conformal regression.
@@ -550,18 +551,18 @@ mutable struct JackknifePlusAbRegressor{Model <: Supervised} <: ConformalInterva
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
     heuristic::Function
-    nsampling::Int16
-    replacement:: Bool
-    aggregate:: String
+    nsampling::Int
+    replacement::Bool
+    aggregate::String
 end
 
 function JackknifePlusAbRegressor(model::Supervised; 
                                 coverage::AbstractFloat=0.95, 
                                 heuristic::Function=f(y,ŷ)=abs(y-ŷ), 
-                                nsampling::Int16, 
-                                replacement::Bool=False, 
-                                aggregate:: String)
-    return JackknifePlusABRegressor(model, coverage, nothing, heuristic, nsampling, replacement, aggregate)
+                                nsampling::Int=2, 
+                                replacement::Bool=false, 
+                                aggregate::String="mean")
+    return JackknifePlusAbRegressor(model, coverage, nothing, heuristic, nsampling, replacement, aggregate)
 end
 
 @doc raw"""
@@ -577,34 +578,48 @@ where ``\hat\mu_{-i}(X_i)`` denotes the leave-one-out prediction for ``X_i``. In
 """
 function MMI.fit(conf_model::JackknifePlusAbRegressor, verbosity, X, y)
     
-    samples, fitresult, cache, report = ([],[],[],[])
+    samples, fitresult, cache, report, scores = ([],[],[],[],[])
+    replacement = conf_model.replacement
+    nsampling = conf_model.nsampling
+    aggregate = conf_model.aggregate
     T = size(y,1)
-    if replacement
-        m = T/2
-    else
-        m = T
-    end
-
+    # subsample size
+    m = floor(Int, T/2)
     for _ in 1:nsampling
-        sample₋ᵢ = sample(1:T, m, replace=replacement)
-        y₋ᵢ = y[sample₋ᵢ]
-        X₋ᵢ = selectrows(X, sample₋ᵢ)
-        μ̂₋ᵢ, cache₋ᵢ, report₋ᵢ = MMI.fit(conf_model.model, 0, MMI.reformat(conf_model.model, X₋ᵢ, y₋ᵢ)...)
-        push!(samples, sample₋ᵢ)
-        push!(fitresult, μ̂₋ᵢ)
-        push!(cache, cache₋ᵢ)
-        push!(report, report₋ᵢ)
+        samplesᵢ = sample(1:T, m, replace=replacement)
+        yᵢ = y[samplesᵢ] 
+        Xᵢ = selectrows(X, samplesᵢ)
+        μ̂ᵢ, cacheᵢ, reportᵢ = MMI.fit(conf_model.model, 0, MMI.reformat(conf_model.model, Xᵢ, yᵢ)...)
+        push!(samples, samplesᵢ)
+        push!(fitresult, μ̂ᵢ)
+        push!(cache, cacheᵢ)
+        push!(report, reportᵢ)
     end
-    
     for t in 1:T
         index_samples = indexin([v for v in samples if !(t in v)], samples)
         selected_models = fitresult[index_samples]
-        Xᵢ = selectrows(X, t)
-        yᵢ = y[t]
-        ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xᵢ)...)) for μ̂₋ᵢ in selected_models] 
-        ŷᵢ = mean(ŷ)
-        push!(scores,@.(conf_model.heuristic(yᵢ, ŷᵢ))...)
+        Xₜ = selectrows(X, t)
+        yₜ = y[t]
+        ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ₜ, MMI.reformat(conf_model.model, Xₜ)...)) for μ̂₋ₜ in selected_models] 
+        try
+            if aggregate == "mean"
+                ŷₜ = mean(ŷ)
+            elseif aggregate == "median"
+                ŷₜ = median(ŷ)
+            elseif aggregate == "trimmedmean"
+                ŷₜ = mean(trim(ŷ, prop=0.1))
+            else
+                println("Aggregate is not defined, the default is mean")
+                ŷₜ = mean(ŷ)
+            end
+            push!(scores,@.(conf_model.heuristic(yₜ, ŷₜ))...) 
+        catch MethodError
+            ŷₜ = NaN
+            push!(scores,@.(conf_model.heuristic(yₜ, ŷₜ))...)
+        end
+        
     end
+    scores = filter(!isnan, scores)
     conf_model.scores = scores
     return (fitresult, cache, report)
 end
@@ -626,7 +641,6 @@ function MMI.predict(conf_model::JackknifePlusAbRegressor, fitresult, Xnew)
     ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)) for μ̂₋ᵢ in fitresult] 
     # Applying aggregation function on bootstrapped predictions across columns for each Xnew across rows:
     ŷ = mean(ŷ)
-    # For each Xnew compute ( q̂⁻(μ̂_ϕ\ᵢ(xnew)-Rᵢ) , q̂⁺(μ̂_ϕ\ᵢ(xnew)+Rᵢ) ):
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
