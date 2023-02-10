@@ -609,7 +609,7 @@ function MMI.fit(conf_model::JackknifePlusAbRegressor, verbosity, X, y)
             elseif aggregate == "trimmedmean"
                 ŷₜ = mean(trim(ŷ, prop=0.1))
             else
-                println("Aggregate is not defined, the default is mean")
+                println("Aggregatation method is not defined, the default is mean")
                 ŷₜ = mean(ŷ)
             end
             push!(scores,@.(conf_model.heuristic(yₜ, ŷₜ))...) 
@@ -640,7 +640,17 @@ function MMI.predict(conf_model::JackknifePlusAbRegressor, fitresult, Xnew)
     # Get all bootstrapped predictions for each Xnew:
     ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)) for μ̂₋ᵢ in fitresult] 
     # Applying aggregation function on bootstrapped predictions across columns for each Xnew across rows:
-    ŷ = mean(ŷ)
+    aggregate = conf_model.aggregate
+    if aggregate == "mean"
+        ŷ = mean(ŷ)
+    elseif aggregate == "median"
+        ŷ = median(ŷ)
+    elseif aggregate == "trimmedmean"
+        ŷ = mean(trim(ŷ, prop=0.1))
+    else
+        println("Aggregatation method is not defined, the default is mean")
+        ŷ = mean(ŷ)
+    end
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
