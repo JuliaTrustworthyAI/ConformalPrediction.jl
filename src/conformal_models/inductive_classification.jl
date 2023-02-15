@@ -3,7 +3,7 @@
 mutable struct SimpleInductiveClassifier{Model<:Supervised} <: ConformalProbabilisticSet
     model::Model
     coverage::AbstractFloat
-    scores::Union{Nothing,AbstractArray}
+    scores::Union{Nothing,Dict{Any,Any}}
     heuristic::Function
     train_ratio::AbstractFloat
 end
@@ -43,8 +43,13 @@ function MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
     # Nonconformity Scores:
-    ŷ = pdf.(reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, Xcal)), ycal)
-    conf_model.scores = @.(conf_model.heuristic(ycal, ŷ))
+    L = levels(y)
+    ŷ = pdf(reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, Xcal)), L)
+    scores = @.(conf_model.heuristic(ycal, ŷ))
+    conf_model.scores = Dict(
+        :calibration => getindex.(Ref(scores), 1:size(scores,1), levelcode.(ycal)),
+        :all => scores,
+    )
 
     return (fitresult, cache, report)
 end
@@ -64,7 +69,7 @@ function MMI.predict(conf_model::SimpleInductiveClassifier, fitresult, Xnew)
     p̂ = reformat_mlj_prediction(
         MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...),
     )
-    v = conf_model.scores
+    v = conf_model.scores[:calibration]
     q̂ = Statistics.quantile(v, conf_model.coverage)
     p̂ = map(p̂) do pp
         L = p̂.decoder.classes
@@ -128,7 +133,7 @@ function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
     ŷ = pdf(p̂, L)                                           # compute probabilities for all classes
     scores = map(eachrow(ŷ), eachrow(ycal)) do ŷᵢ, ycalᵢ
         ranks = sortperm(.-ŷᵢ)                              # rank in descending order
-        index_y = findall(L[ranks] .== ycalᵢ)[1]              # index of true y in sorted array
+        index_y = findall(L[ranks] .== ycalᵢ)[1]            # index of true y in sorted array
         scoreᵢ = last(cumsum(ŷᵢ[ranks][1:index_y]))         # sum up until true y is reached
         return scoreᵢ
     end
