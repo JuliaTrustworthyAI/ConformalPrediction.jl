@@ -1,3 +1,6 @@
+using CategoricalArrays
+using Flux
+using LinearAlgebra
 using MLJBase
 
 """
@@ -27,3 +30,21 @@ function smooth_size_loss(
     Ω = map(x -> maximum([0,x]), sum(C .- κ; dims=2))
     return Ω
 end
+
+# function classification_loss(
+#     conf_model::ConformalProbabilisticSet, fitresult, X, y;
+#     loss_matrix::Union{AbstractMatrix,UniformScaling} = UniformScaling(1.0),
+#     temp::Real=0.5
+# )
+#     L = levels(y)
+#     K = length(L)
+#     if typeof(loss_matrix) <: UniformScaling
+#         loss_matrix = loss_matrix(K)
+#     end
+#     C = soft_assignment(conf_model, fitresult, X; temp=temp)
+#     yenc = permutedims(Flux.onehotbatch(levelcode.(y), levels(y)))
+#     l1 = (1 .- C) * yenc * loss_matrix
+#     l2 = C * (1 .- yenc) * loss_matrix
+#     ℒ = sum(maximum(l1 + l2, zeros(size(l1))); dims=1)
+#     return ℒ
+# end
