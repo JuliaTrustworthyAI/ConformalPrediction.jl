@@ -12,14 +12,14 @@ function soft_assignment(conf_model::ConformalProbabilisticSet; temp::Real=0.5)
     v = conf_model.scores[:calibration]
     q̂ = Statistics.quantile(v, conf_model.coverage)
     scores = conf_model.scores[:all]
-    return @.(MLJBase.sigmoid((scores - q̂) / temp))
+    return @.(MLJBase.sigmoid((q̂ - scores) / temp))
 end
 
 function soft_assignment(conf_model::ConformalProbabilisticSet, fitresult, X; temp::Real=0.5)
     v = conf_model.scores[:calibration]
     q̂ = Statistics.quantile(v, conf_model.coverage)
     scores = score(conf_model, fitresult, X)
-    return @.(MLJBase.sigmoid((scores - q̂) / temp))
+    return @.(MLJBase.sigmoid((q̂ - scores) / temp))
 end
 
 function smooth_size_loss(
