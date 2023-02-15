@@ -11,10 +11,24 @@ end
 function SimpleInductiveClassifier(
     model::Supervised;
     coverage::AbstractFloat = 0.95,
-    heuristic::Function = f(y, ŷ) = 1.0 - ŷ,
+    heuristic::Function = f(p̂) = 1.0 - p̂,
     train_ratio::AbstractFloat = 0.5,
 )
     return SimpleInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
+end
+
+function score(conf_model::SimpleInductiveClassifier, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+    X = isa(X, Matrix) ? table(X) : X
+    p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, X))
+    L = p̂.decoder.classes
+    probas = pdf(p̂, L)
+    scores = @.(conf_model.heuristic(probas))
+    if isnothing(y)
+        return scores
+    else
+        cal_scores = getindex.(Ref(scores), 1:size(scores,1), levelcode.(y))
+        return cal_scores, scores
+    end
 end
 
 @doc raw"""
@@ -43,11 +57,9 @@ function MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
     # Nonconformity Scores:
-    L = levels(y)
-    ŷ = pdf(reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, Xcal)), L)
-    scores = @.(conf_model.heuristic(ycal, ŷ))
+    cal_scores, scores = score(conf_model, fitresult, Xcal, ycal)
     conf_model.scores = Dict(
-        :calibration => getindex.(Ref(scores), 1:size(scores,1), levelcode.(ycal)),
+        :calibration => cal_scores,
         :all => scores,
     )
 

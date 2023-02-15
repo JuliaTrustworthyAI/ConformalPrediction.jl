@@ -12,8 +12,18 @@ function soft_assignment(conf_model::ConformalProbabilisticSet; temp::Real=0.5)
     return @.(MLJBase.sigmoid((scores - q̂) / temp))
 end
 
+function soft_assignment(conf_model::ConformalProbabilisticSet, fitresult, X; temp::Real=0.5)
+    v = conf_model.scores[:calibration]
+    q̂ = Statistics.quantile(v, conf_model.coverage)
+    scores = score(conf_model, fitresult, X)
+    return @.(MLJBase.sigmoid((scores - q̂) / temp))
+end
+
 function smooth_size_loss(
-    conf_model::ConformalProbabilisticSet, x::Union{Nothing,AbstractArray}; 
+    conf_model::ConformalProbabilisticSet, fitresult, X; 
     temp::Real=0.5, κ::Real=1.0
 )
+    C = soft_assignment(conf_model, fitresult, X; temp=temp)
+    Ω = map(x -> maximum([0,x]), sum(C .- κ; dims=2))
+    return Ω
 end
