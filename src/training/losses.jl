@@ -48,7 +48,14 @@ function smooth_size_loss(
     C = soft_assignment(conf_model, fitresult, X; temp=temp)
     full_set_size = size(C, 2)
     is_empty_set = all(x -> x .== 0, soft_assignment(conf_model, fitresult, X; temp=0.0), dims=2)
-    Ω = map((x, is_empty) -> is_empty ? full_set_size - κ : maximum([0, x - κ]), sum(C; dims=2), is_empty_set)
+    Ω = map(sum(C; dims=2), is_empty_set) do x, is_empty
+        if is_empty #&& κ > 0
+            ω = maximum([x - κ, full_set_size - κ])
+        else 
+            ω = maximum([0, x - κ])
+        end
+        return ω
+    end
     return Ω
 end
 
