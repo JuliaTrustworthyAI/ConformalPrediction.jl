@@ -18,10 +18,11 @@ function SimpleInductiveClassifier(
 end
 
 function score(conf_model::SimpleInductiveClassifier, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
-    X = isa(X, Matrix) ? table(X) : X
-    p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, X))
-    L = p̂.decoder.classes
-    probas = pdf(p̂, L)
+    # X = isa(X, Matrix) ? table(X) : X
+    # p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, X))
+    # L = p̂.decoder.classes
+    # probas = pdf(p̂, L)
+    probas = permutedims(fitresult[1](X))
     scores = @.(conf_model.heuristic(probas))
     if isnothing(y)
         return scores

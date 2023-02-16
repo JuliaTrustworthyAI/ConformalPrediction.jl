@@ -9,10 +9,10 @@ using MLJBase
 Computes soft assignment scores for each label and sample. That is, the probability of label `k` being included in the confidence set. This implementation follows Stutz et al. (2022): https://openreview.net/pdf?id=t8O-4LKFVx. Contrary to the paper, we use non-conformity scores instead of conformity scores, hence the sign swap. 
 """
 function soft_assignment(conf_model::ConformalProbabilisticSet; temp::Real=0.5)
-    v = conf_model.scores[:calibration]
-    q̂ = Statistics.quantile(v, conf_model.coverage)
+    v = sort(conf_model.scores[:calibration])
+    q̂ = Statistics.quantile(v, conf_model.coverage, sorted=true)
     scores = conf_model.scores[:all]
-    return @.(MLJBase.sigmoid((q̂ - scores) / temp))
+    return @.(σ((q̂ - scores) / temp))
 end
 
 @doc raw"""
@@ -21,10 +21,10 @@ end
 This function can be used to compute soft assigment probabilities for new data `X` as in [`soft_assignment(conf_model::ConformalProbabilisticSet; temp::Real=0.5)`](@ref). When a fitted model $\mu$ (`fitresult`) and new samples `X` are supplied, non-conformity scores are first computed for the new data points. Then the existing threshold/quantile `q̂` is used to compute the final soft assignments. 
 """
 function soft_assignment(conf_model::ConformalProbabilisticSet, fitresult, X; temp::Real=0.5)
-    v = conf_model.scores[:calibration]
-    q̂ = Statistics.quantile(v, conf_model.coverage)
+    v = sort(conf_model.scores[:calibration])
+    q̂ = Statistics.quantile(v, conf_model.coverage, sorted=true)
     scores = score(conf_model, fitresult, X)
-    return @.(MLJBase.sigmoid((q̂ - scores) / temp))
+    return @.(σ((q̂ - scores) / temp))
 end
 
 @doc raw"""
