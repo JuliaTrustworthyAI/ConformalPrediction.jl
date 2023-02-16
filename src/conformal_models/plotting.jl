@@ -65,6 +65,9 @@ function Plots.contourf(
     xlims = nothing,
     ylims = nothing,
     plot_set_size = false,
+    plot_classification_loss = false,
+    plot_set_loss = false,
+    κ = 0,
     kwargs...,
 )
 
@@ -85,26 +88,46 @@ function Plots.contourf(
 
     # Target
     if !isnothing(target)
-        @assert target in unique(y) "Specified target does not match any of the labels."
+        @assert target in levels(y) "Specified target does not match any of the labels."
     end
     if length(unique(y)) > 1
         if isnothing(target)
             @info "No target label supplied, using first."
         end
         target = isnothing(target) ? 1 : target
-        _default_title = plot_set_size ? "Set size" : "p̂(y=$(target))"
+        if plot_set_size 
+            _default_title = "Set size"
+        elseif plot_set_loss
+            _default_title = "Smooth set loss"
+        elseif plot_classification_loss
+            _default_title = "ℒ(C,$(target))"
+        else
+            _default_title = "p̂(y=$(target))"
+        end
     else
-        target = isnothing(target) ? 2 : target
-        _default_title = plot_set_size ? "Set size" : "p̂(y=$(target-1))"
+        if plot_set_size 
+            _default_title = "Set size"
+        elseif plot_set_loss
+            _default_title = "Smooth set loss"
+        elseif plot_classification_loss
+            _default_title = "ℒ(C,$(target-1))"
+        else
+            _default_title = "p̂(y=$(target-1))"
+        end
     end
     title = !@isdefined(title) ? _default_title : title
 
     # Predictions
     Z = []
     for x2 in x2range, x1 in x1range
-        p̂ = predict(conf_model, fitresult, [x1 x2])[1]
+        p̂ = predict(conf_model, fitresult, table([x1 x2]))[1]
         if plot_set_size
             z = ismissing(p̂) ? 0 : sum(pdf.(p̂, p̂.decoder.classes) .> 0)
+        elseif plot_classification_loss
+            _target = categorical([target], levels=levels(y))
+            z = ConformalPrediction.classification_loss(conf_model, fitresult, [x1 x2], _target)
+        elseif plot_set_loss
+            z = ConformalPrediction.smooth_size_loss(conf_model, fitresult, [x1 x2]; κ=κ)
         else
             z = ismissing(p̂) ? [missing for i = 1:length(levels(y))] : pdf.(p̂, levels(y))
             z = replace(z, 0 => missing)
@@ -139,6 +162,8 @@ function Plots.contourf(
             xlims = xlims,
             ylims = ylims,
             clim = clim,
+            c = cgrad(:blues),
+            linewidth=0,
             kwargs...,
         )
     end
