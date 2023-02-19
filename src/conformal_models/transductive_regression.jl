@@ -568,13 +568,13 @@ end
 @doc raw"""
     MMI.fit(conf_model::JackknifePlusAbRegressor, verbosity, X, y)
 
-For the [`JackknifePlusAbRegressor`](@ref) nonconformity scores are computed in the same way as for the [`JackknifeRegressor`](@ref). Specifically, we have,
+For the [`JackknifePlusAbRegressor`](@ref) nonconformity scores are computed as
 
 ``
-S_i^{\text{LOO}} = s(X_i, Y_i) = h(\hat\mu_{-i}(X_i), Y_i), \ i \in \mathcal{D}_{\text{train}}
+$ S_i^{\text{J+ab}} = s(X_i, Y_i) = h(agg(\hat\mu_{B_{K(-i)}}(X_i)), Y_i), \ i \in \mathcal{D}_{\text{train}} $
 ``
 
-where ``\hat\mu_{-i}(X_i)`` denotes the aggregate prediction for ``X_i`` where ``X_i`` is not in boostrapped sampling . In other words, n model is trained on n boostrapped sampling. The fitted models are then used to create aggregated prediction of out-of-sample ``X_i``. The corresponding nonconformity score is then computed by applying a heuristic uncertainty measure ``h(\cdot)`` to the fitted value ``\hat\mu_{-i}(X_i)`` and the true value ``Y_i``.
+where ``agg(\hat\mu_{B_{K(-i)}}(X_i))`` denotes the aggregate predictions, typically mean or median, for each ``X_i`` (with ``K_{-i}`` the bootstraps not containing ``X_i``). In other words, B models are trained on boostrapped sampling, the fitted models are then used to create aggregated prediction of out-of-sample ``X_i``. The corresponding nonconformity score is then computed by applying a heuristic uncertainty measure ``h(\cdot)`` to the fitted value ``agg(\hat\mu_{B_{K(-i)}}(X_i))`` and the true value ``Y_i``.
 """
 function MMI.fit(conf_model::JackknifePlusAbRegressor, verbosity, X, y)
     
@@ -631,10 +631,10 @@ end
 For the [`JackknifePlusAbRegressor`](@ref) prediction intervals are computed as follows,
 
 ``
-\hat{C}_{n,\alpha}(X_{n+1}) = \left[ \hat{q}_{n, α}^{-} \{\hat\mu_ϕ\i}(X_{n+1}) - R_i \}, \hat{q}_{n,α}^{+} \{\hat\mu_ϕ\i}(X_{n+1}) + R_i \} \right] , i \in \mathcal{D}_{\text{train}}
+\hat{C}_{n,\alpha, B}^{J+ab}(X_{n+1}) = \left[ \hat{q}_{n, \alpha}^{-} \{\hat\mu_{agg(-i)}(X_{n+1}) - S_i^{\text{J+ab}} \}, \hat{q}_{n, \alpha}^{+} \{\hat\mu_{agg(-i)}(X_{n+1}) + S_i^{\text{J+ab}}\} \right] , i \in \mathcal{D}_{\text{train}}
 ``
 
-where ``\hat\mu_{ϕ\i}`` denotes the aggregated models ``\hat\mu_{1}, ...., \hat\mu_{B}`` fitted on bootstrapped data where S_{b} does not include the ``i``th  data point. The jackknife``+`` procedure is more stable than the [`JackknifeRegressor`](@ref).
+where ``\hat\mu_{agg(-i)}`` denotes the aggregated models ``\hat\mu_{1}, ...., \hat\mu_{B}`` fitted on bootstrapped data (B) does not include the ``i``th data point. The jackknife``+`` procedure is more stable than the [`JackknifeRegressor`](@ref).
 """
 function MMI.predict(conf_model::JackknifePlusAbRegressor, fitresult, Xnew)
     # Get all bootstrapped predictions for each Xnew:
@@ -682,13 +682,13 @@ end
 @doc raw"""
     MMI.fit(conf_model::JackknifePlusMinMaxAbRegressor, verbosity, X, y)
 
-For the [`JackknifePlusAbRegressor`](@ref) nonconformity scores are computed in the same way as for the [`JackknifeRegressor`](@ref). Specifically, we have,
+For the [`JackknifePlusABMinMaxRegressor`](@ref) nonconformity scores are as,
 
 ``
-S_i^{\text{LOO}} = s(X_i, Y_i) = h(\hat\mu_{-i}(X_i), Y_i), \ i \in \mathcal{D}_{\text{train}}
+S_i^{\text{J+MinMax}} = s(X_i, Y_i) = h(agg(\hat\mu_{B_{K(-i)}}(X_i)), Y_i), \ i \in \mathcal{D}_{\text{train}}
 ``
 
-where ``\hat\mu_{-i}(X_i)`` denotes the aggregate prediction for ``X_i`` where ``X_i`` is not in boostrapped sampling . In other words, n model is trained on n boostrapped sampling. The fitted models are then used to create aggregated prediction of out-of-sample ``X_i``. The corresponding nonconformity score is then computed by applying a heuristic uncertainty measure ``h(\cdot)`` to the fitted value ``\hat\mu_{-i}(X_i)`` and the true value ``Y_i``.
+where ``agg(\hat\mu_{B_{K(-i)}}(X_i))`` denotes the aggregate predictions, typically mean or median, for each ``X_i`` (with ``K_{-i}`` the bootstraps not containing ``X_i``). In other words, B models are trained on boostrapped sampling, the fitted models are then used to create aggregated prediction of out-of-sample ``X_i``. The corresponding nonconformity score is then computed by applying a heuristic uncertainty measure ``h(\cdot)`` to the fitted value ``agg(\hat\mu_{B_{K(-i)}}(X_i))`` and the true value ``Y_i``.
 """
 function MMI.fit(conf_model::JackknifePlusAbMinMaxRegressor, verbosity, X, y)
     
@@ -715,6 +715,7 @@ function MMI.fit(conf_model::JackknifePlusAbMinMaxRegressor, verbosity, X, y)
         Xₜ = selectrows(X, t)
         yₜ = y[t]
         ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ₜ, MMI.reformat(conf_model.model, Xₜ)...)) for μ̂₋ₜ in selected_models] 
+        # catch cases that t is in all trained samples
         try
             if aggregate == "mean"
                 ŷₜ = mean(ŷ)
@@ -742,13 +743,13 @@ end
 @doc raw"""
     MMI.predict(conf_model::JackknifePlusAbMinMaxRegressor, fitresult, Xnew)
 
-For the [`JackknifePlusAbRegressor`](@ref) prediction intervals are computed as follows,
+For the [`JackknifePlusAbMinMaxRegressor`](@ref) prediction intervals are computed as follows,
 
 ``
-\hat{C}_{n,\alpha}(X_{n+1}) = \left[ \hat{q}_{n, α}^{-} \{\hat\mu_ϕ\i}(X_{n+1}) - R_i \}, \hat{q}_{n,α}^{+} \{\hat\mu_ϕ\i}(X_{n+1}) + R_i \} \right] , i \in \mathcal{D}_{\text{train}}
+\hat{C}_{n,\alpha}^{J+MinMax}(X_{n+1}) = \left[ \min_{i=1,...,n} \hat\mu_{-i}(X_{n+1}) -  \hat{q}_{n, \alpha}^{+} \{S_i^{\text{J+MinMax}} \}, \max_{i=1,...,n} \hat\mu_{-i}(X_{n+1}) + \hat{q}_{n, \alpha}^{+} \{S_i^{\text{J+MinMax}}\} \right] ,  i \in \mathcal{D}_{\text{train}} 
 ``
 
-where ``\hat\mu_{ϕ\i}`` denotes the aggregated models ``\hat\mu_{1}, ...., \hat\mu_{B}`` fitted on bootstrapped data where S_{b} does not include the ``i``th  data point. The jackknife``+`` procedure is more stable than the [`JackknifeRegressor`](@ref).
+where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th point removed. The jackknife+ab-minmax procedure is more conservative than the [`JackknifePlusAbRegressor`](@ref).
 """
 function MMI.predict(conf_model::JackknifePlusAbMinMaxRegressor, fitresult, Xnew)
     # Get all bootstrapped predictions for each Xnew:
