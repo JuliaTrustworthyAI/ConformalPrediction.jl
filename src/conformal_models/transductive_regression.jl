@@ -648,7 +648,7 @@ function MMI.predict(conf_model::JackknifePlusAbRegressor, fitresult, Xnew)
     elseif aggregate == "trimmedmean"
         ŷ = mean(trim(ŷ, prop=0.1))
     else
-        println("Aggregatation method is not defined, the default is mean")
+        println("Aggregatation method is not correctly defined, the default is mean")
         ŷ = mean(ŷ)
     end
     v = conf_model.scores
@@ -724,7 +724,7 @@ function MMI.fit(conf_model::JackknifePlusAbMinMaxRegressor, verbosity, X, y)
             elseif aggregate == "trimmedmean"
                 ŷₜ = mean(trim(ŷ, prop=0.1))
             else
-                println("Aggregatation method is not defined, the default is mean")
+                println("Aggregatation method is not correctly defined, the default is mean")
                 ŷₜ = mean(ŷ)
             end
             push!(scores,@.(conf_model.heuristic(yₜ, ŷₜ))...) 
@@ -759,6 +759,100 @@ function MMI.predict(conf_model::JackknifePlusAbMinMaxRegressor, fitresult, Xnew
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
     ŷ = map(yᵢ -> (minimum(yᵢ .- q̂), maximum(yᵢ .+ q̂)), eachrow(ŷ))
+    ŷ = reformat_interval(ŷ)
+    return ŷ
+end
+
+# Ensemble Batch Prediction Interval Regressor
+"Constructor for `EnsembleBatchPIRegressor`."
+mutable struct EnsembleBatchPIRegressor{Model <: Supervised} <: ConformalInterval
+    model::Model
+    coverage::AbstractFloat
+    scores::Union{Nothing,AbstractArray}
+    heuristic::Function
+    aggregate::String
+end
+
+
+function EnsembleBatchPIRegressor(
+    model::Supervised;
+    coverage::AbstractFloat = 0.95,
+    heuristic::Function = f(y, ŷ) = abs(y - ŷ),
+    aggregate::String="mean"
+    )
+    return EnsembleBatchPIRegressor(model, coverage, nothing, heuristic, aggregate)
+end
+
+@doc raw"""
+    MMI.fit(conf_model::EnsembleBatchPIRegressor, verbosity, X, y)
+
+For the [`EnsembleBatchPIRegressor`](@ref) nonconformity scores are computed as,
+
+``
+S_i^{\text{LOO}} = s(X_i, Y_i) = h(\hat\mu_{-i}(X_i), Y_i), \ i \in \mathcal{D}_{\text{train}}
+``
+
+where ``\hat\mu_{-i}(X_i)`` denotes the leave-one-out prediction for ``X_i``. In other words, for each training instance ``i=1,...,n`` the model is trained on all training data excluding ``i``. The fitted model is then used to predict out-of-sample from ``X_i``. The corresponding nonconformity score is then computed by applying a heuristic uncertainty measure ``h(\cdot)`` to the fitted value ``\hat\mu_{-i}(X_i)`` and the true value ``Y_i``.
+"""
+function MMI.fit(conf_model::EnsembleBatchPIRegressor, verbosity, X, y)
+
+    # Training: 
+    fitresult, cache, report = ([], [], [])
+
+    # Nonconformity Scores:
+    T = size(y, 1)
+    scores = []
+    for t = 1:T
+        loo_ids = 1:T .!= t
+        y₋ᵢ = y[loo_ids]
+        X₋ᵢ = selectrows(X, loo_ids)
+        yᵢ = y[t]
+        Xᵢ = selectrows(X, t)
+        # Store LOO fitresult:
+        μ̂₋ᵢ, cache₋ᵢ, report₋ᵢ =
+            MMI.fit(conf_model.model, 0, MMI.reformat(conf_model.model, X₋ᵢ, y₋ᵢ)...)
+        push!(fitresult, μ̂₋ᵢ)
+        push!(cache, cache₋ᵢ)
+        push!(report, report₋ᵢ)
+        # Store LOO score:
+        ŷᵢ = reformat_mlj_prediction(
+            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xᵢ)...),
+        )
+        push!(scores, @.(conf_model.heuristic(yᵢ, ŷᵢ))...)
+    end
+    conf_model.scores = scores
+
+    return (fitresult, cache, report)
+end
+
+# Prediction
+@doc raw"""
+    MMI.predict(conf_model::EnsembleBatchPIRegressor, fitresult, Xnew)
+
+For the [`EnsembleBatchPIRegressor`](@ref) prediction intervals are computed as follows,
+
+``
+\hat{C}_{n,\alpha}^{EnbPI}(X_{n+1}) = \left[\ \hat\mu_{agg}(X_{n+1}) +  \hat{q}_{n, \beta}\{R_{i}^{LOO}\} ,\ \hat\mu_{agg}(X_{n+1}) +  \hat{q}_{n, 1-\alpha+\beta}\{R_{i}^{LOO}\} \right] , i \in \mathcal{D}_{\text{train}}
+``
+
+where ``\hat\mu_{agg}`` is the aggregation of the predictions of the LOO estimators (mean or median), and ``R_{i}^{LOO} = |Y_{i} - \hat\mu_{i}(X_{i})|`` is the residual of the LOO estimator ``\hat\mu_{-i}`` at ``X_{-i}``
+"""
+function MMI.predict(conf_model::EnsembleBatchPIRegressor, fitresult, Xnew)
+    # Get all LOO predictions for each Xnew:
+    ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)) for μ̂₋ᵢ in fitresult] 
+    # Applying aggregation function on LOO predictions across columns for each Xnew across rows:
+    aggregate = conf_model.aggregate
+    if aggregate == "mean"
+        ŷ = mean(ŷ)
+    elseif aggregate == "median"
+        ŷ = median(ŷ)
+    else
+        println("Aggregatation method is not correctly defined, the default is mean")
+        ŷ = mean(ŷ)
+    end
+    v = conf_model.scores
+    q̂ = Statistics.quantile(v, conf_model.coverage)
+    ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
     return ŷ
 end
