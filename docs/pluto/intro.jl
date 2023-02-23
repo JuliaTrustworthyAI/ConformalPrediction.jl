@@ -32,7 +32,7 @@ end;
 md"""
 # Welcome to `ConformalPrediction.jl`
 
-[`ConformalPrediction.jl`](https://github.com/pat-alt/ConformalPrediction.jl) is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic. This notebook provides a very quick tour of the package functionality.
+[`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl) is a package for Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/). Conformal Prediction is distribution-free, easy-to-understand, easy-to-use and model-agnostic. This notebook provides a very quick tour of the package functionality.
 
 Let's start by loading the necessary packages:
 """
@@ -73,7 +73,7 @@ Don't worry, we're not about to deep-dive into methodology. But just to give you
 
 Intuitively, CP works under the premise of turning heuristic notions of uncertainty into rigorous uncertainty estimates through repeated sampling or the use of dedicated calibration data. 
 
-In what follows we will explore what CP can do by going through a standard machine learning workflow using [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/) and [`ConformalPrediction.jl`](https://github.com/pat-alt/ConformalPrediction.jl). There will be less focus on how exactly CP works, but references will point you to additional resources.
+In what follows we will explore what CP can do by going through a standard machine learning workflow using [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/) and [`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl). There will be less focus on how exactly CP works, but references will point you to additional resources.
 """
 
 # ╔═╡ 2a3570b0-8a1f-4836-965e-2e2740a2e995
@@ -146,7 +146,7 @@ Using the slider below you can zoom in and out to see how the function behaves o
 md"""
 ## 🏋️ Model Training using [`MLJ`](https://alan-turing-institute.github.io/MLJ.jl/dev/)
 
-[`ConformalPrediction.jl`]((https://github.com/pat-alt/ConformalPrediction.jl)) is interfaced to [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/): a comprehensive Machine Learning Framework for Julia. `MLJ.jl` provides a large and growing suite of popular machine learning models that can be used for supervised and unsupervised tasks. Conformal Prediction is a model-agnostic approach to uncertainty quantification, so it can be applied to any common supervised machine learning model. 
+[`ConformalPrediction.jl`]((https://github.com/juliatrustworthyai/ConformalPrediction.jl)) is interfaced to [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/): a comprehensive Machine Learning Framework for Julia. `MLJ.jl` provides a large and growing suite of popular machine learning models that can be used for supervised and unsupervised tasks. Conformal Prediction is a model-agnostic approach to uncertainty quantification, so it can be applied to any common supervised machine learning model. 
 
 The interface to `MLJ.jl` therefore seems natural: any (supervised) `MLJ.jl` model can now be conformalized using `ConformalPrediction.jl`. By leveraging existing `MLJ.jl` functionality for common tasks like training, prediction and model evaluation, this package is light-weight and scalable. Now let's see how all of that works ...
 
@@ -327,7 +327,7 @@ Inductive Conformal Prediction (also referred to as Split Conformal Prediction) 
 md"""
 ## 🔃 Recap
 
-This has been a super quick tour of [`ConformalPrediction.jl`](https://github.com/pat-alt/ConformalPrediction.jl). We have seen how the package naturally integrates with [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/), allowing users to generate rigorous predictive uncertainty estimates. 
+This has been a super quick tour of [`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl). We have seen how the package naturally integrates with [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/), allowing users to generate rigorous predictive uncertainty estimates. 
 
 ### *Are we done?*
 
