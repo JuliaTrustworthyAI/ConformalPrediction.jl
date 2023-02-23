@@ -22,11 +22,11 @@ DocMeta.setdocmeta!(ConformalPrediction, :DocTestSetup, ex_meta; recursive = tru
 makedocs(;
     modules = [ConformalPrediction],
     authors = "Patrick Altmeyer",
-    repo = "https://github.com/pat-alt/ConformalPrediction.jl/blob/{commit}{path}#{line}",
+    repo = "https://github.com/juliatrustworthyai/ConformalPrediction.jl/blob/{commit}{path}#{line}",
     sitename = "ConformalPrediction.jl",
     format = Documenter.HTML(;
         prettyurls = get(ENV, "CI", "false") == "true",
-        canonical = "https://pat-alt.github.io/ConformalPrediction.jl",
+        canonical = "https://juliatrustworthyai.github.io/ConformalPrediction.jl",
         edit_link = "main",
         assets = String[],
     ),
@@ -52,4 +52,4 @@ makedocs(;
     ],
 )
 
-deploydocs(; repo = "github.com/pat-alt/ConformalPrediction.jl", devbranch = "main")
+deploydocs(; repo = "github.com/juliatrustworthyai/ConformalPrediction.jl", devbranch = "main")

@@ -5,7 +5,7 @@ CurrentModule = ConformalPrediction
 
 ![](assets/wide_logo.png)
 
-Documentation for [ConformalPrediction.jl](https://github.com/pat-alt/ConformalPrediction.jl).
+Documentation for [ConformalPrediction.jl](https://github.com/juliatrustworthyai/ConformalPrediction.jl).
 
 `ConformalPrediction.jl` is a package for Predictive Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) (Blaom et al. 2020). Conformal Prediction is easy-to-understand, easy-to-use and model-agnostic and it works under minimal distributional assumptions.
 
@@ -54,7 +54,7 @@ The development version can be installed as follows:
 
 ``` julia
 using Pkg
-Pkg.add(url="https://github.com/pat-alt/ConformalPrediction.jl")
+Pkg.add(url="https://github.com/juliatrustworthyai/ConformalPrediction.jl")
 ```
 
 ## 🔍 Usage Example
@@ -159,7 +159,7 @@ If after reading the usage example above you are just left with more questions a
 
 1.  Blog post introducing conformal classifiers: \[[Quarto](https://www.paltmeyer.com/blog/posts/conformal-prediction/)\], \[[TDS](https://medium.com/towards-data-science/conformal-prediction-in-julia-351b81309e30)\], \[[Forem](https://forem.julialang.org/patalt/conformal-prediction-in-julia-h9n)\].
 2.  Blog post applying CP to a deep learning image classifier: \[[Quarto](https://www.paltmeyer.com/blog/posts/conformal-image-classifier/)\], \[[TDS](https://medium.com/towards-data-science/how-to-conformalize-a-deep-image-classifier-14ead4e1a5a0)\], \[[Forem](https://forem.julialang.org/patalt/how-to-conformalize-a-deep-image-classifier-50p2)\].
-3.  The package [docs](https://pat-alt.github.io/ConformalPrediction.jl/dev/) and in particular the [FAQ](https://www.paltmeyer.com/ConformalPrediction.jl/dev/faq/).
+3.  The package [docs](https://juliatrustworthyai.github.io/ConformalPrediction.jl/dev/) and in particular the [FAQ](https://www.paltmeyer.com/ConformalPrediction.jl/dev/faq/).
 
 ### External Resources
 
@@ -237,7 +237,7 @@ bar(mach.model, mach.fitresult, X)
 
 ## 🛠 Contribute
 
-Contributions are welcome! A good place to start is the [list](https://github.com/pat-alt/ConformalPrediction.jl/issues) of outstanding issues. For more details, see also the [Contributor’s Guide](https://www.paltmeyer.com/ConformalPrediction.jl/dev/contribute/). Please follow the [SciML ColPrac guide](https://github.com/SciML/ColPrac).
+Contributions are welcome! A good place to start is the [list](https://github.com/juliatrustworthyai/ConformalPrediction.jl/issues) of outstanding issues. For more details, see also the [Contributor’s Guide](https://www.paltmeyer.com/ConformalPrediction.jl/dev/contribute/). Please follow the [SciML ColPrac guide](https://github.com/SciML/ColPrac).
 
 ## 🙏 Thanks
 

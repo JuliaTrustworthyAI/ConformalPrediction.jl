@@ -3,7 +3,7 @@ Predictive Uncertainty Quantification in Machine Learning
 
 ### Abstract
 
-We propose [`ConformalPrediction.jl`](https://github.com/pat-alt/ConformalPrediction.jl): a Julia package for Predictive Uncertainty Quantification in Machine Learning (ML) through Conformal Prediction. It works with supervised models trained in [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/), a popular comprehensive ML framework for Julia. Conformal Prediction is easy-to-understand, easy-to-use and model-agnostic and it works under minimal distributional assumptions.
+We propose [`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl): a Julia package for Predictive Uncertainty Quantification in Machine Learning (ML) through Conformal Prediction. It works with supervised models trained in [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/), a popular comprehensive ML framework for Julia. Conformal Prediction is easy-to-understand, easy-to-use and model-agnostic and it works under minimal distributional assumptions.
 
 ### 📈 The Need for Predictive Uncertainty Quantification
 
@@ -41,8 +41,8 @@ Our primary goal for this package is to become the go-to place for conformalizin
 - Best of both worlds through **Conformalized Bayes**: combining the power of Bayesian methods with conformal coverage control.
 - Additional approaches to Conformal Regression (including time series) and Conformal Classification (including Venn-ABER) as well as support for Conformal Predictive Distributions.
 
-For more information see the list of outstanding [issues](https://github.com/pat-alt/ConformalPrediction.jl/issues).
+For more information see the list of outstanding [issues](https://github.com/juliatrustworthyai/ConformalPrediction.jl/issues).
 
 ### 🧐 Curious?
 
-Take a quick interactive tour to see what this package can do: [link](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl). Aside from this `Pluto.jl` 🎈 notebook you will find links to many more resources on the package repository: [`ConformalPrediction.jl`](https://github.com/pat-alt/ConformalPrediction.jl).
+Take a quick interactive tour to see what this package can do: [link](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl). Aside from this `Pluto.jl` 🎈 notebook you will find links to many more resources on the package repository: [`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl).

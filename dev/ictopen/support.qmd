@@ -10,9 +10,9 @@ bibliography: https://raw.githubusercontent.com/pat-alt/bib/main/bib.bib
 
 This supporting document provides brief descriptions of the various packages that form part of our Trustworthy AI ecosystem for Julia. We will use an extended version of this [notebook](https://mybinder.org/v2/gh/fonsp/pluto-on-binder/v0.19.12?urlpath=pluto/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl) for demo purposes (may take a few minutes to load).
 
-## [`ConformalPrediction.jl`](https://github.com/pat-alt/ConformalPrediction.jl)
+## [`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl)
 
-[`ConformalPrediction.jl`](https://github.com/pat-alt/ConformalPrediction.jl) is a package for Predictive Uncertainty Quantification through Conformal Prediction for Machine Learning models trained in [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/).
+[`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl) is a package for Predictive Uncertainty Quantification through Conformal Prediction for Machine Learning models trained in [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/).
 
 > Conformal prediction (a.k.a. conformal inference) is a user-friendly paradigm for creating statistically rigorous uncertainty sets/intervals for the predictions of such models.
 >
