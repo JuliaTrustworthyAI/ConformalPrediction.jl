@@ -110,11 +110,11 @@ ŷ[1:show_first]
 ```
 
     5-element Vector{Tuple{Float64, Float64}}:
-     (0.5113539995719073, 2.7791173590180245)
-     (0.15501260477711076, 2.491986075800726)
-     (-0.32783606947941524, 1.9302674946467009)
-     (-0.13732511816023366, 2.141708832043786)
-     (0.5089900787456267, 2.7771571126470387)
+     (0.3514065102722679, 2.4948272235282696)
+     (-0.36580206168104035, 1.7780775120607)
+     (0.13671800582612756, 2.2792132778975933)
+     (0.15237308545277795, 2.2801138611534326)
+     (0.19080981472120032, 2.3863592104933966)
 
 For simple models like this one, we can call a custom `Plots` recipe on our instance, fit result and data to generate the chart below:
 
@@ -145,13 +145,13 @@ println("SSC: $(round(_eval.measurement[2], digits=3))")
     ┌───────────────────────────────────────────────────────────┬───────────┬───────
     │ measure                                                   │ operation │ meas ⋯
     ├───────────────────────────────────────────────────────────┼───────────┼───────
-    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.94 ⋯
-    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.76 ⋯
+    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.95 ⋯
+    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.84 ⋯
     └───────────────────────────────────────────────────────────┴───────────┴───────
                                                                    3 columns omitted
 
-    Empirical coverage: 0.947
-    SSC: 0.762
+    Empirical coverage: 0.95
+    SSC: 0.841
 
 ## 📚 Read on
 
@@ -200,12 +200,11 @@ The package has been tested for the following supervised models offered by [MLJ]
 keys(tested_atomic_models[:regression])
 ```
 
-    KeySet for a Dict{Symbol, Expr} with 5 entries. Keys:
+    KeySet for a Dict{Symbol, Expr} with 4 entries. Keys:
       :nearest_neighbor
       :evo_tree
       :light_gbm
       :linear
-      :decision_tree
 
 **Classification**:
 
@@ -213,11 +212,10 @@ keys(tested_atomic_models[:regression])
 keys(tested_atomic_models[:classification])
 ```
 
-    KeySet for a Dict{Symbol, Expr} with 5 entries. Keys:
+    KeySet for a Dict{Symbol, Expr} with 4 entries. Keys:
       :nearest_neighbor
       :evo_tree
       :light_gbm
-      :decision_tree
       :logistic
 
 ### Implemented Evaluation Metrics
