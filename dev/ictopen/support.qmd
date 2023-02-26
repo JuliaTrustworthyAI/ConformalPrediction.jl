@@ -1,0 +1,49 @@
+---
+format:
+  pdf:
+    number-sections: true
+    fontsize: 10pt
+bibliography: https://raw.githubusercontent.com/pat-alt/bib/main/bib.bib
+---
+
+## Creating an Open-Source Ecosystem for Trustworthy AI in Julia {-}
+
+This supporting document provides brief descriptions of the various packages that form part of our Trustworthy AI ecosystem for Julia. We will use an extended version of this [notebook](https://mybinder.org/v2/gh/fonsp/pluto-on-binder/v0.19.12?urlpath=pluto/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl) for demo purposes (may take a few minutes to load).
+
+## [`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl)
+
+[`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl) is a package for Predictive Uncertainty Quantification through Conformal Prediction for Machine Learning models trained in [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/).
+
+> Conformal prediction (a.k.a. conformal inference) is a user-friendly paradigm for creating statistically rigorous uncertainty sets/intervals for the predictions of such models.
+>
+> --- @angelopoulos2021gentle
+
+Intuitively, CP works under the premise of turning heuristic notions of uncertainty into rigorous uncertainty estimates through repeated sampling or the use of dedicated calibration data. @fig-cp demonstrates this notion for the regression case.
+
+## [`LaplaceRedux.jl`](https://github.com/pat-alt/LaplaceRedux.jl)
+
+[`LaplaceRedux.jl`](https://github.com/pat-alt/LaplaceRedux.jl) is a package that facilitates Effortless Bayesian Deep Learning through Laplace Approximation for Deep Neural Networks built in `Flux.jl`. It implements the ideas presented in @daxberger2021laplace. @fig-laplace shows a Bayesian Prediction interval for a Deep Neural Network with Laplace Approximation that was built and trained in `LaplaceRedux.jl`.
+
+::: {#fig-pu layout="[60,-5,40]"}
+
+![Conformal Prediction interval for a Nearest Neighbour Regression model. Source: our [blog post](https://www.paltmeyer.com/blog/posts/conformal-regression/).](cp.png){#fig-cp}
+
+![Bayesian Prediction interval for a Deep Neural Network with Laplace Approximation. Source: package [repository](https://github.com/pat-alt/LaplaceRedux.jl).](laplace.png){#fig-laplace}
+
+Frequentist and Bayesian approaches to Predictive Uncertainty Quantification.
+:::
+
+## [`CounterfactualExplanations.jl`](https://github.com/pat-alt/CounterfactualExplanations.jl)
+
+[`CounterfactualExplanations.jl`](https://github.com/pat-alt/CounterfactualExplanations.jl) is a package for generating Counterfactual Explanations and Algorithmic Recourse in Julia. In @fig-ce1 we have generated a Counterfactual Explanation for turning a cat into a dog (a toy example): as the tail length decreases and the height increases, the cat traverses through the feature space across the decision boundary of the underlying classifier. @fig-ce2 applies the same underlying principles to MNIST data: it demonstrates which pixels need to be perturbed in order for the underlying image classifier to predict 'four' (4) instead of 'nine' (9).
+
+::: {#fig-ce layout="[60,-5,40]"}
+
+![Turning a cat into a dog. Source: package [repository](https://github.com/pat-alt/CounterfactualExplanations.jl).](ce2.png){#fig-ce1}
+
+![Turning a nine (9) into a four (4). Source: package [repository](https://github.com/pat-alt/CounterfactualExplanations.jl).](ce.png){#fig-ce2}
+
+Counterfactual Explanations in action.
+:::
+
+## References {-}

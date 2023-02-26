@@ -26,7 +26,7 @@ flowchart TB
     mmi --<:MMI.Probabilistic--> prob
 ```
 
-## Abstract Suptypes
+## Abstract Subtypes
 
 Currently I intend to work with three different abstract subtypes: 
 

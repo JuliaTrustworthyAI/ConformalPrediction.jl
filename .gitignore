@@ -24,5 +24,3 @@ docs/site/
 Manifest.toml
 
 /.quarto/
-
-.JuliaFormatter.jl
