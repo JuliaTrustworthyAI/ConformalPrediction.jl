@@ -1,7 +1,5 @@
 using MLJBase: CV
-using Distributions
-using StatsBase: sample, trim
-
+using StatsBase
 # Naive
 """
 The `NaiveRegressor` for conformal prediction is the simplest approach to conformal regression.
