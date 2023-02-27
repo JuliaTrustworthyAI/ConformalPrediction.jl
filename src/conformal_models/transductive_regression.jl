@@ -1,6 +1,7 @@
 using MLJBase: CV
 using Distributions
-using StatsBase
+using StatsBase: sample, trim
+
 # Naive
 """
 The `NaiveRegressor` for conformal prediction is the simplest approach to conformal regression.
@@ -603,14 +604,14 @@ function MMI.fit(conf_model::JackknifePlusAbRegressor, verbosity, X, y)
         ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ₜ, MMI.reformat(conf_model.model, Xₜ)...)) for μ̂₋ₜ in selected_models] 
         try
             if aggregate == "mean"
-                ŷₜ = mean(ŷ)
+                ŷₜ = Statistics.mean(ŷ)
             elseif aggregate == "median"
-                ŷₜ = median(ŷ)
+                ŷₜ = Statistics.median(ŷ)
             elseif aggregate == "trimmedmean"
-                ŷₜ = mean(trim(ŷ, prop=0.1))
+                ŷₜ = Statistics.mean(trim(ŷ, prop=0.1))
             else
                 println("Aggregatation method is not defined, the default is mean")
-                ŷₜ = mean(ŷ)
+                ŷₜ = Statistics.mean(ŷ)
             end
             push!(scores,@.(conf_model.heuristic(yₜ, ŷₜ))...) 
         catch MethodError
@@ -642,14 +643,14 @@ function MMI.predict(conf_model::JackknifePlusAbRegressor, fitresult, Xnew)
     # Applying aggregation function on bootstrapped predictions across columns for each Xnew across rows:
     aggregate = conf_model.aggregate
     if aggregate == "mean"
-        ŷ = mean(ŷ)
+        ŷ = Statistics.mean(ŷ)
     elseif aggregate == "median"
-        ŷ = median(ŷ)
+        ŷ = Statistics.median(ŷ)
     elseif aggregate == "trimmedmean"
-        ŷ = mean(trim(ŷ, prop=0.1))
+        ŷ = Statistics.mean(trim(ŷ, prop=0.1))
     else
         println("Aggregatation method is not correctly defined, the default is mean")
-        ŷ = mean(ŷ)
+        ŷ = Statistics.mean(ŷ)
     end
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
@@ -718,14 +719,14 @@ function MMI.fit(conf_model::JackknifePlusAbMinMaxRegressor, verbosity, X, y)
         # catch cases that t is in all trained samples
         try
             if aggregate == "mean"
-                ŷₜ = mean(ŷ)
+                ŷₜ = Statistics.mean(ŷ)
             elseif aggregate == "median"
-                ŷₜ = median(ŷ)
+                ŷₜ = Statistics.median(ŷ)
             elseif aggregate == "trimmedmean"
-                ŷₜ = mean(trim(ŷ, prop=0.1))
+                ŷₜ = Statistics.mean(trim(ŷ, prop=0.1))
             else
                 println("Aggregatation method is not correctly defined, the default is mean")
-                ŷₜ = mean(ŷ)
+                ŷₜ = Statistics.mean(ŷ)
             end
             push!(scores,@.(conf_model.heuristic(yₜ, ŷₜ))...) 
         catch MethodError
@@ -843,12 +844,12 @@ function MMI.predict(conf_model::EnsembleBatchPIRegressor, fitresult, Xnew)
     # Applying aggregation function on LOO predictions across columns for each Xnew across rows:
     aggregate = conf_model.aggregate
     if aggregate == "mean"
-        ŷ = mean(ŷ)
+        ŷ = Statistics.mean(ŷ)
     elseif aggregate == "median"
-        ŷ = median(ŷ)
+        ŷ = Statistics.median(ŷ)
     else
-        println("Aggregatation method is not correctly defined, the default is mean")
-        ŷ = mean(ŷ)
+        println("Aggregation method is not correctly defined, the default is mean")
+        ŷ = Statistics.mean(ŷ)
     end
     v = conf_model.scores
     q̂ = Statistics.quantile(v, conf_model.coverage)
