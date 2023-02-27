@@ -1,5 +1,5 @@
 using MLJBase: CV
-using StatsBase
+using StatsBase: sample, trim
 # Naive
 """
 The `NaiveRegressor` for conformal prediction is the simplest approach to conformal regression.
@@ -608,7 +608,7 @@ function MMI.fit(conf_model::JackknifePlusAbRegressor, verbosity, X, y)
             elseif aggregate == "trimmedmean"
                 ŷₜ = Statistics.mean(trim(ŷ, prop=0.1))
             else
-                println("Aggregatation method is not defined, the default is mean")
+                println("Aggregation method is not defined, the default is mean")
                 ŷₜ = Statistics.mean(ŷ)
             end
             push!(scores,@.(conf_model.heuristic(yₜ, ŷₜ))...) 
@@ -647,7 +647,7 @@ function MMI.predict(conf_model::JackknifePlusAbRegressor, fitresult, Xnew)
     elseif aggregate == "trimmedmean"
         ŷ = Statistics.mean(trim(ŷ, prop=0.1))
     else
-        println("Aggregatation method is not correctly defined, the default is mean")
+        println("Aggregation method is not correctly defined, the default is mean")
         ŷ = Statistics.mean(ŷ)
     end
     v = conf_model.scores
@@ -723,7 +723,7 @@ function MMI.fit(conf_model::JackknifePlusAbMinMaxRegressor, verbosity, X, y)
             elseif aggregate == "trimmedmean"
                 ŷₜ = Statistics.mean(trim(ŷ, prop=0.1))
             else
-                println("Aggregatation method is not correctly defined, the default is mean")
+                println("Aggregation method is not correctly defined, the default is mean")
                 ŷₜ = Statistics.mean(ŷ)
             end
             push!(scores,@.(conf_model.heuristic(yₜ, ŷₜ))...) 
