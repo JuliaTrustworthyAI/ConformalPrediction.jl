@@ -1,5 +1,6 @@
 using MLJBase: CV
 using StatsBase: sample, trim
+
 # Naive
 """
 The `NaiveRegressor` for conformal prediction is the simplest approach to conformal regression.
@@ -65,7 +66,7 @@ function MMI.predict(conf_model::NaiveRegressor, fitresult, Xnew)
         MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...),
     )
     v = conf_model.scores
-    q̂ = Statistics.quantile(v, conf_model.coverage)
+    q̂ = StatsBase.quantile(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
     return ŷ
@@ -147,7 +148,7 @@ function MMI.predict(conf_model::JackknifeRegressor, fitresult, Xnew)
         MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...),
     )
     v = conf_model.scores
-    q̂ = Statistics.quantile(v, conf_model.coverage)
+    q̂ = StatsBase.quantile(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
     return ŷ
@@ -235,8 +236,8 @@ function MMI.predict(conf_model::JackknifePlusRegressor, fitresult, Xnew)
     ŷ = reduce(hcat, ŷ)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
     ŷ = map(eachrow(ŷ)) do yᵢ
-        lb = -Statistics.quantile(.-yᵢ .+ conf_model.scores, conf_model.coverage)
-        ub = Statistics.quantile(yᵢ .+ conf_model.scores, conf_model.coverage)
+        lb = -StatsBase.quantile(.-yᵢ .+ conf_model.scores, conf_model.coverage)
+        ub = StatsBase.quantile(yᵢ .+ conf_model.scores, conf_model.coverage)
         return (lb, ub)
     end
     ŷ = reformat_interval(ŷ)
@@ -325,7 +326,7 @@ function MMI.predict(conf_model::JackknifeMinMaxRegressor, fitresult, Xnew)
     ŷ = reduce(hcat, ŷ)
     # Get all LOO residuals:
     v = conf_model.scores
-    q̂ = Statistics.quantile(v, conf_model.coverage)
+    q̂ = StatsBase.quantile(v, conf_model.coverage)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
     ŷ = map(yᵢ -> (minimum(yᵢ .- q̂), maximum(yᵢ .+ q̂)), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
@@ -430,8 +431,8 @@ function MMI.predict(conf_model::CVPlusRegressor, fitresult, Xnew)
     ŷ = reduce(hcat, ŷ)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
     ŷ = map(eachrow(ŷ)) do yᵢ
-        lb = -Statistics.quantile(.-yᵢ .+ conf_model.scores, conf_model.coverage)
-        ub = Statistics.quantile(yᵢ .+ conf_model.scores, conf_model.coverage)
+        lb = -StatsBase.quantile(.-yᵢ .+ conf_model.scores, conf_model.coverage)
+        ub = StatsBase.quantile(yᵢ .+ conf_model.scores, conf_model.coverage)
         return (lb, ub)
     end
     ŷ = reformat_interval(ŷ)
@@ -536,12 +537,35 @@ function MMI.predict(conf_model::CVMinMaxRegressor, fitresult, Xnew)
     ŷ = reduce(hcat, ŷ)
     # Get all LOO residuals:
     v = conf_model.scores
-    q̂ = Statistics.quantile(v, conf_model.coverage)
+    q̂ = StatsBase.quantile(v, conf_model.coverage)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
     ŷ = map(yᵢ -> (minimum(yᵢ .- q̂), maximum(yᵢ .+ q̂)), eachrow(ŷ))
     return ŷ
 end
 
+"""
+    _aggregate(y, aggregate::Union{Symbol,String})
+
+Helper function that performs aggregation across vector of predictions.
+"""
+function _aggregate(y, aggregate::Union{Symbol,String})
+    # Setup:
+    aggregate = Symbol(aggregate)
+    valid_methods = Dict(
+        :mean => x -> StatsBase.mean(x),
+        :median => x -> StatsBase.median(x),
+        :trimmedmean => x -> StatsBase.mean(trim(x, prop=0.1)),
+    )
+    @assert aggregate ∈ keys(valid_methods) "`aggregate`=$aggregate is not a valid aggregation method. Should be one of: $valid_methods"
+    # Aggregate:
+    ȳ = try
+        valid_methods[aggregate](y)
+    catch MethodError
+        # catch cases that t is in all trained samples
+        NaN
+    end
+    return ȳ
+end
 
 # Jackknife_plus_after_bootstrapping
 "Constructor for `JackknifePlusAbPlusRegressor`."
@@ -552,7 +576,7 @@ mutable struct JackknifePlusAbRegressor{Model <: Supervised} <: ConformalInterva
     heuristic::Function
     nsampling::Int
     replacement::Bool
-    aggregate::String
+    aggregate::Union{Symbol, String}
 end
 
 function JackknifePlusAbRegressor(model::Supervised; 
@@ -560,7 +584,7 @@ function JackknifePlusAbRegressor(model::Supervised;
                                 heuristic::Function=f(y,ŷ)=abs(y-ŷ), 
                                 nsampling::Int=2, 
                                 replacement::Bool=false, 
-                                aggregate::String="mean")
+                                aggregate::Union{Symbol, String}="mean")
     return JackknifePlusAbRegressor(model, coverage, nothing, heuristic, nsampling, replacement, aggregate)
 end
 
@@ -600,23 +624,8 @@ function MMI.fit(conf_model::JackknifePlusAbRegressor, verbosity, X, y)
         Xₜ = selectrows(X, t)
         yₜ = y[t]
         ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ₜ, MMI.reformat(conf_model.model, Xₜ)...)) for μ̂₋ₜ in selected_models] 
-        try
-            if aggregate == "mean"
-                ŷₜ = Statistics.mean(ŷ)
-            elseif aggregate == "median"
-                ŷₜ = Statistics.median(ŷ)
-            elseif aggregate == "trimmedmean"
-                ŷₜ = Statistics.mean(trim(ŷ, prop=0.1))
-            else
-                println("Aggregation method is not defined, the default is mean")
-                ŷₜ = Statistics.mean(ŷ)
-            end
-            push!(scores,@.(conf_model.heuristic(yₜ, ŷₜ))...) 
-        catch MethodError
-            ŷₜ = NaN
-            push!(scores,@.(conf_model.heuristic(yₜ, ŷₜ))...)
-        end
-        
+        ŷₜ = _aggregate(ŷ, aggregate)
+        push!(scores,@.(conf_model.heuristic(yₜ, ŷₜ))...)
     end
     scores = filter(!isnan, scores)
     conf_model.scores = scores
@@ -637,21 +646,12 @@ where ``\hat\mu_{agg(-i)}`` denotes the aggregated models ``\hat\mu_{1}, ...., \
 """
 function MMI.predict(conf_model::JackknifePlusAbRegressor, fitresult, Xnew)
     # Get all bootstrapped predictions for each Xnew:
-    ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)) for μ̂₋ᵢ in fitresult] 
+    ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)) for μ̂₋ᵢ in fitresult]
     # Applying aggregation function on bootstrapped predictions across columns for each Xnew across rows:
     aggregate = conf_model.aggregate
-    if aggregate == "mean"
-        ŷ = Statistics.mean(ŷ)
-    elseif aggregate == "median"
-        ŷ = Statistics.median(ŷ)
-    elseif aggregate == "trimmedmean"
-        ŷ = Statistics.mean(trim(ŷ, prop=0.1))
-    else
-        println("Aggregation method is not correctly defined, the default is mean")
-        ŷ = Statistics.mean(ŷ)
-    end
+    ŷ = _aggregate(ŷ, aggregate)
     v = conf_model.scores
-    q̂ = Statistics.quantile(v, conf_model.coverage)
+    q̂ = StatsBase.quantile(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
     return ŷ
@@ -666,7 +666,7 @@ mutable struct JackknifePlusAbMinMaxRegressor{Model <: Supervised} <: ConformalI
     heuristic::Function
     nsampling::Int
     replacement::Bool
-    aggregate::String
+    aggregate::Union{Symbol, String}
 end
 
 function JackknifePlusAbMinMaxRegressor(model::Supervised; 
@@ -674,7 +674,7 @@ function JackknifePlusAbMinMaxRegressor(model::Supervised;
                                 heuristic::Function=f(y,ŷ)=abs(y-ŷ), 
                                 nsampling::Int=2, 
                                 replacement::Bool=false, 
-                                aggregate::String="mean")
+                                aggregate::Union{Symbol, String}="mean")
     return JackknifePlusAbMinMaxRegressor(model, coverage, nothing, heuristic, nsampling, replacement, aggregate)
 end
 
@@ -714,24 +714,8 @@ function MMI.fit(conf_model::JackknifePlusAbMinMaxRegressor, verbosity, X, y)
         Xₜ = selectrows(X, t)
         yₜ = y[t]
         ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ₜ, MMI.reformat(conf_model.model, Xₜ)...)) for μ̂₋ₜ in selected_models] 
-        # catch cases that t is in all trained samples
-        try
-            if aggregate == "mean"
-                ŷₜ = Statistics.mean(ŷ)
-            elseif aggregate == "median"
-                ŷₜ = Statistics.median(ŷ)
-            elseif aggregate == "trimmedmean"
-                ŷₜ = Statistics.mean(trim(ŷ, prop=0.1))
-            else
-                println("Aggregation method is not correctly defined, the default is mean")
-                ŷₜ = Statistics.mean(ŷ)
-            end
-            push!(scores,@.(conf_model.heuristic(yₜ, ŷₜ))...) 
-        catch MethodError
-            ŷₜ = NaN
-            push!(scores,@.(conf_model.heuristic(yₜ, ŷₜ))...)
-        end
-        
+        ŷₜ = _aggregate(ŷ, aggregate)
+        push!(scores,@.(conf_model.heuristic(yₜ, ŷₜ))...)
     end
     scores = filter(!isnan, scores)
     conf_model.scores = scores
@@ -756,7 +740,7 @@ function MMI.predict(conf_model::JackknifePlusAbMinMaxRegressor, fitresult, Xnew
     # Applying aggregation function on bootstrapped predictions across columns for each Xnew across rows:
     ŷ = reduce(hcat, ŷ)
     v = conf_model.scores
-    q̂ = Statistics.quantile(v, conf_model.coverage)
+    q̂ = StatsBase.quantile(v, conf_model.coverage)
     ŷ = map(yᵢ -> (minimum(yᵢ .- q̂), maximum(yᵢ .+ q̂)), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
     return ŷ
@@ -769,7 +753,7 @@ mutable struct EnsembleBatchPIRegressor{Model <: Supervised} <: ConformalInterva
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
     heuristic::Function
-    aggregate::String
+    aggregate::Union{Symbol, String}
 end
 
 
@@ -777,7 +761,7 @@ function EnsembleBatchPIRegressor(
     model::Supervised;
     coverage::AbstractFloat = 0.95,
     heuristic::Function = f(y, ŷ) = abs(y - ŷ),
-    aggregate::String="mean"
+    aggregate::Union{Symbol, String}="mean"
     )
     return EnsembleBatchPIRegressor(model, coverage, nothing, heuristic, aggregate)
 end
@@ -838,19 +822,12 @@ where ``\hat\mu_{agg}`` is the aggregation of the predictions of the LOO estimat
 """
 function MMI.predict(conf_model::EnsembleBatchPIRegressor, fitresult, Xnew)
     # Get all LOO predictions for each Xnew:
-    ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)) for μ̂₋ᵢ in fitresult] 
+    ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)) for μ̂₋ᵢ in fitresult]
     # Applying aggregation function on LOO predictions across columns for each Xnew across rows:
     aggregate = conf_model.aggregate
-    if aggregate == "mean"
-        ŷ = Statistics.mean(ŷ)
-    elseif aggregate == "median"
-        ŷ = Statistics.median(ŷ)
-    else
-        println("Aggregation method is not correctly defined, the default is mean")
-        ŷ = Statistics.mean(ŷ)
-    end
+    ŷ = _aggregate(ŷ, aggregate)
     v = conf_model.scores
-    q̂ = Statistics.quantile(v, conf_model.coverage)
+    q̂ = StatsBase.quantile(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
     return ŷ
