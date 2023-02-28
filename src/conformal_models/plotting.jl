@@ -1,4 +1,5 @@
 using CategoricalArrays
+using LinearAlgebra
 using NaturalSort
 using Plots
 using Statistics
@@ -67,7 +68,9 @@ function Plots.contourf(
     plot_set_size = false,
     plot_classification_loss = false,
     plot_set_loss = false,
+    temp = nothing,
     κ = 0,
+    loss_matrix = UniformScaling(1.0),
     kwargs...,
 )
 
@@ -125,9 +128,9 @@ function Plots.contourf(
             z = ismissing(p̂) ? 0 : sum(pdf.(p̂, p̂.decoder.classes) .> 0)
         elseif plot_classification_loss
             _target = categorical([target], levels=levels(y))
-            z = ConformalPrediction.classification_loss(conf_model, fitresult, [x1 x2], _target)
+            z = ConformalPrediction.classification_loss(conf_model, fitresult, [x1 x2], _target; temp=temp, loss_matrix=loss_matrix)
         elseif plot_set_loss
-            z = ConformalPrediction.smooth_size_loss(conf_model, fitresult, [x1 x2]; κ=κ)
+            z = ConformalPrediction.smooth_size_loss(conf_model, fitresult, [x1 x2]; κ=κ, temp=temp)
         else
             z = ismissing(p̂) ? [missing for i = 1:length(levels(y))] : pdf.(p̂, levels(y))
             z = replace(z, 0 => missing)
