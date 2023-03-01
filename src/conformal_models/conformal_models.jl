@@ -2,7 +2,6 @@ using MLJBase
 import MLJModelInterface as MMI
 import MLJModelInterface: predict, fit, save, restore
 using Statistics
-using Distributions
 using StatsBase
 
 "An abstract base type for conformal models that produce interval-valued predictions. This includes most conformal regression models."
@@ -76,7 +75,6 @@ const TransductiveModel = Union{
     CVPlusRegressor,
     CVMinMaxRegressor,
     NaiveClassifier,
-    EnsembleBatchPIRegressor,
 }
 
 "A container listing all available methods for conformal prediction."
@@ -91,7 +89,6 @@ const available_models = Dict(
             :cv_minmax => CVMinMaxRegressor,
             :jackknife_plus_ab => JackknifePlusAbRegressor,
             :jackknife_plus_ab_minmax => JackknifePlusAbMinMaxRegressor,
-            :ensemble_batch_pi => EnsembleBatchPIRegressor,
         ),
         :inductive => Dict(:simple_inductive => SimpleInductiveRegressor),
     ),
