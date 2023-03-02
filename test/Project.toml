@@ -1,4 +1,5 @@
 [deps]
+CompatHelperLocal = "5224ae11-6099-4aaa-941d-3aab004bd678"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 EvoTrees = "f6006082-12f8-11e9-0c9c-0d5d367ab1e5"
 LightGBM = "7acf609c-83a4-11e9-1ffb-b912bcd3b04a"
