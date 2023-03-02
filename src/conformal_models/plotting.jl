@@ -1,7 +1,6 @@
 using CategoricalArrays
 using NaturalSort
 using Plots
-using Statistics
 
 """
     generate_lims(x1, x2, xlims, ylims)
