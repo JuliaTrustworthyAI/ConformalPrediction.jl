@@ -580,13 +580,15 @@ mutable struct JackknifePlusAbRegressor{Model <: Supervised} <: ConformalInterva
     aggregate::Union{Symbol, String}
 end
 
-function JackknifePlusAbRegressor(model::Supervised; 
-                                coverage::AbstractFloat=0.95, 
-                                heuristic::Function=f(y,ŷ)=abs(y-ŷ), 
-                                nsampling::Int=30, 
-                                sample_size::AbstractFloat=0.5,
-                                replacement::Bool=true, 
-                                aggregate::Union{Symbol, String}="mean")
+function JackknifePlusAbRegressor(
+    model::Supervised; 
+    coverage::AbstractFloat=0.95, 
+    heuristic::Function=f(y,ŷ)=abs(y-ŷ), 
+    nsampling::Int=30, 
+    sample_size::AbstractFloat=0.5,
+    replacement::Bool=true, 
+    aggregate::Union{Symbol, String}="mean"
+)
     return JackknifePlusAbRegressor(model, coverage, nothing, heuristic, nsampling, sample_size, replacement, aggregate)
 end
 
@@ -673,13 +675,15 @@ mutable struct JackknifePlusAbMinMaxRegressor{Model <: Supervised} <: ConformalI
     aggregate::Union{Symbol, String}
 end
 
-function JackknifePlusAbMinMaxRegressor(model::Supervised; 
-                                coverage::AbstractFloat=0.95, 
-                                heuristic::Function=f(y,ŷ)=abs(y-ŷ), 
-                                nsampling::Int=30, 
-                                sample_size::AbstractFloat=0.5,
-                                replacement::Bool=true, 
-                                aggregate::Union{Symbol, String}="mean")
+function JackknifePlusAbMinMaxRegressor(
+    model::Supervised; 
+    coverage::AbstractFloat=0.95, 
+    heuristic::Function=f(y,ŷ)=abs(y-ŷ), 
+    nsampling::Int=30, 
+    sample_size::AbstractFloat=0.5,
+    replacement::Bool=true, 
+    aggregate::Union{Symbol, String}="mean"
+)
     return JackknifePlusAbMinMaxRegressor(model, coverage, nothing, heuristic, nsampling, sample_size, replacement, aggregate)
 end
 
