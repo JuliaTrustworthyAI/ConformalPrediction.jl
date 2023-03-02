@@ -747,7 +747,6 @@ where ``\hat\mu_{-i}`` denotes the model fitted on training data with ``i``th po
 function MMI.predict(conf_model::JackknifePlusAbMinMaxRegressor, fitresult, Xnew)
     # Get all bootstrapped predictions for each Xnew:
     ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)) for μ̂₋ᵢ in fitresult] 
-    # Applying aggregation function on bootstrapped predictions across columns for each Xnew across rows:
     ŷ = reduce(hcat, ŷ)
     v = conf_model.scores
     q̂ = StatsBase.quantile(v, conf_model.coverage)
