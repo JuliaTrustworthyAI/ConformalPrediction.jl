@@ -52,4 +52,7 @@ makedocs(;
     ],
 )
 
-deploydocs(; repo = "github.com/juliatrustworthyai/ConformalPrediction.jl", devbranch = "main")
+deploydocs(;
+    repo = "github.com/JuliaTrustworthyAI/ConformalPrediction.jl", 
+    devbranch = "main"
+)
