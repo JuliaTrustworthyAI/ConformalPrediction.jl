@@ -1,7 +1,7 @@
 using MLJBase
 import MLJModelInterface as MMI
 import MLJModelInterface: predict, fit, save, restore
-using Statistics
+import StatsBase
 
 "An abstract base type for conformal models that produce interval-valued predictions. This includes most conformal regression models."
 abstract type ConformalInterval <: MMI.Interval end
@@ -68,6 +68,8 @@ const TransductiveModel = Union{
     NaiveRegressor,
     JackknifeRegressor,
     JackknifePlusRegressor,
+    JackknifePlusAbRegressor,
+    JackknifePlusAbMinMaxRegressor,
     JackknifeMinMaxRegressor,
     CVPlusRegressor,
     CVMinMaxRegressor,
@@ -84,6 +86,8 @@ const available_models = Dict(
             :jackknife_minmax => JackknifeMinMaxRegressor,
             :cv_plus => CVPlusRegressor,
             :cv_minmax => CVMinMaxRegressor,
+            :jackknife_plus_ab => JackknifePlusAbRegressor,
+            :jackknife_plus_ab_minmax => JackknifePlusAbMinMaxRegressor,
         ),
         :inductive => Dict(:simple_inductive => SimpleInductiveRegressor),
     ),

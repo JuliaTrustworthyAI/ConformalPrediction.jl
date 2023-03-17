@@ -1,5 +1,4 @@
 using CategoricalArrays
-using Statistics
 
 """
     reformat_interval(ŷ)
