@@ -1,7 +1,7 @@
 using MLJBase
 import MLJModelInterface as MMI
 import MLJModelInterface: predict, fit, save, restore
-using StatsBase
+import StatsBase
 
 "An abstract base type for conformal models that produce interval-valued predictions. This includes most conformal regression models."
 abstract type ConformalInterval <: MMI.Interval end
@@ -113,6 +113,7 @@ const tested_atomic_models = Dict(
         :evo_tree => :(@load EvoTreeClassifier pkg = EvoTrees),
         :nearest_neighbor => :(@load KNNClassifier pkg = NearestNeighborModels),
         :light_gbm => :(@load LGBMClassifier pkg = LightGBM),
+        :flux => :(@load NeuralNetworkClassifier pkg = MLJFlux),
     ),
 )
 
