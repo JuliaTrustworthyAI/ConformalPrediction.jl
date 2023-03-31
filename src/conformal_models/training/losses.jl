@@ -10,7 +10,7 @@ Computes soft assignment scores for each label and sample. That is, the probabil
 function soft_assignment(conf_model::ConformalProbabilisticSet; temp::Union{Nothing, Real}=nothing)
     temp = isnothing(temp) ? 0.5 : temp
     v = sort(conf_model.scores[:calibration])
-    q̂ = Statistics.quantile(v, conf_model.coverage, sorted=true)
+    q̂ = StatsBase.quantile(v, conf_model.coverage, sorted=true)
     scores = conf_model.scores[:all]
     return @.(σ((q̂ - scores) / temp))
 end
@@ -23,7 +23,7 @@ This function can be used to compute soft assigment probabilities for new data `
 function soft_assignment(conf_model::ConformalProbabilisticSet, fitresult, X; temp::Union{Nothing, Real}=nothing)
     temp = isnothing(temp) ? 0.5 : temp
     v = sort(conf_model.scores[:calibration])
-    q̂ = Statistics.quantile(v, conf_model.coverage, sorted=true)
+    q̂ = StatsBase.quantile(v, conf_model.coverage, sorted=true)
     scores = score(conf_model, fitresult, X)
     return @.(σ((q̂ - scores) / temp))
 end

@@ -60,9 +60,15 @@ include("transductive_regression.jl")
 include("inductive_classification.jl")
 include("transductive_classification.jl")
 
+# Training:
+include("training/training.jl")
+
 # Type unions:
-const InductiveModel =
-    Union{SimpleInductiveRegressor,SimpleInductiveClassifier,AdaptiveInductiveClassifier}
+const InductiveModel = Union{
+    SimpleInductiveRegressor,
+    SimpleInductiveClassifier,
+    AdaptiveInductiveClassifier,
+}
 
 const TransductiveModel = Union{
     NaiveRegressor,
@@ -95,6 +101,7 @@ const available_models = Dict(
         :transductive => Dict(:naive => NaiveClassifier),
         :inductive => Dict(
             :simple_inductive => SimpleInductiveClassifier,
+            :trainable_simple_inductive => TrainableSimpleInductiveClassifier,
             :adaptive_inductive => AdaptiveInductiveClassifier,
         ),
     ),

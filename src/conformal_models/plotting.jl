@@ -96,7 +96,7 @@ function Plots.contourf(
         if isnothing(target)
             @info "No target label supplied, using first."
         end
-        target = isnothing(target) ? 1 : target
+        target = isnothing(target) ? levels(y)[1] : target
         if plot_set_size 
             _default_title = "Set size"
         elseif plot_set_loss
@@ -137,7 +137,7 @@ function Plots.contourf(
         push!(Z, z)
     end
     Z = reduce(hcat, Z)
-    Z = Z[Int(target), :]
+    Z = Z[findall.(levels(y) .== target)[1][1], :]
 
     # Contour:
     if plot_set_size

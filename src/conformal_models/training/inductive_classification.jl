@@ -1,6 +1,7 @@
-# Simple
-"The `SimpleInductiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset."
-mutable struct SimpleInductiveClassifier{Model<:Supervised} <: ConformalProbabilisticSet
+using MLJFlux: MLJFluxModel
+
+"The `TrainableSimpleInductiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset."
+mutable struct TrainableSimpleInductiveClassifier{Model<:MLJFluxModel} <: ConformalProbabilisticSet
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,Dict{Any,Any}}
@@ -8,20 +9,16 @@ mutable struct SimpleInductiveClassifier{Model<:Supervised} <: ConformalProbabil
     train_ratio::AbstractFloat
 end
 
-function SimpleInductiveClassifier(
-    model::Supervised;
+function TrainableSimpleInductiveClassifier(
+    model::MLJFluxModel;
     coverage::AbstractFloat = 0.95,
     heuristic::Function = f(p̂) = 1.0 - p̂,
     train_ratio::AbstractFloat = 0.5,
 )
-    return SimpleInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
+    return TrainableSimpleInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
 end
 
-function score(conf_model::SimpleInductiveClassifier, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
-    # X = isa(X, Matrix) ? table(X) : X
-    # p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, X))
-    # L = p̂.decoder.classes
-    # probas = pdf(p̂, L)
+function score(conf_model::TrainableSimpleInductiveClassifier, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
     X = size(X,2) == 1 ? X : permutedims(X)
     probas = permutedims(fitresult[1](X))
     scores = @.(conf_model.heuristic(probas))
@@ -34,9 +31,9 @@ function score(conf_model::SimpleInductiveClassifier, fitresult, X, y::Union{Not
 end
 
 @doc raw"""
-    MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
+    MMI.fit(conf_model::TrainableSimpleInductiveClassifier, verbosity, X, y)
 
-For the [`SimpleInductiveClassifier`](@ref) nonconformity scores are computed as follows:
+For the [`TrainableSimpleInductiveClassifier`](@ref) nonconformity scores are computed as follows:
 
 ``
 S_i^{\text{CAL}} = s(X_i, Y_i) = h(\hat\mu(X_i), Y_i), \ i \in \mathcal{D}_{\text{calibration}}
@@ -44,7 +41,7 @@ S_i^{\text{CAL}} = s(X_i, Y_i) = h(\hat\mu(X_i), Y_i), \ i \in \mathcal{D}_{\tex
 
 A typical choice for the heuristic function is ``h(\hat\mu(X_i), Y_i)=1-\hat\mu(X_i)_{Y_i}`` where ``\hat\mu(X_i)_{Y_i}`` denotes the softmax output of the true class and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``. The simple approach only takes the softmax probability of the true label into account.
 """
-function MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
+function MMI.fit(conf_model::TrainableSimpleInductiveClassifier, verbosity, X, y)
 
     # Data Splitting:
     train, calibration = partition(eachindex(y), conf_model.train_ratio)
@@ -69,9 +66,9 @@ function MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
 end
 
 @doc raw"""
-    MMI.predict(conf_model::SimpleInductiveClassifier, fitresult, Xnew)
+    MMI.predict(conf_model::TrainableSimpleInductiveClassifier, fitresult, Xnew)
 
-For the [`SimpleInductiveClassifier`](@ref) prediction sets are computed as follows,
+For the [`TrainableSimpleInductiveClassifier`](@ref) prediction sets are computed as follows,
 
 ``
 \hat{C}_{n,\alpha}(X_{n+1}) = \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{S_i^{\text{CAL}}\} \right\}, \ i \in \mathcal{D}_{\text{calibration}}
@@ -79,7 +76,7 @@ For the [`SimpleInductiveClassifier`](@ref) prediction sets are computed as foll
 
 where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
 """
-function MMI.predict(conf_model::SimpleInductiveClassifier, fitresult, Xnew)
+function MMI.predict(conf_model::TrainableSimpleInductiveClassifier, fitresult, Xnew)
     p̂ = reformat_mlj_prediction(
         MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...),
     )
@@ -100,8 +97,8 @@ function MMI.predict(conf_model::SimpleInductiveClassifier, fitresult, Xnew)
 end
 
 # Adaptive
-"The `AdaptiveInductiveClassifier` is an improvement to the [`SimpleInductiveClassifier`](@ref) and the [`NaiveClassifier`](@ref). Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset like the [`SimpleInductiveClassifier`](@ref). Contrary to the [`SimpleInductiveClassifier`](@ref) it utilizes the softmax output of all classes."
-mutable struct AdaptiveInductiveClassifier{Model<:Supervised} <: ConformalProbabilisticSet
+"The `TrainableAdaptiveInductiveClassifier` is an improvement to the [`TrainableSimpleInductiveClassifier`](@ref) and the [`NaiveClassifier`](@ref). Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset like the [`TrainableSimpleInductiveClassifier`](@ref). Contrary to the [`TrainableSimpleInductiveClassifier`](@ref) it utilizes the softmax output of all classes."
+mutable struct TrainableAdaptiveInductiveClassifier{Model<:MLJFluxModel} <: ConformalProbabilisticSet
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -109,25 +106,25 @@ mutable struct AdaptiveInductiveClassifier{Model<:Supervised} <: ConformalProbab
     train_ratio::AbstractFloat
 end
 
-function AdaptiveInductiveClassifier(
-    model::Supervised;
+function TrainableAdaptiveInductiveClassifier(
+    model::MLJFluxModel;
     coverage::AbstractFloat = 0.95,
     heuristic::Function = f(y, ŷ) = 1.0 - ŷ,
     train_ratio::AbstractFloat = 0.5,
 )
-    return AdaptiveInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
+    return TrainableAdaptiveInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
 end
 
 @doc raw"""
-    MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
+    MMI.fit(conf_model::TrainableAdaptiveInductiveClassifier, verbosity, X, y)
 
-For the [`AdaptiveInductiveClassifier`](@ref) nonconformity scores are computed by cumulatively summing the ranked scores of each label in descending order until reaching the true label ``Y_i``:
+For the [`TrainableAdaptiveInductiveClassifier`](@ref) nonconformity scores are computed by cumulatively summing the ranked scores of each label in descending order until reaching the true label ``Y_i``:
 
 ``
 S_i^{\text{CAL}} = s(X_i,Y_i) = \sum_{j=1}^k  \hat\mu(X_i)_{\pi_j} \ \text{where } \ Y_i=\pi_k,  i \in \mathcal{D}_{\text{calibration}}
 ``
 """
-function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
+function MMI.fit(conf_model::TrainableAdaptiveInductiveClassifier, verbosity, X, y)
 
     # Data Splitting:
     train, calibration = partition(eachindex(y), conf_model.train_ratio)
@@ -157,9 +154,9 @@ function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
 end
 
 @doc raw"""
-    MMI.predict(conf_model::AdaptiveInductiveClassifier, fitresult, Xnew)
+    MMI.predict(conf_model::TrainableAdaptiveInductiveClassifier, fitresult, Xnew)
 
-For the [`AdaptiveInductiveClassifier`](@ref) prediction sets are computed as follows,
+For the [`TrainableAdaptiveInductiveClassifier`](@ref) prediction sets are computed as follows,
 
 ``
 \hat{C}_{n,\alpha}(X_{n+1}) = \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{S_i^{\text{CAL}}\} \right\},  i \in \mathcal{D}_{\text{calibration}}
@@ -167,7 +164,7 @@ For the [`AdaptiveInductiveClassifier`](@ref) prediction sets are computed as fo
 
 where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
 """
-function MMI.predict(conf_model::AdaptiveInductiveClassifier, fitresult, Xnew)
+function MMI.predict(conf_model::TrainableAdaptiveInductiveClassifier, fitresult, Xnew)
     p̂ = reformat_mlj_prediction(
         MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...),
     )
