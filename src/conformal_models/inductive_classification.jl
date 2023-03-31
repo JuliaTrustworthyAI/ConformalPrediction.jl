@@ -18,17 +18,18 @@ function SimpleInductiveClassifier(
 end
 
 function score(conf_model::SimpleInductiveClassifier, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
-    # X = isa(X, Matrix) ? table(X) : X
-    # p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, X))
-    # L = p̂.decoder.classes
-    # probas = pdf(p̂, L)
-    X = size(X,2) == 1 ? X : permutedims(X)
-    probas = permutedims(fitresult[1](X))
+    score(conf_model, typeof(conf_model.model), fitresult, X, y)
+end
+
+function score(conf_model::SimpleInductiveClassifier, ::Type{<:Supervised}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+    p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, X))
+    L = p̂.decoder.classes
+    probas = pdf(p̂, L)
     scores = @.(conf_model.heuristic(probas))
     if isnothing(y)
         return scores
     else
-        cal_scores = getindex.(Ref(scores), 1:size(scores,1), levelcode.(y))
+        cal_scores = getindex.(Ref(scores), 1:size(scores, 1), levelcode.(y))
         return cal_scores, scores
     end
 end
@@ -59,7 +60,7 @@ function MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
     # Nonconformity Scores:
-    cal_scores, scores = score(conf_model, fitresult, matrix(Xcal), ycal)
+    cal_scores, scores = score(conf_model, fitresult, Xcal, ycal)
     conf_model.scores = Dict(
         :calibration => cal_scores,
         :all => scores,

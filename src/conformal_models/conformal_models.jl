@@ -101,7 +101,6 @@ const available_models = Dict(
         :transductive => Dict(:naive => NaiveClassifier),
         :inductive => Dict(
             :simple_inductive => SimpleInductiveClassifier,
-            :trainable_simple_inductive => TrainableSimpleInductiveClassifier,
             :adaptive_inductive => AdaptiveInductiveClassifier,
         ),
     ),
@@ -120,6 +119,7 @@ const tested_atomic_models = Dict(
         :evo_tree => :(@load EvoTreeClassifier pkg = EvoTrees),
         :nearest_neighbor => :(@load KNNClassifier pkg = NearestNeighborModels),
         :light_gbm => :(@load LGBMClassifier pkg = LightGBM),
+        :flux => :(@load NeuralNetworkClassifier pkg = MLJFlux),
     ),
 )
 
