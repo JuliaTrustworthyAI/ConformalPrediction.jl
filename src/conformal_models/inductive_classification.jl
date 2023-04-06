@@ -1,3 +1,12 @@
+"""
+    score(conf_model::ConformalProbabilisticSet, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+ 
+Generic score method for the [`ConformalProbabilisticSet`](@ref). It computes nonconformity scores using the heuristic function `h` and the softmax probabilities of the true class. Method is dispatched for different Conformal Probabilistic Sets and atomic models.
+"""
+function score(conf_model::ConformalProbabilisticSet, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+    score(conf_model, typeof(conf_model.model), fitresult, X, y)
+end
+
 # Simple
 "The `SimpleInductiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset."
 mutable struct SimpleInductiveClassifier{Model<:Supervised} <: ConformalProbabilisticSet
@@ -10,17 +19,18 @@ end
 
 function SimpleInductiveClassifier(
     model::Supervised;
-    coverage::AbstractFloat = 0.95,
-    heuristic::Function = f(p̂) = 1.0 - p̂,
-    train_ratio::AbstractFloat = 0.5,
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=f(p̂) = 1.0 - p̂,
+    train_ratio::AbstractFloat=0.5
 )
     return SimpleInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
 end
 
-function score(conf_model::SimpleInductiveClassifier, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
-    score(conf_model, typeof(conf_model.model), fitresult, X, y)
-end
+"""
+    score(conf_model::SimpleInductiveClassifier, ::Type{<:Supervised}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
 
+Score method for the [`SimpleInductiveClassifier`](@ref) dispatched for any `<:Supervised` model.  
+"""
 function score(conf_model::SimpleInductiveClassifier, ::Type{<:Supervised}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
     p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, X))
     L = p̂.decoder.classes
@@ -105,16 +115,16 @@ end
 mutable struct AdaptiveInductiveClassifier{Model<:Supervised} <: ConformalProbabilisticSet
     model::Model
     coverage::AbstractFloat
-    scores::Union{Nothing,AbstractArray}
+    scores::Union{Nothing,Dict{Any,Any}}
     heuristic::Function
     train_ratio::AbstractFloat
 end
 
 function AdaptiveInductiveClassifier(
     model::Supervised;
-    coverage::AbstractFloat = 0.95,
-    heuristic::Function = f(y, ŷ) = 1.0 - ŷ,
-    train_ratio::AbstractFloat = 0.5,
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=f(y, ŷ) = 1.0 - ŷ,
+    train_ratio::AbstractFloat=0.5
 )
     return AdaptiveInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
 end
@@ -143,18 +153,37 @@ function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
     # Nonconformity Scores:
-    p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, Xcal))
-    L = p̂.decoder.classes
-    ŷ = pdf(p̂, L)                                           # compute probabilities for all classes
-    scores = map(eachrow(ŷ), eachrow(ycal)) do ŷᵢ, ycalᵢ
-        ranks = sortperm(.-ŷᵢ)                              # rank in descending order
-        index_y = findall(L[ranks] .== ycalᵢ)[1]            # index of true y in sorted array
-        scoreᵢ = last(cumsum(ŷᵢ[ranks][1:index_y]))         # sum up until true y is reached
-        return scoreᵢ
-    end
-    conf_model.scores = scores
+    cal_scores, scores = score(conf_model, fitresult, Xcal, ycal)
+    conf_model.scores = Dict(
+        :calibration => cal_scores,
+        :all => scores,
+    )
 
     return (fitresult, cache, report)
+end
+
+"""
+    score(conf_model::AdaptiveInductiveClassifier, ::Type{<:Supervised}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+
+Score method for the [`AdaptiveInductiveClassifier`](@ref) dispatched for any `<:Supervised` model.  
+"""
+function score(conf_model::AdaptiveInductiveClassifier, ::Type{<:Supervised}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+    p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, X))
+    L = p̂.decoder.classes
+    probas = pdf(p̂, L)                                              # compute probabilities for all classes
+    scores = map(Base.Iterators.product(eachrow(probas), L)) do Z
+        probasᵢ, yₖ = Z
+        ranks = sortperm(.-probasᵢ)                                 # rank in descending order
+        index_y = findall(L[ranks] .== yₖ)[1]                       # index of true y in sorted array
+        scoresᵢ = last(cumsum(probasᵢ[ranks][1:index_y]))           # sum up until true y is reached
+        return scoresᵢ
+    end
+    if isnothing(y)
+        return scores
+    else
+        cal_scores = getindex.(Ref(scores), 1:size(scores, 1), levelcode.(y))
+        return cal_scores, scores
+    end
 end
 
 @doc raw"""
@@ -172,7 +201,7 @@ function MMI.predict(conf_model::AdaptiveInductiveClassifier, fitresult, Xnew)
     p̂ = reformat_mlj_prediction(
         MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...),
     )
-    v = conf_model.scores
+    v = conf_model.scores[:calibration]
     q̂ = StatsBase.quantile(v, conf_model.coverage)
     p̂ = map(p̂) do pp
         L = p̂.decoder.classes
