@@ -16,21 +16,22 @@ end
 
 # ╔═╡ aad62ef1-4136-4732-a9e6-3746524978ee
 begin
+	using Pkg; Pkg.activate("../")
     using ConformalPrediction
     using DecisionTree: DecisionTreeRegressor
     using Distributions
     using EvoTrees: EvoTreeRegressor
+	using Flux
     using LightGBM.MLJInterface: LGBMRegressor
     using MLJBase
+	using MLJFlux
+	using MLJFlux: NeuralNetworkRegressor
 	using MLJLinearModels
     using MLJModels
     using NearestNeighborModels: KNNRegressor
     using Plots
     using PlutoUI
 end;
-
-# ╔═╡ 8a2e7eb1-3a7a-49b0-83db-09966e8e891a
-pwd()
 
 # ╔═╡ bc0d7575-dabd-472d-a0ce-db69d242ced8
 md"""
@@ -63,6 +64,8 @@ begin
 	    end
 	
 	end
+
+	MLJFlux.reformat(X, ::Type{<:AbstractMatrix}) = X'
 end;
 
 # ╔═╡ be8b2fbb-3b3d-496e-9041-9b8f50872350
@@ -92,7 +95,7 @@ begin
     function get_data(N=600, xmax=3.0, noise=0.5; fun::Function=fun(X) = X * sin(X))
         # Inputs:
         d = Distributions.Uniform(-xmax, xmax)
-        X = rand(d, N)
+        X = Float32.(rand(d, N))
         X = MLJBase.table(reshape(X, :, 1))
 
         # Outputs:
@@ -169,7 +172,14 @@ md"Now let's choose a model for our regression task:"
 # ╔═╡ 292978a2-1941-44d3-af5b-13456d16b656
 begin
     Model = eval(tested_atomic_models[:regression][model_name])
-    model = Model()
+    if Model() isa MLJFlux.MLJFluxModel
+		model = Model(
+			builder=MLJFlux.MLP(hidden=(50,), σ=Flux.tanh_fast), 
+			epochs=200
+		) 
+	else
+		model = Model()
+	end
 end;
 
 # ╔═╡ 10340f3f-7981-42da-846a-7599a9edb7f3
@@ -389,7 +399,6 @@ Enjoy!
 """
 
 # ╔═╡ Cell order:
-# ╠═8a2e7eb1-3a7a-49b0-83db-09966e8e891a
 # ╟─bc0d7575-dabd-472d-a0ce-db69d242ced8
 # ╠═aad62ef1-4136-4732-a9e6-3746524978ee
 # ╟─55a7c16b-a526-41d9-9d73-a0591ad006ce
@@ -399,8 +408,8 @@ Enjoy!
 # ╟─eb251479-ce0f-4158-8627-099da3516c73
 # ╠═aa69f9ef-96c6-4846-9ce7-80dd9945a7a8
 # ╟─2e36ea74-125e-46d6-b558-6e920aa2663c
-# ╠═931ce259-d5fb-4a56-beb8-61a69a2fc09e
-# ╠═f0106aa5-b1c5-4857-af94-2711f80d25a8
+# ╟─931ce259-d5fb-4a56-beb8-61a69a2fc09e
+# ╟─f0106aa5-b1c5-4857-af94-2711f80d25a8
 # ╟─2fe1065e-d1b8-4e3c-930c-654f50349222
 # ╟─787f7ee9-2247-4a1b-9519-51394933428c
 # ╠═3a4fe2bc-387c-4d7e-b45f-292075a01bcd
@@ -412,7 +421,7 @@ Enjoy!
 # ╟─380c7aea-e841-4bca-81b3-52d1ff05fd32
 # ╠═aabfbbfb-7fb0-4f37-9a05-b96207636232
 # ╟─5506e1b5-5f2f-4972-a845-9c0434d4b31c
-# ╠═9bb977fe-d7e0-4420-b472-a50e8bd6d94f
+# ╟─9bb977fe-d7e0-4420-b472-a50e8bd6d94f
 # ╟─36eef47f-ad55-49be-ac60-7aa1cf50e61a
 # ╟─0a9a4c99-4b9e-4fcc-baf0-9e04559ed8ab
 # ╠═626ac76b-7e66-4fa2-9ab2-247010945ef2
