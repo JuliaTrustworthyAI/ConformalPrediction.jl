@@ -83,7 +83,7 @@ When specifying a coverage rate very close to one, the prediction set will typic
 ```{julia}
 #| output: true
 
-conf_model = conformal_model(model; coverage=coverage)
+conf_model = conformal_model(model; coverage=coverage, method=:adaptive_inductive)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 
