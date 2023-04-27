@@ -20,6 +20,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 [compat]
 CategoricalArrays = "0.10"
 MLJBase = "0.20, 0.21"
+MLJEnsembles = "0.3"
 MLJModelInterface = "1"
 NaturalSort = "1"
 Plots = "1"
