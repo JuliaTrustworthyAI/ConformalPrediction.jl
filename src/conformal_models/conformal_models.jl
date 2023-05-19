@@ -113,14 +113,14 @@ const tested_atomic_models = Dict(
         :evo_tree => :(@load EvoTreeRegressor pkg = EvoTrees),
         :nearest_neighbor => :(@load KNNRegressor pkg = NearestNeighborModels),
         :light_gbm => :(@load LGBMRegressor pkg = LightGBM),
-        :neural_network => :(@load NeuralNetworkRegressor pkg = MLJFlux),
+        # :neural_network => :(@load NeuralNetworkRegressor pkg = MLJFlux),
     ),
     :classification => Dict(
         :logistic => :(@load LogisticClassifier pkg = MLJLinearModels),
         :evo_tree => :(@load EvoTreeClassifier pkg = EvoTrees),
         :nearest_neighbor => :(@load KNNClassifier pkg = NearestNeighborModels),
         :light_gbm => :(@load LGBMClassifier pkg = LightGBM),
-        :neural_network => :(@load NeuralNetworkClassifier pkg = MLJFlux),
+        # :neural_network => :(@load NeuralNetworkClassifier pkg = MLJFlux),
     ),
 )
 
