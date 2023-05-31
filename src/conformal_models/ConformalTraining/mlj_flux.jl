@@ -6,10 +6,10 @@ using ProgressMeter
 using Random
 using Tables
 
-const default_builder_jem = MLJFlux.MLP(hidden=(32, 32, 32,), σ=Flux.swish)
+const default_builder = MLJFlux.MLP(hidden=(32, 32, 32,), σ=Flux.swish)
 
-"The `JointEnergyClassifier` struct is a wrapper for a `JointEnergyModel` that can be used with MLJFlux.jl."
-mutable struct JointEnergyClassifier{B,F,O,L} <: MLJFlux.MLJFluxProbabilistic
+"The `ConformalClassifier` struct is a wrapper for a `ConformalModel` that can be used with MLJFlux.jl."
+mutable struct ConformalClassifier{B,F,O,L} <: MLJFlux.MLJFluxProbabilistic
     builder::B
     finaliser::F
     optimiser::O   # mutable struct from Flux/src/optimise/optimisers.jl
@@ -21,15 +21,11 @@ mutable struct JointEnergyClassifier{B,F,O,L} <: MLJFlux.MLJFluxProbabilistic
     rng::Union{AbstractRNG,Int64}
     optimiser_changes_trigger_retraining::Bool
     acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
-    sampler::AbstractSampler
-    jem::Union{Nothing,JointEnergyModel}
-    jem_training_params::NamedTuple
-    sampling_steps::Union{Nothing,Int}
 end
 
-function JointEnergyClassifier(
+function ConformalClassifier(
     sampler::AbstractSampler;
-    builder::B=default_builder_jem,
+    builder::B=default_builder,
     finaliser::F=Flux.softmax,
     optimiser::O=Flux.Optimise.Adam(),
     loss::L=Flux.crossentropy,
@@ -42,17 +38,17 @@ function JointEnergyClassifier(
 ) where {B,F,O,L}
 
     # Initialise the MLJFlux wrapper:
-    mlj_jem = JointEnergyClassifier(
+    mod = ConformalClassifier(
         builder, finaliser, optimiser, loss, epochs, batch_size, lambda, alpha, rng,
-        optimiser_changes_trigger_retraining, acceleration, sampler, nothing, jem_training_params, sampling_steps
+        optimiser_changes_trigger_retraining, acceleration,
     )
 
-    return mlj_jem
+    return mod
 end
 
 # if `b` is a builder, then `b(model, rng, shape...)` is called to make a
 # new chain, where `shape` is the return value of this method:
-function MLJFlux.shape(model::JointEnergyClassifier, X, y)
+function MLJFlux.shape(model::ConformalClassifier, X, y)
     levels = MMI.classes(y[1])
     n_output = length(levels)
     n_input = Tables.schema(X).names |> length
@@ -60,7 +56,7 @@ function MLJFlux.shape(model::JointEnergyClassifier, X, y)
 end
 
 # builds the end-to-end Flux chain needed, given the `model` and `shape`:
-function MLJFlux.build(model::JointEnergyClassifier, rng, shape)
+function MLJFlux.build(model::ConformalClassifier, rng, shape)
 
     # Chain:
     chain = Flux.Chain(MLJFlux.build(model.builder, rng, shape...), model.finaliser)
@@ -89,11 +85,11 @@ end
 # returns the model `fitresult` (see "Adding Models for General Use"
 # section of the MLJ manual) which must always have the form `(chain,
 # metadata)`, where `metadata` is anything extra needed by `predict`:
-MLJFlux.fitresult(model::JointEnergyClassifier, chain, y) =
+MLJFlux.fitresult(model::ConformalClassifier, chain, y) =
     (chain, MMI.classes(y[1]))
 
 function MMI.predict(
-    model::JointEnergyClassifier,
+    model::ConformalClassifier,
     fitresult,
     Xnew
 )
@@ -103,12 +99,12 @@ function MMI.predict(
     return MMI.UnivariateFinite(levels, probs)
 end
 
-MMI.metadata_model(JointEnergyClassifier,
+MMI.metadata_model(ConformalClassifier,
     input=Union{AbstractArray,MMI.Table(MMI.Continuous)},
     target=AbstractVector{<:MMI.Finite},
-    path="MLJFlux.JointEnergyClassifier")
+    path="MLJFlux.ConformalClassifier")
 
-function MLJFlux.fit!(model::JointEnergyClassifier, penalty, chain, optimiser, epochs, verbosity, X, y)
+function MLJFlux.fit!(model::ConformalClassifier, penalty, chain, optimiser, epochs, verbosity, X, y)
 
     loss = model.loss
 
