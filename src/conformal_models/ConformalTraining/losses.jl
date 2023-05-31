@@ -1,3 +1,4 @@
+using ConformalPrediction: ConformalProbabilisticSet
 using Flux
 using LinearAlgebra
 using MLJBase

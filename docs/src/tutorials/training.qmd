@@ -1,0 +1,34 @@
+# ConformalTraining
+
+```@meta
+CurrentModule = ConformalPrediction
+```
+
+```{julia}
+#| echo: false
+using Pkg; Pkg.activate("docs")
+using Plots
+theme(:wong)
+using Random
+Random.seed!(2022)
+www_path = "docs/src/www"   # output path for files don't get automatically saved in auto-generated path (e.g. GIFs)
+```
+
+
+```{julia}
+using MLJ
+using Random
+Random.seed!(123)
+
+# Data:
+X, y = make_moons(500; noise=0.15)
+train, test = partition(eachindex(y), 0.8, shuffle=true)
+```
+
+
+```{julia}
+X = permutedims(MLJ.matrix(X))
+y = Int.(y.refs)
+y = Flux.onehotbatch(y, 1:2)
+dl = MLUtils.DataLoader((data=X,label=y),batchsize=50)
+```
