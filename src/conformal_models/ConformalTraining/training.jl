@@ -1,9 +1,10 @@
+using ConformalPrediction: ConformalProbabilisticSet
 using Flux
 using MLUtils
 using ProgressMeter
 
 function conformal_training(
-    chain::Flux.Chain, train_set::MLUtils.DataLoader, opt_state;
+    conf_model::ConformalProbabilisticSet, train_set::MLUtils.DataLoader, opt_state;
     num_epochs::Int=100,
     val_set::Union{Nothing,DataLoader,Base.Iterators.Zip}=nothing,
     max_patience::Int=10,
@@ -35,8 +36,8 @@ function conformal_training(
         for (i, data) in enumerate(train_set)
 
             # Split into calibration set and prediction set:
-            x, y = data
             cal, pred = partition(1:MLUtils.numobs(data), cal_split, shuffle=true)
+            data_cal, data_pred = (MLUtils.getobs(data, cal), MLUtils.getobs(data, pred))
 
             # Forward pass:
 
