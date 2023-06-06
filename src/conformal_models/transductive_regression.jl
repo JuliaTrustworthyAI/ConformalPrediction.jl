@@ -754,3 +754,116 @@ function MMI.predict(conf_model::JackknifePlusAbMinMaxRegressor, fitresult, Xnew
     ŷ = reformat_interval(ŷ)
     return ŷ
 end
+
+
+
+# TimeSeries_Regressor_Ensemble_Batch_Prediction_Interval
+"Constructor for `TimeSeriesRegressorEnsemble`."
+mutable struct TimeSeriesRegressorEnsembleBatch{Model <: Supervised} <: ConformalInterval
+    model::Model
+    coverage::AbstractFloat
+    scores::Union{Nothing,AbstractArray}
+    heuristic::Function
+    nsampling::Int
+    sample_size::AbstractFloat
+    replacement::Bool
+    aggregate::Union{Symbol, String}
+end
+
+function TimeSeriesRegressorEnsembleBatch(
+    model::Supervised; 
+    coverage::AbstractFloat=0.95, 
+    heuristic::Function=f(y,ŷ)=abs(y-ŷ), 
+    nsampling::Int=30, 
+    sample_size::AbstractFloat=0.2,
+    replacement::Bool=true, 
+    aggregate::Union{Symbol, String}="mean"
+)
+    return TimeSeriesRegressorEnsembleBatch(model, coverage, nothing, heuristic, nsampling, sample_size, replacement, aggregate)
+end
+
+@doc raw"""
+    MMI.fit(conf_model::TimeSeriesRegressorEnsembleBatch, verbosity, X, y)
+
+For the [`TimeSeriesRegressorEnsembleBatch`](@ref) nonconformity scores are computed as
+
+``
+$ S_i^{\text{J+ab}} = s(X_i, Y_i) = h(agg(\hat\mu_{B_{K(-i)}}(X_i)), Y_i), \ i \in \mathcal{D}_{\text{train}} $
+``
+
+where ``agg(\hat\mu_{B_{K(-i)}}(X_i))`` denotes the aggregate predictions, typically mean or median, for each ``X_i`` (with ``K_{-i}`` the bootstraps not containing ``X_i``). In other words, B models are trained on boostrapped sampling, the fitted models are then used to create aggregated prediction of out-of-sample ``X_i``. The corresponding nonconformity score is then computed by applying a heuristic uncertainty measure ``h(\cdot)`` to the fitted value ``agg(\hat\mu_{B_{K(-i)}}(X_i))`` and the true value ``Y_i``.
+"""
+function MMI.fit(conf_model::TimeSeriesRegressorEnsembleBatch, verbosity, X, y, partial_fit=false)
+    
+    samples, fitresult, cache, report, scores = ([],[],[],[],[])
+    replacement = conf_model.replacement
+    nsampling = conf_model.nsampling
+    sample_size = conf_model.sample_size
+    aggregate = conf_model.aggregate
+    T = size(y,1)
+    # bootstrap size
+    m = floor(Int, T* sample_size)
+    for _ in 1:nsampling
+        samplesᵢ = blockbootstrap(1:T, m)
+        yᵢ = y[samplesᵢ] 
+        Xᵢ = selectrows(X, samplesᵢ)
+        μ̂ᵢ, cacheᵢ, reportᵢ = MMI.fit(conf_model.model, 0, MMI.reformat(conf_model.model, Xᵢ, yᵢ)...)
+        push!(samples, samplesᵢ)
+        push!(fitresult, μ̂ᵢ)
+        push!(cache, cacheᵢ)
+        push!(report, reportᵢ)
+    end
+    for t in 1:T
+        index_samples = indexin([v for v in samples if !(t in v) && any(t.>v)], samples)
+        selected_models = fitresult[index_samples]
+        Xₜ = selectrows(X, t)
+        yₜ = y[t]
+        ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ₜ, MMI.reformat(conf_model.model, Xₜ)...)) for μ̂₋ₜ in selected_models] 
+        ŷₜ = _aggregate(ŷ, aggregate)
+        push!(scores,@.(conf_model.heuristic(yₜ, ŷₜ))...)
+    end
+    scores = filter(!isnan, scores)
+    conf_model.scores = scores
+    return (fitresult, cache, report)
+end
+
+@doc raw"""
+    MMI.partial_fit(conf_model::TimeSeriesRegressorEnsembleBatch, verbosity, X, y)
+For the [`TimeSeriesRegressorEnsembleBatch`](@ref) Non-conformity score for partial_fit is calculated as
+
+"""
+
+function partial_fit(conf_model::TimeSeriesRegressorEnsembleBatch, fitresult, X, y)
+    ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ₜ, MMI.reformat(conf_model.model, X)...)) for μ̂₋ₜ in fitresult] 
+    ŷₜ = _aggregate(ŷ, aggregate)
+    push!(conf_model.scores,@.(conf_model.heuristic(y, ŷₜ))...)
+    conf_model.scores = filter(!isnan, conf_model.scores)
+    T = size(y,1)
+    conf_model.scores = circshift(conf_model.scores, T)
+    return 
+end
+
+# Prediction
+@doc raw"""
+    MMI.predict(conf_model::TimeSeriesRegressorEnsemble, fitresult, Xnew)
+
+For the [`TimeSeriesRegressorEnsemble`](@ref) prediction intervals are computed as follows,
+
+``
+\hat{C}_{n,\alpha, B}^{J+ab}(X_{n+1}) = \left[ \hat{q}_{n, \alpha}^{-} \{\hat\mu_{agg(-i)}(X_{n+1}) - S_i^{\text{J+ab}} \}, \hat{q}_{n, \alpha}^{+} \{\hat\mu_{agg(-i)}(X_{n+1}) + S_i^{\text{J+ab}}\} \right] , i \in \mathcal{D}_{\text{train}}
+``
+
+where ``\hat\mu_{agg(-i)}`` denotes the aggregated models ``\hat\mu_{1}, ...., \hat\mu_{B}`` fitted on bootstrapped data (B) does not include the ``i``th data point. The jackknife``+`` procedure is more stable than the [`JackknifeRegressor`](@ref).
+"""
+function MMI.predict(conf_model::TimeSeriesRegressorEnsembleBatch, fitresult, Xnew)
+    # Get all bootstrapped predictions for each Xnew:
+    ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)) for μ̂₋ᵢ in fitresult]
+    # Applying aggregation function on bootstrapped predictions across columns for each Xnew across rows:
+    aggregate = conf_model.aggregate
+    ŷ = _aggregate(ŷ, aggregate)
+    v = conf_model.scores
+    q̂ = StatsBase.quantile(v, conf_model.coverage)
+    ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
+    ŷ = reformat_interval(ŷ)
+    return ŷ
+end

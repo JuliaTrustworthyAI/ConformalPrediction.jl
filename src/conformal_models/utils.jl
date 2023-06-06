@@ -104,3 +104,16 @@ function size_indicator(ŷ::AbstractVector; bins = 5, tol = 1e-10)
     return idx
 
 end
+
+"""
+    blockbootstrap(time_series_data, block_szie)
+
+    Generate a sampling method, that block bootstraps the given data
+"""
+function blockbootstrap(time_series, block_size)
+    n = length(time_series)
+    bootstrap_sample = similar(time_series) #Vector{eltype(time_series)}(undef, n)
+    rand_block = rand(1:n-block_size)
+    bootstrap_sample = time_series[rand_block: rand_block+block_size-1,:]
+    return vec(bootstrap_sample)
+end

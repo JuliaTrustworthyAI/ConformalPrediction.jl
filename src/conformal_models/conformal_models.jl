@@ -80,6 +80,7 @@ const TransductiveModel = Union{
     CVPlusRegressor,
     CVMinMaxRegressor,
     NaiveClassifier,
+    TimeSeriesRegressorEnsembleBatch,
 }
 
 "A container listing all available methods for conformal prediction."
@@ -94,6 +95,7 @@ const available_models = Dict(
             :cv_minmax => CVMinMaxRegressor,
             :jackknife_plus_ab => JackknifePlusAbRegressor,
             :jackknife_plus_ab_minmax => JackknifePlusAbMinMaxRegressor,
+            :time_series_ensemble_batch => TimeSeriesRegressorEnsembleBatch,
         ),
         :inductive => Dict(:simple_inductive => SimpleInductiveRegressor),
     ),
