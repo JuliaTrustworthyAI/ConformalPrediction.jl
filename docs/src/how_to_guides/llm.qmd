@@ -50,7 +50,9 @@ d = softmax(c.logit)
 [labels[i] for i in Flux.onecold(d)]
 ```
 
-## `MLJ` Model
+## `MLJ` Models
+
+### Full Model
 
 ```{julia}
 struct IntentClassifier <: MLJBase.Probabilistic
@@ -92,15 +94,50 @@ MLJBase.predict_mode(clf::IntentClassifier, fitresult, Xnew) = mode.(MLJBase.pre
 
 ```{julia}
 clf = IntentClassifier(tkr, mod)
-top_n = 100
+top_n = 1000
 fitresult, _, _ = fit(clf, 1, nothing, y_test[1:top_n])
 @time ŷ = predict(clf, fitresult, queries_test[1:top_n]);
 ```
 
+### Omniscent Model
+
+```{julia}
+struct OmniscentClassifier <: MLJBase.Probabilistic end
+
+# This doesn't actually retrain the model, but it retrieves the classifier object
+function MLJBase.fit(clf::OmniscentClassifier, verbosity, X, y)
+    cache=nothing
+    report=nothing
+    fitresult=y
+    return fitresult, cache, report
+end
+
+function MLJBase.predict(clf::OmniscentClassifier, fitresult, Xnew)
+    p̂ = UnivariateFinite(fitresult.labels,fitresult,pool=missing)
+    return p̂
+end
+
+MLJBase.target_scitype(clf::OmniscentClassifier) = AbstractVector{<:Finite}
+
+MLJBase.predict_mode(clf::OmniscentClassifier, fitresult, Xnew) = mode.(MLJBase.predict(clf, fitresult, Xnew))
+```
+
 ## Conformal Prediction
+
+### Simple Inductive Conformal Prediction
 
 ```{julia}
 conf_model = conformal_model(clf; coverage=.9, method=:simple_inductive, train_ratio=train_ratio)
 mach = machine(conf_model, queries[1:1000], y[1:1000])
 fit!(mach)
+ŷ = predict(mach, queries_test[1:top_n])
+```
+
+### Adaptive Inductive Conformal Prediction
+
+```{julia}
+conf_model = conformal_model(clf; coverage=.9, method=:adaptive_inductive, train_ratio=train_ratio)
+mach = machine(conf_model, queries[1:1000], y[1:1000])
+fit!(mach)
+ŷ = predict(mach, queries_test[1:top_n])
 ```
