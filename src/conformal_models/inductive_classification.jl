@@ -7,6 +7,27 @@ function score(conf_model::ConformalProbabilisticSet, fitresult, X, y::Union{Not
     score(conf_model, typeof(conf_model.model), fitresult, X, y)
 end
 
+"""
+    split_data(conf_model::ConformalProbabilisticSet, indices::Base.OneTo{Int})
+
+Splits the data into a proper training and calibration set. If `conf_model.train_indices` is specified, it will use those indices for training and the rest for calibration. Otherwise, it will use `conf_model.train_ratio` to split the data into training and calibration sets.
+"""
+function split_data(conf_model::ConformalProbabilisticSet, X, y)
+    if !isnothing(conf_model.train_indices)
+        train = conf_model.train_indices
+        calibration = setdiff(eachindex(y), train)
+    else
+        train, calibration = partition(eachindex(y), conf_model.train_ratio)
+    end
+    Xtrain = selectrows(X, train)
+    ytrain = y[train]
+    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
+    Xcal = selectrows(X, calibration)
+    ycal = y[calibration]
+    Xcal, ycal = MMI.reformat(conf_model.model, Xcal, ycal)
+    return Xtrain, ytrain, Xcal, ycal
+end
+
 # Simple
 "The `SimpleInductiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset."
 mutable struct SimpleInductiveClassifier{Model<:Supervised} <: ConformalProbabilisticSet
@@ -14,16 +35,20 @@ mutable struct SimpleInductiveClassifier{Model<:Supervised} <: ConformalProbabil
     coverage::AbstractFloat
     scores::Union{Nothing,Dict{Any,Any}}
     heuristic::Function
-    train_ratio::AbstractFloat
+    train_ratio::Union{Nothing,AbstractFloat}
+    train_indices::Union{Nothing,AbstractArray}
 end
 
 function SimpleInductiveClassifier(
     model::Supervised;
     coverage::AbstractFloat=0.95,
     heuristic::Function=f(p̂) = 1.0 - p̂,
-    train_ratio::AbstractFloat=0.5
+    train_ratio::Union{AbstractFloat}=0.5,
+    train_indices::Union{Nothing,AbstractArray}=nothing,
 )
-    return SimpleInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
+    @assert !isnothing(train_indices) || !isnothing(train_ratio) "Either `train_indices` or `train_ratio` must be specified."
+    isnothing(train_indices) || isnothing(train_ratio) || @warn "Both `train_indices` and `train_ratio` are specified. `train_indices` will be used."
+    return SimpleInductiveClassifier(model, coverage, nothing, heuristic, train_ratio, train_indices)
 end
 
 """
@@ -58,13 +83,7 @@ A typical choice for the heuristic function is ``h(\hat\mu(X_i), Y_i)=1-\hat\mu(
 function MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
 
     # Data Splitting:
-    train, calibration = partition(eachindex(y), conf_model.train_ratio)
-    Xtrain = selectrows(X, train)
-    ytrain = y[train]
-    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
-    Xcal = selectrows(X, calibration)
-    ycal = y[calibration]
-    Xcal, ycal = MMI.reformat(conf_model.model, Xcal, ycal)
+    Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
 
     # Training: 
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
@@ -117,15 +136,19 @@ mutable struct AdaptiveInductiveClassifier{Model<:Supervised} <: ConformalProbab
     coverage::AbstractFloat
     scores::Union{Nothing,Dict{Any,Any}}
     heuristic::Function
-    train_ratio::AbstractFloat
+    train_ratio::Union{Nothing,AbstractFloat}
+    train_indices::Union{Nothing,AbstractArray}
 end
 
 function AdaptiveInductiveClassifier(
     model::Supervised;
     coverage::AbstractFloat=0.95,
     heuristic::Function=f(y, ŷ) = 1.0 - ŷ,
-    train_ratio::AbstractFloat=0.5
+    train_ratio::Union{Nothing,AbstractFloat}=0.5,
+    train_indices::Union{Nothing,AbstractVector}=nothing,
 )
+    @assert !isnothing(train_indices) || !isnothing(train_ratio) "Either `train_indices` or `train_ratio` must be specified."
+    isnothing(train_indices) || isnothing(train_ratio) || @warn "Both `train_indices` and `train_ratio` are specified. `train_indices` will be used."
     return AdaptiveInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
 end
 
@@ -141,13 +164,7 @@ S_i^{\text{CAL}} = s(X_i,Y_i) = \sum_{j=1}^k  \hat\mu(X_i)_{\pi_j} \ \text{where
 function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
 
     # Data Splitting:
-    train, calibration = partition(eachindex(y), conf_model.train_ratio)
-    Xtrain = selectrows(X, train)
-    ytrain = y[train]
-    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
-    Xcal = selectrows(X, calibration)
-    ycal = y[calibration]
-    Xcal, ycal = MMI.reformat(conf_model.model, Xcal, ycal)
+    Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
 
     # Training: 
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)

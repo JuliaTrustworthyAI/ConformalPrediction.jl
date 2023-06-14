@@ -83,12 +83,25 @@ function MLJBase.predict(clf::IntentClassifier, fitresult, Xnew)
     p̂ = UnivariateFinite(fitresult.labels,p̂,pool=missing)
     return p̂
 end
-```
 
+MLJBase.target_scitype(clf::IntentClassifier) = AbstractVector{<:Finite}
+
+MLJBase.predict_mode(clf::IntentClassifier, fitresult, Xnew) = mode.(MLJBase.predict(clf, fitresult, Xnew))
+```
 
 ```{julia}
 clf = IntentClassifier(tkr, mod)
-X_train = get_hidden_state(clf, queries_train)
-fitresult, _, _ = fit(clf, 1, nothing, y_train)
+top_n = 10
+X_train = get_hidden_state(clf, queries_train[1:top_n])
+fitresult, _, _ = fit(clf, 1, X_train, y_train[1:top_n])
 p̂ = predict(clf, fitresult, X_train)
+ŷ = predict_mode(clf, fitresult, X_train)
+```
+
+## Conformalization
+
+```{julia}
+conf_model = conformal_model(clf; coverage=.9)
+X_cal = get_hidden_state(clf, queries_cal)
+ConformalPrediction.score(conf_model, fitresult, X_cal, y_cal)
 ```
