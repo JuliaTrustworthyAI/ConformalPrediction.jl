@@ -14,8 +14,8 @@ eval(setup_docs)
 
 ```{julia}
 # Get labels:
-labels = CSV.read("dev/artifacts/data/banking77/labels.csv", DataFrame, drop=[1])
-pool = labels[:,1]
+df_labels = CSV.read("dev/artifacts/data/banking77/labels.csv", DataFrame, drop=[1])
+labels = df_labels[:,1]
 
 # Get data:
 df_train = CSV.read("dev/artifacts/data/banking77/train.csv", DataFrame, drop=[1])
@@ -23,9 +23,9 @@ df_cal = CSV.read("dev/artifacts/data/banking77/calibration.csv", DataFrame, dro
 df_test = CSV.read("dev/artifacts/data/banking77/test.csv", DataFrame, drop=[1])
 
 # Preprocess data:
-queries_train, y_train = df_train.text, categorical(df_train.labels .+ 1)
-queries_cal, y_cal = df_cal.text, categorical(df_cal.labels .+ 1)
-queries_test, y_test = df_test.text, categorical(df_test.labels .+ 1)
+queries_train, y_train = collect(df_train.text), categorical(df_train.labels .+ 1)
+queries_cal, y_cal = collect(df_cal.text), categorical(df_cal.labels .+ 1)
+queries_test, y_test = collect(df_test.text), categorical(df_test.labels .+ 1)
 ```
 
 ## HuggingFace Model
@@ -56,7 +56,10 @@ struct IntentClassifier <: MLJBase.Probabilistic
     mod::HuggingFace.HGFRobertaForSequenceClassification
 end
 
-function IntentClassifier(tkr::TextEncoders.AbstractTransformerTextEncoder, mod::HuggingFace.HGFRobertaForSequenceClassification)
+function IntentClassifier(;
+    tokenizer::TextEncoders.AbstractTransformerTextEncoder, 
+    model::HuggingFace.HGFRobertaForSequenceClassification,
+)
     IntentClassifier(tkr, mod)
 end
 
@@ -70,13 +73,14 @@ end
 function MLJBase.fit(clf::IntentClassifier, verbosity, X, y)
     cache=nothing
     report=nothing
-    fitresult = clf.mod.cls
+    fitresult = (clf = clf.mod.cls, labels = levels(y))
     return fitresult, cache, report
 end
 
 function MLJBase.predict(clf::IntentClassifier, fitresult, Xnew)
-    output = fitresult(Xnew)
-    p̂ = softmax(c.logit)
+    output = fitresult.clf(Xnew)
+    p̂ = permutedims(softmax(output.logit))
+    p̂ = UnivariateFinite(fitresult.labels,p̂,pool=missing)
     return p̂
 end
 ```
@@ -84,7 +88,7 @@ end
 
 ```{julia}
 clf = IntentClassifier(tkr, mod)
-Xnew = get_hidden_state(clf, query)
-fitresult, _, _ = fit(clf, 1, nothing, nothing)
-p̂ = predict(clf, fitresult, Xnew)
+X_train = get_hidden_state(clf, queries_train)
+fitresult, _, _ = fit(clf, 1, nothing, y_train)
+p̂ = predict(clf, fitresult, X_train)
 ```
