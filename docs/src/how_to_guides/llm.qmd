@@ -20,11 +20,14 @@ labels = df_labels[:,1]
 # Get data:
 df_train = CSV.read("dev/artifacts/data/banking77/train.csv", DataFrame, drop=[1])
 df_cal = CSV.read("dev/artifacts/data/banking77/calibration.csv", DataFrame, drop=[1])
+df_full_train = vcat(df_train, df_cal)
+train_ratio = round(nrow(df_train)/nrow(df_full_train), digits=2)
 df_test = CSV.read("dev/artifacts/data/banking77/test.csv", DataFrame, drop=[1])
 
 # Preprocess data:
 queries_train, y_train = collect(df_train.text), categorical(df_train.labels .+ 1)
 queries_cal, y_cal = collect(df_cal.text), categorical(df_cal.labels .+ 1)
+queries, y = collect(df_full_train.text), categorical(df_full_train.labels .+ 1)
 queries_test, y_test = collect(df_test.text), categorical(df_test.labels .+ 1)
 ```
 
@@ -35,7 +38,6 @@ tkr = hgf"mrm8488/distilroberta-finetuned-banking77:tokenizer"
 mod = hgf"mrm8488/distilroberta-finetuned-banking77:ForSequenceClassification"
 ```
 
-
 ```{julia}
 query = [
     "What is the base of the exchange rates?",
@@ -45,7 +47,7 @@ a = encode(tkr, query)
 b = mod.model(a)
 c = mod.cls(b.hidden_state)
 d = softmax(c.logit)
-Flux.onecold(d)
+[labels[i] for i in Flux.onecold(d)]
 ```
 
 ## `MLJ` Model
@@ -78,9 +80,8 @@ function MLJBase.fit(clf::IntentClassifier, verbosity, X, y)
 end
 
 function MLJBase.predict(clf::IntentClassifier, fitresult, Xnew)
-    output = fitresult.clf(Xnew)
-    p̂ = permutedims(softmax(output.logit))
-    p̂ = UnivariateFinite(fitresult.labels,p̂,pool=missing)
+    output = fitresult.clf(get_hidden_state(clf,Xnew))
+    p̂ = UnivariateFinite(fitresult.labels,softmax(output.logit)',pool=missing)
     return p̂
 end
 
@@ -91,17 +92,15 @@ MLJBase.predict_mode(clf::IntentClassifier, fitresult, Xnew) = mode.(MLJBase.pre
 
 ```{julia}
 clf = IntentClassifier(tkr, mod)
-top_n = 10
-X_train = get_hidden_state(clf, queries_train[1:top_n])
-fitresult, _, _ = fit(clf, 1, X_train, y_train[1:top_n])
-p̂ = predict(clf, fitresult, X_train)
-ŷ = predict_mode(clf, fitresult, X_train)
+top_n = 100
+fitresult, _, _ = fit(clf, 1, nothing, y_test[1:top_n])
+@time ŷ = predict(clf, fitresult, queries_test[1:top_n]);
 ```
 
-## Conformalization
+## Conformal Prediction
 
 ```{julia}
-conf_model = conformal_model(clf; coverage=.9)
-X_cal = get_hidden_state(clf, queries_cal)
-ConformalPrediction.score(conf_model, fitresult, X_cal, y_cal)
+conf_model = conformal_model(clf; coverage=.9, method=:simple_inductive, train_ratio=train_ratio)
+mach = machine(conf_model, queries[1:1000], y[1:1000])
+fit!(mach)
 ```

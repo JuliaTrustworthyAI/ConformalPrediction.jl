@@ -10,15 +10,10 @@ end
 """
     split_data(conf_model::ConformalProbabilisticSet, indices::Base.OneTo{Int})
 
-Splits the data into a proper training and calibration set. If `conf_model.train_indices` is specified, it will use those indices for training and the rest for calibration. Otherwise, it will use `conf_model.train_ratio` to split the data into training and calibration sets.
+Splits the data into a proper training and calibration set.
 """
 function split_data(conf_model::ConformalProbabilisticSet, X, y)
-    if !isnothing(conf_model.train_indices)
-        train = conf_model.train_indices
-        calibration = setdiff(eachindex(y), train)
-    else
-        train, calibration = partition(eachindex(y), conf_model.train_ratio)
-    end
+    train, calibration = partition(eachindex(y), conf_model.train_ratio)
     Xtrain = selectrows(X, train)
     ytrain = y[train]
     Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
@@ -35,20 +30,16 @@ mutable struct SimpleInductiveClassifier{Model<:Supervised} <: ConformalProbabil
     coverage::AbstractFloat
     scores::Union{Nothing,Dict{Any,Any}}
     heuristic::Function
-    train_ratio::Union{Nothing,AbstractFloat}
-    train_indices::Union{Nothing,AbstractArray}
+    train_ratio::AbstractFloat
 end
 
 function SimpleInductiveClassifier(
     model::Supervised;
     coverage::AbstractFloat=0.95,
     heuristic::Function=f(p̂) = 1.0 - p̂,
-    train_ratio::Union{AbstractFloat}=0.5,
-    train_indices::Union{Nothing,AbstractArray}=nothing,
+    train_ratio::AbstractFloat=0.5,
 )
-    @assert !isnothing(train_indices) || !isnothing(train_ratio) "Either `train_indices` or `train_ratio` must be specified."
-    isnothing(train_indices) || isnothing(train_ratio) || @warn "Both `train_indices` and `train_ratio` are specified. `train_indices` will be used."
-    return SimpleInductiveClassifier(model, coverage, nothing, heuristic, train_ratio, train_indices)
+    return SimpleInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
 end
 
 """
@@ -136,19 +127,15 @@ mutable struct AdaptiveInductiveClassifier{Model<:Supervised} <: ConformalProbab
     coverage::AbstractFloat
     scores::Union{Nothing,Dict{Any,Any}}
     heuristic::Function
-    train_ratio::Union{Nothing,AbstractFloat}
-    train_indices::Union{Nothing,AbstractArray}
+    train_ratio::AbstractFloat
 end
 
 function AdaptiveInductiveClassifier(
     model::Supervised;
     coverage::AbstractFloat=0.95,
     heuristic::Function=f(y, ŷ) = 1.0 - ŷ,
-    train_ratio::Union{Nothing,AbstractFloat}=0.5,
-    train_indices::Union{Nothing,AbstractVector}=nothing,
+    train_ratio::AbstractFloat=0.5,
 )
-    @assert !isnothing(train_indices) || !isnothing(train_ratio) "Either `train_indices` or `train_ratio` must be specified."
-    isnothing(train_indices) || isnothing(train_ratio) || @warn "Both `train_indices` and `train_ratio` are specified. `train_indices` will be used."
     return AdaptiveInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
 end
 
