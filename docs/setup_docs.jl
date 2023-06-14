@@ -6,9 +6,15 @@ setup_docs = quote
 
     # Dependencies:
     using ConformalPrediction
+    using CSV
+    using DataFrames
+    using Flux
+    using MLJBase
+    using MLJFlux
     using Plots
     using Random
     using Transformers
+    using Transformers.TextEncoders
     using Transformers.HuggingFace
   
     # Setup:

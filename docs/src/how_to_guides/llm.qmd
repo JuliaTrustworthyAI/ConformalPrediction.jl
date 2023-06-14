@@ -2,14 +2,89 @@
 CurrentModule = ConformalPrediction
 ```
 
-# How to Conformalize a Language Model
-
 ```{julia}
 #| echo: false
 include("$(pwd())/docs/setup_docs.jl")
 eval(setup_docs)
 ```
 
+# How to Conformalize a Language Model
+
+## Data
+
 ```{julia}
+# Get labels:
+labels = CSV.read("dev/artifacts/data/banking77/labels.csv", DataFrame, drop=[1])
+pool = labels[:,1]
+
+# Get data:
+df_train = CSV.read("dev/artifacts/data/banking77/train.csv", DataFrame, drop=[1])
+df_cal = CSV.read("dev/artifacts/data/banking77/calibration.csv", DataFrame, drop=[1])
+df_test = CSV.read("dev/artifacts/data/banking77/test.csv", DataFrame, drop=[1])
+
+# Preprocess data:
+queries_train, y_train = df_train.text, categorical(df_train.labels .+ 1)
+queries_cal, y_cal = df_cal.text, categorical(df_cal.labels .+ 1)
+queries_test, y_test = df_test.text, categorical(df_test.labels .+ 1)
+```
+
+## HuggingFace Model
+
+```{julia}
+tkr = hgf"mrm8488/distilroberta-finetuned-banking77:tokenizer"
 mod = hgf"mrm8488/distilroberta-finetuned-banking77:ForSequenceClassification"
+```
+
+
+```{julia}
+query = [
+    "What is the base of the exchange rates?",
+    "Exchange rates for the US dollar.",
+]
+a = encode(tkr, query)
+b = mod.model(a)
+c = mod.cls(b.hidden_state)
+d = softmax(c.logit)
+Flux.onecold(d)
+```
+
+## `MLJ` Model
+
+```{julia}
+struct IntentClassifier <: MLJBase.Probabilistic
+    tkr::TextEncoders.AbstractTransformerTextEncoder
+    mod::HuggingFace.HGFRobertaForSequenceClassification
+end
+
+function IntentClassifier(tkr::TextEncoders.AbstractTransformerTextEncoder, mod::HuggingFace.HGFRobertaForSequenceClassification)
+    IntentClassifier(tkr, mod)
+end
+
+function get_hidden_state(clf::IntentClassifier, query::Union{AbstractString, Vector{<:AbstractString}})
+    token = encode(clf.tkr, query)
+    hidden_state = clf.mod.model(token).hidden_state
+    return hidden_state
+end
+
+# This doesn't actually retrain the model, but it retrieves the classifier object
+function MLJBase.fit(clf::IntentClassifier, verbosity, X, y)
+    cache=nothing
+    report=nothing
+    fitresult = clf.mod.cls
+    return fitresult, cache, report
+end
+
+function MLJBase.predict(clf::IntentClassifier, fitresult, Xnew)
+    output = fitresult(Xnew)
+    p̂ = softmax(c.logit)
+    return p̂
+end
+```
+
+
+```{julia}
+clf = IntentClassifier(tkr, mod)
+Xnew = get_hidden_state(clf, query)
+fitresult, _, _ = fit(clf, 1, nothing, nothing)
+p̂ = predict(clf, fitresult, Xnew)
 ```
