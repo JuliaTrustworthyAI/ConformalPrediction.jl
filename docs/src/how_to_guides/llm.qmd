@@ -132,8 +132,8 @@ cov = 0.95
 
 ```{julia}
 conf_model = conformal_model(clf; coverage=cov, method=:simple_inductive, train_ratio=train_ratio)
-mach = machine(conf_model, queries[1:1000], y[1:1000])
-fit!(mach)
+mach = machine(conf_model, queries, y)
+@time fit!(mach)
 ŷ = predict(mach, queries_test[1:10])
 ```
 
@@ -141,7 +141,7 @@ ŷ = predict(mach, queries_test[1:10])
 
 ```{julia}
 conf_model = conformal_model(clf; coverage=cov, method=:adaptive_inductive, train_ratio=train_ratio)
-mach = machine(conf_model, queries[1:1000], y[1:1000])
-fit!(mach)
+mach = machine(conf_model, queries, y)
+@time fit!(mach)
 ŷ = predict(mach, queries_test[1:10])
 ```
