@@ -68,7 +68,7 @@ function Plots.contourf(
     plot_classification_loss = false,
     plot_set_loss = false,
     temp = nothing,
-    κ = 0,
+    κ = 1,
     loss_matrix = UniformScaling(1.0),
     kwargs...,
 )
@@ -129,7 +129,7 @@ function Plots.contourf(
             _target = categorical([target], levels=levels(y))
             z = ConformalPrediction.classification_loss(conf_model, fitresult, [x1 x2], _target; temp=temp, loss_matrix=loss_matrix)
         elseif plot_set_loss
-            z = ConformalPrediction.smooth_size_loss(conf_model, fitresult, [x1 x2]; κ=κ, temp=temp)
+            z = ConformalPrediction.ConformalTraining.smooth_size_loss(conf_model, fitresult, [x1 x2]; κ=κ, temp=temp)
         else
             z = ismissing(p̂) ? [missing for i = 1:length(levels(y))] : pdf.(p̂, levels(y))
             z = replace(z, 0 => missing)
@@ -155,7 +155,6 @@ function Plots.contourf(
             kwargs...,
         )
     else
-        clim = @isdefined(clim) ? clim : (0, 1)
         plt = contourf(
             x1range,
             x2range,
@@ -163,7 +162,6 @@ function Plots.contourf(
             title = title,
             xlims = xlims,
             ylims = ylims,
-            clim = clim,
             c = cgrad(:blues),
             linewidth=0,
             kwargs...,

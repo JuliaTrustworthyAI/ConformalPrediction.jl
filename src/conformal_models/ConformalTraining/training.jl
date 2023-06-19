@@ -40,7 +40,7 @@ function MLJFlux.train!(model::ConformalNN, penalty, chain, optimiser, X, y)
             Ω = smooth_size_loss(conf_model, fitresult, Xpred')
             yhat = chain(X_batch)
             batch_loss = loss(yhat, y_batch) + penalty(parameters) / n_batches 
-            batch_loss += sum(Ω) / length(Ω)                            # add size loss
+            batch_loss += 0.5 * sum(Ω) / length(Ω)                            # add size loss
             training_loss += batch_loss
             size_loss += sum(Ω) / length(Ω)
             return batch_loss

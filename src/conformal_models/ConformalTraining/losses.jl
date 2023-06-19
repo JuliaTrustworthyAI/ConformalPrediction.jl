@@ -48,7 +48,7 @@ function smooth_size_loss(
     conf_model::ConformalProbabilisticSet, fitresult, X;
     temp::Union{Nothing, Real}=nothing, κ::Real=1.0
 )
-    temp = isnothing(temp) ? 0.5 : temp
+    temp = isnothing(temp) ? 0.1 : temp
     C = soft_assignment(conf_model, fitresult, X; temp=temp)
     is_empty_set = all(x -> x .== 0, soft_assignment(conf_model, fitresult, X; temp=0.0), dims=2)
     Ω = []
