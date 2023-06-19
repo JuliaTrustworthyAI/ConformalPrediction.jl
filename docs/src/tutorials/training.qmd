@@ -20,29 +20,45 @@ using MLJ
 using Random
 Random.seed!(123)
 
-# Data:
-X, y = make_moons(500; noise=0.15)
-X = MLJ.table(Float32.(MLJ.matrix(X)))
-train, test = partition(eachindex(y), 0.8, shuffle=true)
+# Regression data:
+
+# Inputs:
+N = 600
+xmax = 5.0
+using Distributions
+d = Uniform(-xmax, xmax)
+X = rand(d, N)
+X = Float32.(reshape(X, :, 1))
+
+# Outputs:
+noise = 0.5
+fun(X) = X * sin(X)
+ε = randn(N) .* noise
+y = @.(fun(X)) + ε
+y = vec(y)
+y = Float32.(y)
+
+# Partition:
+using MLJ
+train, test = partition(eachindex(y), 0.4, 0.4, shuffle=true)
 ```
 
 
 ```{julia}
 using MLJFlux
 using ConformalPrediction
-using ConformalPrediction.ConformalTraining: ConformalNNClassifier
+using ConformalPrediction.ConformalTraining: ConformalNNRegressor
+using Flux
 
 # Model:
 builder = MLJFlux.MLP(hidden=(32, 32, 32,), σ=Flux.relu)
-clf = ConformalNNClassifier(epochs=250, builder=builder, batch_size=50)
-# clf = NeuralNetworkClassifier(epochs=250, builder=builder, batch_size=50)
+mod = ConformalNNRegressor(epochs=250, builder=builder, batch_size=50)
+# clf = NeuralNetworkRegressor(epochs=250, builder=builder, batch_size=50)
 ```
 
 
 ```{julia}
-using ConformalPrediction
-
-conf_model = conformal_model(clf; method=:simple_inductive)
+conf_model = conformal_model(mod; method=:simple_inductive)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 ```
@@ -56,3 +72,7 @@ p_set_size = contourf(mach.model, mach.fitresult, X, y; plot_set_size=true)
 plot(p_proba, p_set_size, size=(800,250))
 ```
 
+
+```{julia}
+mean(ConformalPrediction.set_size.(predict(mach)))
+```

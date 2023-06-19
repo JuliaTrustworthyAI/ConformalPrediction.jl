@@ -1,58 +1,52 @@
-using ConformalPrediction: ConformalProbabilisticSet
-using Flux
-using MLUtils
-using ProgressMeter
+const ConformalNN = Union{ConformalNNClassifier, ConformalNNRegressor}
 
-function conformal_training(
-    chain::Flux.Chain, train_set::MLUtils.DataLoader, opt_state;
-    num_epochs::Int=100,
-    val_set::Union{Nothing,DataLoader,Base.Iterators.Zip}=nothing,
-    max_patience::Int=10,
-    verbosity::Int=num_epochs,
-    progress_meter::Union{Nothing,ProgressMeter.Progress}=nothing,
-    cal_split::Float64=0.5,
-)
+@doc raw"""
+    MLJFlux.train!(model::ConformalNN, penalty, chain, optimiser, X, y)
 
-    # Assertions:
-    train_set.batchsize >= 50 || @warn "Chosen batch size is small and calibration may therefore not work properly."
+Implements the conformal traning procedure for the `ConformalNN` type.
+"""
+function MLJFlux.train!(model::ConformalNN, penalty, chain, optimiser, X, y)
 
     # Setup:
-    training_log = []
-    not_finite_counter = 0
-    if isnothing(progress_meter)
-        progress_meter = Progress(
-            num_epochs, dt=0, desc="Optimising neural net:", 
-            barglyphs=BarGlyphs("[=> ]"), barlen=25, color=:green
-        )
-        verbosity == 0 || next!(progress_meter)
-    end
+    loss = model.loss
+    n_batches = length(y)
+    training_loss = zero(Float32)
+    size_loss = zero(Float32)
+    fitresult = (chain, nothing)
 
     # Training loop:
-    for epoch in 1:num_epochs
+    for i in 1:n_batches
+        parameters = Flux.params(chain)
 
-        training_losses = Float32[]
-        
-        # Forward- and backward pass:
-        for (i, data) in enumerate(train_set)
+        # Data Splitting:
+        X_batch, y_batch = X[i], y[i]
+        conf_model = ConformalPrediction.conformal_model(model, method=:simple_inductive, coverage=0.95)
+        calibration, pred = partition(1:size(y_batch,2), conf_model.train_ratio, shuffle=true)
+        Xcal = X_batch[:,calibration]
+        ycal = y_batch[:,calibration]
+        Xcal, ycal = MMI.reformat(conf_model.model, Xcal, ycal)
+        Xpred = X_batch[:,pred]
+        ypred = y_batch[:,pred]
+        Xpred, ypred = MMI.reformat(conf_model.model, Xpred, ypred)
 
-            # Split into calibration set and prediction set:
-            cal, pred = partition(1:MLUtils.numobs(data), cal_split, shuffle=true)
-            data_cal, data_pred = (MLUtils.getobs(data, cal), MLUtils.getobs(data, pred))
+        # On-the-fly calibration:
+        cal_scores, scores = ConformalPrediction.score(conf_model, fitresult, Xcal', categorical(Flux.onecold(ycal)))
+        conf_model.scores = Dict(
+            :calibration => cal_scores,
+            :all => scores,
+        )
 
-            # Forward pass:
-            
-
-            # Save the loss from the forward pass. (Done outside of gradient.)
-            push!(training_losses, val)
-
-            # Detect loss of Inf or NaN. Print a warning, and then skip update!
-            if !isfinite(val)
-                continue
-            end
-
-            # Backward pass:
-            Flux.update!(opt_state, jem, grads[1])
+        gs = Flux.gradient(parameters) do
+            Ω = smooth_size_loss(conf_model, fitresult, Xpred')
+            yhat = chain(X_batch)
+            batch_loss = loss(yhat, y_batch) + penalty(parameters) / n_batches 
+            batch_loss += sum(Ω) / length(Ω)                            # add size loss
+            training_loss += batch_loss
+            size_loss += sum(Ω) / length(Ω)
+            return batch_loss
         end
+        Flux.update!(optimiser, parameters, gs)
     end
-    
+
+    return training_loss / n_batches
 end
