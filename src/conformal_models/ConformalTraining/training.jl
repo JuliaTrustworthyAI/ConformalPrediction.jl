@@ -4,7 +4,7 @@ using MLUtils
 using ProgressMeter
 
 function conformal_training(
-    conf_model::ConformalProbabilisticSet, train_set::MLUtils.DataLoader, opt_state;
+    chain::Flux.Chain, train_set::MLUtils.DataLoader, opt_state;
     num_epochs::Int=100,
     val_set::Union{Nothing,DataLoader,Base.Iterators.Zip}=nothing,
     max_patience::Int=10,

@@ -1,3 +1,4 @@
+using CategoricalArrays
 using ConformalPrediction: SimpleInductiveClassifier, AdaptiveInductiveClassifier
 using MLJEnsembles: EitherEnsembleModel
 using MLJFlux: MLJFluxModel

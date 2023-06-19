@@ -2,6 +2,7 @@ using ConformalPrediction: ConformalProbabilisticSet
 using Flux
 using LinearAlgebra
 using MLJBase
+using StatsBase
 
 """
     soft_assignment(conf_model::ConformalProbabilisticSet; temp::Real=0.5)
@@ -25,7 +26,7 @@ function soft_assignment(conf_model::ConformalProbabilisticSet, fitresult, X; te
     temp = isnothing(temp) ? 0.5 : temp
     v = sort(conf_model.scores[:calibration])
     q̂ = StatsBase.quantile(v, conf_model.coverage, sorted=true)
-    scores = score(conf_model, fitresult, X)
+    scores = ConformalPrediction.score(conf_model, fitresult, X)
     return @.(σ((q̂ - scores) / temp))
 end
 
@@ -62,14 +63,6 @@ function smooth_size_loss(
         Ω = [Ω..., ω]
     end
     Ω = permutedims(permutedims(Ω))
-    # Ω = map(sum(C; dims=2), is_empty_set) do x, is_empty
-    #     if is_empty #&& κ > 0
-    #         ω = maximum([x - κ, full_set_size - κ])
-    #     else 
-    #         ω = maximum([0, x - κ])
-    #     end
-    #     return ω
-    # end
     return Ω
 end
 

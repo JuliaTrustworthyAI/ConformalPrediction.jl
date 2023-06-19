@@ -132,7 +132,7 @@ The following chart shows the resulting predicted probabilities for ``y=1`` (lef
 using Plots
 p_proba = contourf(mach.model, mach.fitresult, X, y)
 p_set_size = contourf(mach.model, mach.fitresult, X, y; plot_set_size=true)
-contourf(p_proba, p_set_size, size=(800,250))
+plot(p_proba, p_set_size, size=(800,250))
 ```
 
 ```{julia}
