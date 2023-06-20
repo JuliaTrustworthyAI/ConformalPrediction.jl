@@ -1,0 +1,360 @@
+```@meta
+CurrentModule = ConformalPrediction
+```
+
+```{julia}
+#| echo: false
+include("$(pwd())/docs/setup_docs.jl")
+eval(setup_docs)
+```
+
+# How to Conformalize a Transformer Language Model
+
+Large Language Models are all the buzz right now. They are used for a variety of tasks, including text classification, question answering, and text generation. In this tutorial, we will show how to conformalize a transformer language model for text classification. We will use the [Banking77](https://arxiv.org/abs/2005.00796) dataset, which consists of 13,083 queries from 77 intents. We will use the [DistilRoBERTa](https://huggingface.co/mrm8488/distilroberta-finetuned-banking77) model, which is a distilled version of [RoBERTa](https://arxiv.org/abs/1907.11692) trained on the Banking77 dataset.
+
+## Data
+
+```{julia}
+# Get labels:
+df_labels = CSV.read("dev/artifacts/data/banking77/labels.csv", DataFrame, drop=[1])
+labels = df_labels[:,1]
+
+# Get data:
+df_train = CSV.read("dev/artifacts/data/banking77/train.csv", DataFrame, drop=[1])
+df_cal = CSV.read("dev/artifacts/data/banking77/calibration.csv", DataFrame, drop=[1])
+df_full_train = vcat(df_train, df_cal)
+train_ratio = round(nrow(df_train)/nrow(df_full_train), digits=2)
+df_test = CSV.read("dev/artifacts/data/banking77/test.csv", DataFrame, drop=[1])
+
+# Preprocess data:
+queries_train, y_train = collect(df_train.text), categorical(df_train.labels .+ 1)
+queries_cal, y_cal = collect(df_cal.text), categorical(df_cal.labels .+ 1)
+queries, y = collect(df_full_train.text), categorical(df_full_train.labels .+ 1)
+queries_test, y_test = collect(df_test.text), categorical(df_test.labels .+ 1)
+```
+
+## HuggingFace Model
+
+```{julia}
+tkr = hgf"mrm8488/distilroberta-finetuned-banking77:tokenizer"
+mod = hgf"mrm8488/distilroberta-finetuned-banking77:ForSequenceClassification"
+```
+
+```{julia}
+query = [
+    "What is the base of the exchange rates?",
+    "Exchange rates for the US dollar.",
+]
+a = encode(tkr, query)
+b = mod.model(a)
+c = mod.cls(b.hidden_state)
+d = softmax(c.logit)
+[labels[i] for i in Flux.onecold(d)]
+```
+
+## `MLJ` Models
+
+### Full Model
+
+```{julia}
+struct IntentClassifier <: MLJBase.Probabilistic
+    tkr::TextEncoders.AbstractTransformerTextEncoder
+    mod::HuggingFace.HGFRobertaForSequenceClassification
+end
+
+function IntentClassifier(;
+    tokenizer::TextEncoders.AbstractTransformerTextEncoder, 
+    model::HuggingFace.HGFRobertaForSequenceClassification,
+)
+    IntentClassifier(tkr, mod)
+end
+
+function get_hidden_state(clf::IntentClassifier, query::Union{AbstractString, Vector{<:AbstractString}})
+    token = encode(clf.tkr, query)
+    hidden_state = clf.mod.model(token).hidden_state
+    return hidden_state
+end
+
+# This doesn't actually retrain the model, but it retrieves the classifier object
+function MLJBase.fit(clf::IntentClassifier, verbosity, X, y)
+    cache=nothing
+    report=nothing
+    fitresult = (clf = clf.mod.cls, labels = levels(y))
+    return fitresult, cache, report
+end
+
+function MLJBase.predict(clf::IntentClassifier, fitresult, Xnew)
+    output = fitresult.clf(get_hidden_state(clf,Xnew))
+    p̂ = UnivariateFinite(fitresult.labels,softmax(output.logit)',pool=missing)
+    return p̂
+end
+
+MLJBase.target_scitype(clf::IntentClassifier) = AbstractVector{<:Finite}
+
+MLJBase.predict_mode(clf::IntentClassifier, fitresult, Xnew) = mode.(MLJBase.predict(clf, fitresult, Xnew))
+```
+
+```{julia}
+clf = IntentClassifier(tkr, mod)
+top_n = 1000
+fitresult, _, _ = fit(clf, 1, nothing, y_test[1:top_n])
+@time ŷ = predict(clf, fitresult, queries_test[1:top_n]);
+```
+
+### Omniscent Model
+
+```{julia}
+struct OmniscentClassifier <: MLJBase.Probabilistic end
+
+# This doesn't actually retrain the model, but it retrieves the classifier object
+function MLJBase.fit(clf::OmniscentClassifier, verbosity, X, y)
+    cache=nothing
+    report=nothing
+    fitresult = (labels = levels(y),)
+    return fitresult, cache, report
+end
+
+function MLJBase.predict(clf::OmniscentClassifier, fitresult, p̂)
+    p̂ = UnivariateFinite(fitresult.labels,p̂,pool=missing)
+    return p̂
+end
+
+MLJBase.target_scitype(clf::OmniscentClassifier) = AbstractVector{<:Finite}
+
+MLJBase.predict_mode(clf::OmniscentClassifier, fitresult, Xnew) = mode.(MLJBase.predict(clf, fitresult, Xnew))
+```
+
+```{julia}
+# Get predictions:
+p̂_train = Matrix(CSV.read("dev/artifacts/data/banking77/train_softmax.csv", DataFrame, header=false))
+p̂_cal = Matrix(CSV.read("dev/artifacts/data/banking77/calibration_softmax.csv", DataFrame, header=false))
+p̂_full_train = vcat(p̂_train, p̂_cal)
+p̂_test = Matrix(CSV.read("dev/artifacts/data/banking77/test_softmax.csv", DataFrame, header=false))
+
+clf_omni = OmniscentClassifier()
+top_n = 1000
+fitresult, _, _ = fit(clf_omni, 1, nothing, y_test[1:top_n])
+@time ŷ = predict(clf_omni, fitresult, p̂_full_train);
+```
+
+## Conformal Prediction
+
+```{julia}
+cov = 0.95
+```
+
+### Simple Inductive Conformal Prediction
+
+```{julia}
+conf_model = conformal_model(clf; coverage=cov, method=:simple_inductive, train_ratio=train_ratio)
+mach = machine(conf_model, queries, y)
+@time fit!(mach)
+Serialization.serialize("dev/artifacts/models/banking77/simple_inductive.jls", mach)
+```
+
+### Adaptive Inductive Conformal Prediction
+
+```{julia}
+conf_model = conformal_model(clf; coverage=cov, method=:adaptive_inductive, train_ratio=train_ratio)
+mach = machine(conf_model, queries, y)
+@time fit!(mach)
+Serialization.serialize("dev/artifacts/models/banking77/adaptive_inductive.jls", mach)
+```
+
+## Evaluation
+
+### Roberta
+
+```{julia}
+# Get all test predictions:
+using ConformalPrediction: reformat_mlj_prediction
+p̂_test = reformat_mlj_prediction(
+    predict(mach.model.model, mach.fitresult, MMI.reformat(mach.model.model, queries_test)...),
+)
+Serialization.serialize("dev/artifacts/results/banking77/roberta_cp.jls", p̂_test)
+```
+
+```{julia}
+# Helper functions:
+using ConformalPrediction: SimpleInductiveClassifier, AdaptiveInductiveClassifier
+
+# Simple Inductive:
+function MLJBase.predict(conf_model::SimpleInductiveClassifier, fitresult, p̂; cov=0.9)
+    v = conf_model.scores[:calibration]
+    n = length(v)
+    q_level = ceil((n+1)*(cov))/n
+    q̂ = StatsBase.quantile(v, q_level)
+    p̂ = map(p̂) do pp
+        L = p̂.decoder.classes
+        probas = pdf.(pp, L)
+        is_in_set = 1.0 .- probas .<= q̂
+        if !all(is_in_set .== false)
+            pp = UnivariateFinite(L[is_in_set], probas[is_in_set])
+        else
+            pp = missing
+        end
+        return pp
+    end
+    return p̂
+end
+
+# Adaptive Inductive:
+function MLJBase.predict(conf_model::AdaptiveInductiveClassifier, fitresult, p̂; cov=0.9)
+    v = conf_model.scores[:calibration]
+    n = length(v)
+    q_level = ceil((n+1)*(cov))/n
+    q̂ = StatsBase.quantile(v, q_level)
+    p̂ = map(p̂) do pp
+        L = p̂.decoder.classes
+        probas = pdf.(pp, L)
+        Π = sortperm(.-probas)                                  # rank in descending order
+        k = findall(cumsum(probas[Π]) .> q̂)[1] + 1              # index of first class with probability > q̂ (supremum)
+        pp = UnivariateFinite(L[Π][1:k], probas[Π][1:k])
+        return pp
+    end
+    return p̂
+end
+```
+
+```{julia}
+using ConformalPrediction: emp_coverage, size_stratified_coverage, set_size
+function evaluation_plots(
+    mach::Machine, p̂, y; 
+    cov_rates=0.01:0.01:0.99, height=300, 
+    plot_ec=true,
+    plot_ssc=true,
+    plot_avg_size=true,
+    margin=5mm,
+    dpi=300
+)
+
+    conf_model = mach.model
+    fitresult = mach.fitresult
+    ec = []
+    ssc = []
+    avg_size = []
+    
+    # Compute metrics::
+    for cov in cov_rates
+        ŷ = predict(conf_model, fitresult, p̂; cov=cov)
+        !plot_ec || push!(ec,emp_coverage(ŷ, y))
+        !plot_ssc || push!(ssc,size_stratified_coverage(ŷ, y))
+        !plot_avg_size ||push!(avg_size, mean(set_size.(ŷ)))
+    end
+
+    # Plot metrics:
+    plts = []
+    if plot_ec 
+        plt = plot([0,1],[0,1],label="", color=:black)
+        scatter!(plt, cov_rates, ec, label="", xlabel="Coverage", ylabel="Observed", title="Empirical Coverage")
+        push!(plts, plt)
+    end
+    if plot_ssc
+        plt = plot([0,1],[0,1],label="", color=:black)
+        scatter!(plt, cov_rates, ssc, label="", xlabel="Coverage", ylabel="Observed", title="Size-Stratified Coverage")
+        push!(plts, plt)
+    end
+    !plot_avg_size || push!(plts, scatter(cov_rates, avg_size, label="", xlabel="Coverage", ylabel="Size", title="Average Set Size"))
+
+    return plot(plts..., layout=(1,length(plts)), size=(length(plts)*height,height), margin=margin, dpi=dpi)
+
+end
+```
+
+```{julia}
+p̂_test = Serialization.deserialize("dev/artifacts/results/banking77/roberta_cp.jls")
+```
+
+#### Simple Inductive Conformal Prediction
+
+```{julia}
+mach = Serialization.deserialize("dev/artifacts/models/banking77/simple_inductive.jls")
+plt = evaluation_plots(mach, p̂_test, y_test)
+plt
+savefig(plt, "dev/artifacts/figures/banking77/roberta_simple_inductive.png")
+```
+
+#### Adaptive Inductive Conformal Prediction
+
+```{julia}
+mach = Serialization.deserialize("dev/artifacts/models/banking77/adaptive_inductive.jls")
+plt = evaluation_plots(mach, p̂_test, y_test; plot_ssc=true, plot_avg_size=true)
+plt
+savefig(plt, "dev/artifacts/figures/banking77/roberta_adaptive_inductive.png")
+```
+
+### BERT banking77
+
+#### Simple Inductive Conformal Prediction
+
+```{julia}
+conf_model = conformal_model(clf_omni; coverage=cov, method=:simple_inductive, train_ratio=train_ratio)
+mach = machine(conf_model, p̂_full_train, y)
+@time fit!(mach)
+p̂_test = Matrix(CSV.read("dev/artifacts/data/banking77/test_softmax.csv", DataFrame, header=false))
+p̂_test =  predict(mach.model.model, mach.fitresult, MMI.reformat(mach.model.model, p̂_test)...)
+plt = evaluation_plots(mach, p̂_test, y_test; plot_ssc=true, plot_avg_size=true)
+savefig(plt, "dev/artifacts/figures/banking77/bert_simple_inductive.png")
+```
+
+#### Adaptive Inductive Conformal Prediction
+
+```{julia}
+conf_model = conformal_model(clf_omni; coverage=cov, method=:adaptive_inductive, train_ratio=train_ratio)
+mach = machine(conf_model, p̂_full_train, y)
+@time fit!(mach)
+p̂_test = Matrix(CSV.read("dev/artifacts/data/banking77/test_softmax.csv", DataFrame, header=false))
+p̂_test =  predict(mach.model.model, mach.fitresult, MMI.reformat(mach.model.model, p̂_test)...)
+plt = evaluation_plots(mach, p̂_test, y_test; plot_ssc=true, plot_avg_size=true)
+savefig(plt, "dev/artifacts/figures/banking77/bert_adaptive_inductive.png")
+```
+
+### DFCX
+
+```{julia}
+
+```
+
+## Demo
+
+```{julia}
+mach = Serialization.deserialize("dev/artifacts/models/banking77/simple_inductive.jls")
+
+function prediction_set(mach, query::String)
+    p̂ = predict(mach, query)[1]
+    probs = pdf.(p̂, collect(1:77))
+    in_set = findall(probs .!= 0)
+    labels_in_set = labels[in_set]
+    probs_in_set = probs[in_set]
+    _order = sortperm(-probs_in_set)
+    plt = UnicodePlots.barplot(labels_in_set[_order], probs_in_set[_order], title="Possible Intents")
+    return labels_in_set, plt
+end
+
+function conformal_chatbot()
+    println("👋 Hi, I'm a Julia, your conformal chatbot. I'm here to help you with your banking query. Ask me anything or type 'exit' to exit ...\n")
+    completed = false
+    queries = ""
+    while !completed
+        query = readline()
+        queries = queries * "," * query
+        labels, plt = prediction_set(mach, queries)
+        if length(labels) > 1
+            println("🤔 Hmmm ... I can think of several options here. If any of these applies, simply type the corresponding number (e.g. '1' for the first option). Otherwise, can you refine your question, please?\n")
+            println(plt)
+        else
+            println("🥳 I think you mean $(labels[1]). Correct?")
+        end
+
+        # Exit:
+        if query == "exit"
+            println("👋 Bye!")
+            break
+        end
+        if query ∈ string.(collect(1:77))
+            println("👍 Great! You've chosen '$(labels[parse(Int64, query)])'. I'm glad I could help you. Have a nice day!")
+            completed = true
+        end
+    end
+end
+```
