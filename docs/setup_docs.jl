@@ -15,7 +15,7 @@ setup_docs = quote
     using Plots.PlotMeasures
     using Random
     using Serialization
-    using Random
+    using StatsBase
     using Transformers
     using Transformers.TextEncoders
     using Transformers.HuggingFace
