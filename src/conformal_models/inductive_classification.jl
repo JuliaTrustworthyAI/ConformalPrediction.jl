@@ -210,8 +210,14 @@ function MMI.predict(conf_model::AdaptiveInductiveClassifier, fitresult, Xnew)
     p̂ = map(p̂) do pp
         L = p̂.decoder.classes
         probas = pdf.(pp, L)
-        Π = sortperm(.-probas)                                  # rank in descending order
-        k = findall(cumsum(probas[Π]) .> q̂)[1] + 1              # index of first class with probability > q̂ (supremum)
+        Π = sortperm(.-probas)                      # rank in descending order
+        in_set = findall(cumsum(probas[Π]) .> q̂)
+        if length(in_set) > 0
+            k = findall(cumsum(probas[Π]) .> q̂)[1]  # index of first class with probability > q̂ (supremum)
+        else
+            k = 0
+        end
+        k += 1
         pp = UnivariateFinite(L[Π][1:k], probas[Π][1:k])
         return pp
     end

@@ -1,6 +1,3 @@
-``` @meta
-CurrentModule = ConformalPrediction
-```
 
 ```{julia}
 #| echo: false
@@ -192,3 +189,5 @@ Below we include a short demo video that shows the REPL-based chatbot in action.
 ## Final Remarks
 
 This work was done in collaboration with colleagues at ING as part of the ING Analytics 2023 Experiment Week. Our team demonstrated that Conformal Prediction provides a powerful and principled alternative to top-*K* intent classification. We won the first prize by popular vote.
+
+## References

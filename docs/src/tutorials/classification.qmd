@@ -1,9 +1,5 @@
 # Classification 
 
-```@meta
-CurrentModule = ConformalPrediction
-```
-
 ```{julia}
 #| echo: false
 using Pkg; Pkg.activate("docs")
@@ -83,7 +79,7 @@ When specifying a coverage rate very close to one, the prediction set will typic
 ```{julia}
 #| output: true
 
-conf_model = conformal_model(model; coverage=coverage, method=:adaptive_inductive)
+conf_model = conformal_model(model; coverage=coverage, method=:simple_inductive)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 
@@ -132,7 +128,7 @@ The following chart shows the resulting predicted probabilities for ``y=1`` (lef
 using Plots
 p_proba = contourf(mach.model, mach.fitresult, X, y)
 p_set_size = contourf(mach.model, mach.fitresult, X, y; plot_set_size=true)
-contourf(p_proba, p_set_size, size=(800,250))
+plot(p_proba, p_set_size, size=(800,250))
 ```
 
 ```{julia}
@@ -205,6 +201,13 @@ conf_model = conformal_model(model; coverage=cov_, method=:adaptive_inductive)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 results[:adaptive_inductive] = mach
+```
+
+```{julia}
+using Plots
+p_proba = contourf(mach.model, mach.fitresult, X, y)
+p_set_size = contourf(mach.model, mach.fitresult, X, y; plot_set_size=true)
+plot(p_proba, p_set_size, size=(800,250))
 ```
 
 ## Evaluation
