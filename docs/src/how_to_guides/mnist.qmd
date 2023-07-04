@@ -1,7 +1,3 @@
-```@meta
-CurrentModule = ConformalPrediction
-```
-
 # How to Conformalize a Deep Image Classifier
 
 ```{julia}

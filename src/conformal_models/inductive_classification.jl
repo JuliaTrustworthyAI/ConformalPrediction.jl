@@ -218,7 +218,8 @@ function MMI.predict(conf_model::AdaptiveInductiveClassifier, fitresult, Xnew)
             k = 0
         end
         k += 1
-        pp = UnivariateFinite(L[Π][1:k], probas[Π][1:k])
+        final_idx = minimum([k, length(Π)])
+        pp = UnivariateFinite(L[Π][1:final_idx], probas[Π][1:final_idx])
         return pp
     end
     return p̂
