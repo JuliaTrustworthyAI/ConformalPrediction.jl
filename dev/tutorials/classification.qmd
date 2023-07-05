@@ -164,7 +164,7 @@ Well, for low coverage rates (roughly ``<0.9``) the conformal prediction set doe
 These two examples illustrate an interesting point: for regions characterized by high predictive uncertainty, conformal prediction sets are typically empty (for low coverage) or large (for high coverage). While set-valued predictions may be something to get used to, this notion is overall intuitive. 
 
 ```{julia}
-#| output: true
+#| output: false
 #| label: fig-anim
 #| fig-cap: "The effect of the coverage rate on the conformal prediction set. Softmax probabilities are shown on the left. The size of the prediction set is shown on the right."
 

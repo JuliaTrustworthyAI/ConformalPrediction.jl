@@ -188,7 +188,7 @@ prediction_set(mach, refined_query)[2]
 
 Below we include a short demo video that shows the REPL-based chatbot in action.
 
-![](/docs/src/www/demo_llm.gif)
+![](../www/demo_llm.gif)
 
 ## Final Remarks
 
