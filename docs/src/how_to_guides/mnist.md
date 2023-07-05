@@ -1,8 +1,3 @@
-
-``` @meta
-CurrentModule = ConformalPrediction
-```
-
 # How to Conformalize a Deep Image Classifier
 
 Deep Learning is popular and — for some tasks like image classification — remarkably powerful. But it is also well-known that Deep Neural Networks (DNN) can be unstable (Goodfellow, Shlens, and Szegedy 2014) and poorly calibrated. Conformal Prediction can be used to mitigate these pitfalls. This how-to guide demonstrates how you can build an image classifier in `Flux.jl` and conformalize its predictions. For a formal treatment see A. Angelopoulos et al. (2022).
@@ -135,16 +130,16 @@ println("SSC: $(round(_eval.measurement[2], digits=3))")
       per_observation, fitted_params_per_fold,
       report_per_fold, train_test_rows
     Extract:
-    ┌───────────────────────────────────────────────────────────┬───────────┬───────
-    │ measure                                                   │ operation │ meas ⋯
-    ├───────────────────────────────────────────────────────────┼───────────┼───────
-    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.95 ⋯
-    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.86 ⋯
-    └───────────────────────────────────────────────────────────┴───────────┴───────
-                                                                   2 columns omitted
+    ┌──────────────────────────────────────────────┬───────────┬─────────────┬──────
+    │ measure                                      │ operation │ measurement │ per ⋯
+    ├──────────────────────────────────────────────┼───────────┼─────────────┼──────
+    │ ConformalPrediction.emp_coverage             │ predict   │ 0.96        │ [0. ⋯
+    │ ConformalPrediction.size_stratified_coverage │ predict   │ 0.885       │ [0. ⋯
+    └──────────────────────────────────────────────┴───────────┴─────────────┴──────
+                                                                    1 column omitted
 
-    Empirical coverage: 0.955
-    SSC: 0.867
+    Empirical coverage: 0.96
+    SSC: 0.885
 
 Unsurprisingly, we can attain higher adaptivity (SSC) when using adaptive prediction sets:
 
@@ -169,16 +164,16 @@ println("SSC: $(round(_eval.measurement[2], digits=3))")
       per_observation, fitted_params_per_fold,
       report_per_fold, train_test_rows
     Extract:
-    ┌───────────────────────────────────────────────────────────┬───────────┬───────
-    │ measure                                                   │ operation │ meas ⋯
-    ├───────────────────────────────────────────────────────────┼───────────┼───────
-    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.99 ⋯
-    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.96 ⋯
-    └───────────────────────────────────────────────────────────┴───────────┴───────
-                                                                   2 columns omitted
+    ┌──────────────────────────────────────────────┬───────────┬─────────────┬──────
+    │ measure                                      │ operation │ measurement │ per ⋯
+    ├──────────────────────────────────────────────┼───────────┼─────────────┼──────
+    │ ConformalPrediction.emp_coverage             │ predict   │ 1.0         │ [1. ⋯
+    │ ConformalPrediction.size_stratified_coverage │ predict   │ 1.0         │ [1. ⋯
+    └──────────────────────────────────────────────┴───────────┴─────────────┴──────
+                                                                    1 column omitted
 
-    Empirical coverage: 0.995
-    SSC: 0.967
+    Empirical coverage: 1.0
+    SSC: 1.0
 
 We can also have a look at the resulting set size for both approaches:
 
@@ -196,7 +191,7 @@ plot(plt_list..., size=(800,300))
 
 Angelopoulos, Anastasios N., and Stephen Bates. 2021. “A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification.” <https://arxiv.org/abs/2107.07511>.
 
-Angelopoulos, Anastasios, Stephen Bates, Jitendra Malik, and Michael I. Jordan. 2022. “Uncertainty Sets for Image Classifiers Using Conformal Prediction.” arXiv. <http://arxiv.org/abs/2009.14193>.
+Angelopoulos, Anastasios, Stephen Bates, Jitendra Malik, and Michael I. Jordan. 2022. “Uncertainty Sets for Image Classifiers Using Conformal Prediction.” arXiv. <https://arxiv.org/abs/2009.14193>.
 
 Goodfellow, Ian J, Jonathon Shlens, and Christian Szegedy. 2014. “Explaining and Harnessing Adversarial Examples.” <https://arxiv.org/abs/1412.6572>.
 

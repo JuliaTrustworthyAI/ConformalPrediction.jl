@@ -213,7 +213,7 @@ function MMI.predict(conf_model::AdaptiveInductiveClassifier, fitresult, Xnew)
         Π = sortperm(.-probas)                      # rank in descending order
         in_set = findall(cumsum(probas[Π]) .> q̂)
         if length(in_set) > 0
-            k = findall(cumsum(probas[Π]) .> q̂)[1]  # index of first class with probability > q̂ (supremum)
+            k = in_set[1]  # index of first class with probability > q̂ (supremum)
         else
             k = 0
         end

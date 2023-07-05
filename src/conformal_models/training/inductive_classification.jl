@@ -1,5 +1,5 @@
 using MLJEnsembles: EitherEnsembleModel
-using MLJFlux: MLJFluxModel
+using MLJFlux: MLJFluxModel, reformat
 using MLUtils
 
 """
@@ -8,7 +8,8 @@ using MLUtils
 Overloads the `score` function for the `MLJFluxModel` type.
 """
 function score(conf_model::SimpleInductiveClassifier, ::Type{<:MLJFluxModel}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
-    X = permutedims(matrix(X))
+    X = reformat(X)
+    X = typeof(X) <: AbstractArray ? X : permutedims(matrix(X))
     probas = permutedims(fitresult[1](X))
     scores = @.(conf_model.heuristic(probas))
     if isnothing(y)
@@ -25,7 +26,8 @@ end
 Overloads the `score` function for ensembles of `MLJFluxModel` types.
 """
 function score(conf_model::SimpleInductiveClassifier, ::Type{<:EitherEnsembleModel{<:MLJFluxModel}}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
-    X = permutedims(matrix(X))
+    X = reformat(X)
+    X = typeof(X) <: AbstractArray ? X : permutedims(matrix(X))
     _chains = map(res -> res[1], fitresult.ensemble)
     probas = MLUtils.stack(map(chain -> chain(X), _chains)) |>
         p -> mean(p, dims=ndims(p)) |>
@@ -47,7 +49,8 @@ Overloads the `score` function for the `MLJFluxModel` type.
 """
 function score(conf_model::AdaptiveInductiveClassifier, ::Type{<:MLJFluxModel}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
     L = levels(fitresult[2])
-    X = permutedims(matrix(X))
+    X = reformat(X)
+    X = typeof(X) <: AbstractArray ? X : permutedims(matrix(X))
     probas = permutedims(fitresult[1](X))                               # compute probabilities for all classes
     scores = map(Base.Iterators.product(eachrow(probas), L)) do Z
         probasᵢ, yₖ = Z
@@ -71,7 +74,8 @@ Overloads the `score` function for ensembles of `MLJFluxModel` types.
 """
 function score(conf_model::AdaptiveInductiveClassifier, ::Type{<:EitherEnsembleModel{<:MLJFluxModel}}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
     L = levels(fitresult.ensemble[1][2])
-    X = permutedims(matrix(X))
+    X = reformat(X)
+    X = typeof(X) <: AbstractArray ? X : permutedims(matrix(X))
     _chains = map(res -> res[1], fitresult.ensemble)
     probas = MLUtils.stack(map(chain -> chain(X), _chains)) |>
              p -> mean(p, dims=ndims(p)) |>

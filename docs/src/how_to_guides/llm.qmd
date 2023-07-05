@@ -111,7 +111,7 @@ fitresult, _, _ = MLJBase.fit(clf, 1, nothing, y_test[1:top_n])
 
 To turn the wrapped, pre-trained model into a conformal intent classifier, we can now rely on standard API calls. We first wrap our atomic model where we also specify the desired coverage rate and method. Since even simple forward passes are computationally expensive for our (small) LLM, we rely on Simple Inductive Conformal Classification.
 
-```{julia}
+```{.julia}
 #| eval: false
 
 conf_model = conformal_model(clf; coverage=0.95, method=:simple_inductive, train_ratio=train_ratio)

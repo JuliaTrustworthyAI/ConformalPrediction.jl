@@ -24,6 +24,7 @@ Random.seed!(123)
 
 # Data:
 X, y = make_moons(500; noise=0.15)
+X = MLJ.table(convert.(Float32, MLJ.matrix(X)))
 train, test = partition(eachindex(y), 0.8, shuffle=true)
 ```
 
