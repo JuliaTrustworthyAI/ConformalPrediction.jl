@@ -171,6 +171,8 @@ end
 Below we show the output for two example queries. The first one is very ambiguous. As expected, the size of the prediction set is therefore large. 
 
 ```{julia}
+#| output: true
+
 ambiguous_query = "transfer mondey?"
 prediction_set(mach, ambiguous_query)[2]
 ```
@@ -178,6 +180,8 @@ prediction_set(mach, ambiguous_query)[2]
 The more refined version of the prompt yields a smaller prediction set: less ambiguous prompts result in lower predictive uncertainty. 
 
 ```{julia}
+#| output: true
+
 refined_query = "I tried to transfer money to my friend, but it failed."
 prediction_set(mach, refined_query)[2]
 ```

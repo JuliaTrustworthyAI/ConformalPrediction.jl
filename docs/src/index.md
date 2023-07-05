@@ -1,3 +1,4 @@
+# 🏃 Quick Tour
 
 ``` @meta
 CurrentModule = ConformalPrediction
@@ -8,8 +9,6 @@ CurrentModule = ConformalPrediction
 Documentation for [ConformalPrediction.jl](https://github.com/juliatrustworthyai/ConformalPrediction.jl).
 
 `ConformalPrediction.jl` is a package for Predictive Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) (Blaom et al. 2020). Conformal Prediction is easy-to-understand, easy-to-use and model-agnostic and it works under minimal distributional assumptions.
-
-## 🏃 Quick Tour
 
 > First time here? Take a quick interactive [tour](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl) to see what this package can do: [![Binder](https://mybinder.org/badge_logo.svg)](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl)
 
@@ -110,11 +109,11 @@ ŷ[1:show_first]
 ```
 
     5-element Vector{Tuple{Float64, Float64}}:
-     (0.3514065102722679, 2.4948272235282696)
-     (-0.36580206168104035, 1.7780775120607)
-     (0.13671800582612756, 2.2792132778975933)
-     (0.15237308545277795, 2.2801138611534326)
-     (0.19080981472120032, 2.3863592104933966)
+     (0.3633641966158244, 2.4931870917039434)
+     (-0.3996500917580523, 1.7928089786632433)
+     (0.09653821719666224, 2.284119083077198)
+     (0.13354256573784634, 2.260005698592606)
+     (0.21655224395842643, 2.434258746076169)
 
 For simple models like this one, we can call a custom `Plots` recipe on our instance, fit result and data to generate the chart below:
 
@@ -142,16 +141,16 @@ println("SSC: $(round(_eval.measurement[2], digits=3))")
       per_observation, fitted_params_per_fold,
       report_per_fold, train_test_rows
     Extract:
-    ┌───────────────────────────────────────────────────────────┬───────────┬───────
-    │ measure                                                   │ operation │ meas ⋯
-    ├───────────────────────────────────────────────────────────┼───────────┼───────
-    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.95 ⋯
-    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.84 ⋯
-    └───────────────────────────────────────────────────────────┴───────────┴───────
-                                                                   3 columns omitted
+    ┌──────────────────────────────────────────────┬───────────┬─────────────┬──────
+    │ measure                                      │ operation │ measurement │ 1.9 ⋯
+    ├──────────────────────────────────────────────┼───────────┼─────────────┼──────
+    │ ConformalPrediction.emp_coverage             │ predict   │ 0.95        │ 0.0 ⋯
+    │ ConformalPrediction.size_stratified_coverage │ predict   │ 0.903       │ 0.0 ⋯
+    └──────────────────────────────────────────────┴───────────┴─────────────┴──────
+                                                                   2 columns omitted
 
     Empirical coverage: 0.95
-    SSC: 0.841
+    SSC: 0.903
 
 ## 📚 Read on
 
@@ -200,10 +199,11 @@ The package has been tested for the following supervised models offered by [MLJ]
 keys(tested_atomic_models[:regression])
 ```
 
-    KeySet for a Dict{Symbol, Expr} with 4 entries. Keys:
-      :nearest_neighbor
+    KeySet for a Dict{Symbol, Expr} with 5 entries. Keys:
+      :ridge
+      :lasso
       :evo_tree
-      :light_gbm
+      :nearest_neighbor
       :linear
 
 **Classification**:
@@ -212,10 +212,9 @@ keys(tested_atomic_models[:regression])
 keys(tested_atomic_models[:classification])
 ```
 
-    KeySet for a Dict{Symbol, Expr} with 4 entries. Keys:
+    KeySet for a Dict{Symbol, Expr} with 3 entries. Keys:
       :nearest_neighbor
       :evo_tree
-      :light_gbm
       :logistic
 
 ### Implemented Evaluation Metrics

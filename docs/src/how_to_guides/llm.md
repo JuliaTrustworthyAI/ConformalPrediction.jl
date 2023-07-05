@@ -1,9 +1,5 @@
 # How to Build a Conformal Chatbot
 
-``` @meta
-CurrentModule = ConformalPrediction
-```
-
 Large Language Models are all the buzz right now. They are used for a variety of tasks, including text classification, question answering, and text generation. In this tutorial, we will show how to conformalize a transformer language model for text classification. We will use the [Banking77](https://arxiv.org/abs/2003.04807) dataset (Casanueva et al. 2020), which consists of 13,083 queries from 77 intents. On the model side, we will use the [DistilRoBERTa](https://huggingface.co/mrm8488/distilroberta-finetuned-banking77) model, which is a distilled version of [RoBERTa](https://arxiv.org/abs/1907.11692) (Liu et al. 2019) finetuned on the Banking77 dataset.
 
 ## Data
@@ -112,6 +108,8 @@ fitresult, _, _ = MLJBase.fit(clf, 1, nothing, y_test[1:top_n])
 To turn the wrapped, pre-trained model into a conformal intent classifier, we can now rely on standard API calls. We first wrap our atomic model where we also specify the desired coverage rate and method. Since even simple forward passes are computationally expensive for our (small) LLM, we rely on Simple Inductive Conformal Classification.
 
 ``` julia
+#| eval: false
+
 conf_model = conformal_model(clf; coverage=0.95, method=:simple_inductive, train_ratio=train_ratio)
 mach = machine(conf_model, queries, y)
 @time fit!(mach)
@@ -173,12 +171,39 @@ ambiguous_query = "transfer mondey?"
 prediction_set(mach, ambiguous_query)[2]
 ```
 
+                                                            Possible Intents              
+                                               ┌                                        ┐ 
+                       beneficiary_not_allowed ┤■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 0.150517   
+       balance_not_updated_after_bank_transfer ┤■■■■■■■■■■■■■■■■■■■■■■ 0.111409           
+                         transfer_into_account ┤■■■■■■■■■■■■■■■■■■■ 0.0939535             
+            transfer_not_received_by_recipient ┤■■■■■■■■■■■■■■■■■■ 0.091163               
+                top_up_by_bank_transfer_charge ┤■■■■■■■■■■■■■■■■■■ 0.089306               
+                               failed_transfer ┤■■■■■■■■■■■■■■■■■■ 0.0888322              
+                               transfer_timing ┤■■■■■■■■■■■■■ 0.0641952                   
+                          transfer_fee_charged ┤■■■■■■■ 0.0361131                         
+                              pending_transfer ┤■■■■■ 0.0270795                           
+                               receiving_money ┤■■■■■ 0.0252126                           
+                             declined_transfer ┤■■■ 0.0164443                             
+                               cancel_transfer ┤■■■ 0.0150444                             
+                                               └                                        ┘ 
+
 The more refined version of the prompt yields a smaller prediction set: less ambiguous prompts result in lower predictive uncertainty.
 
 ``` julia
 refined_query = "I tried to transfer money to my friend, but it failed."
 prediction_set(mach, refined_query)[2]
 ```
+
+                                                            Possible Intents              
+                                               ┌                                        ┐ 
+                               failed_transfer ┤■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 0.59042   
+                       beneficiary_not_allowed ┤■■■■■■■ 0.139806                          
+            transfer_not_received_by_recipient ┤■■ 0.0449783                              
+       balance_not_updated_after_bank_transfer ┤■■ 0.037894                               
+                             declined_transfer ┤■ 0.0232856                               
+                         transfer_into_account ┤■ 0.0108771                               
+                               cancel_transfer ┤ 0.00876369                               
+                                               └                                        ┘ 
 
 Below we include a short demo video that shows the REPL-based chatbot in action.
 
@@ -187,6 +212,8 @@ Below we include a short demo video that shows the REPL-based chatbot in action.
 ## Final Remarks
 
 This work was done in collaboration with colleagues at ING as part of the ING Analytics 2023 Experiment Week. Our team demonstrated that Conformal Prediction provides a powerful and principled alternative to top-*K* intent classification. We won the first prize by popular vote.
+
+## References
 
 Casanueva, Iñigo, Tadas Temčinas, Daniela Gerz, Matthew Henderson, and Ivan Vulić. 2020. “Efficient Intent Detection with Dual Sentence Encoders.” In *Proceedings of the 2nd Workshop on Natural Language Processing for Conversational AI*, 38–45. Online: Association for Computational Linguistics. <https://doi.org/10.18653/v1/2020.nlp4convai-1.5>.
 
