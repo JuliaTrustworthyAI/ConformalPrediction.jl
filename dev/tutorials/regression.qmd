@@ -1,9 +1,5 @@
 # Regression
 
-```@meta
-CurrentModule = ConformalPrediction
-```
-
 ```{julia}
 #| echo: false
 using Pkg; Pkg.activate("docs")
@@ -72,7 +68,7 @@ results = Dict()
 for _mod in keys(conformal_models) 
     conf_model = conformal_model(pipe; method=_mod, coverage=0.95)
     global mach = machine(conf_model, X, y)
-    fit!(mach, rows=train)
+    MLJ.fit!(mach, rows=train)
     results[_mod] = mach
 end
 ```
