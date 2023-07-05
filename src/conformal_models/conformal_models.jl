@@ -110,6 +110,8 @@ const available_models = Dict(
 const tested_atomic_models = Dict(
     :regression => Dict(
         :linear => :(@load LinearRegressor pkg = MLJLinearModels),
+        :ridge => :(@load RidgeRegressor pkg = MLJLinearModels),
+        :lasso => :(@load LassoRegressor pkg = MLJLinearModels),
         :evo_tree => :(@load EvoTreeRegressor pkg = EvoTrees),
         :nearest_neighbor => :(@load KNNRegressor pkg = NearestNeighborModels),
         # :light_gbm => :(@load LGBMRegressor pkg = LightGBM),
