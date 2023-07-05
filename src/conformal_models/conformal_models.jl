@@ -110,16 +110,18 @@ const available_models = Dict(
 const tested_atomic_models = Dict(
     :regression => Dict(
         :linear => :(@load LinearRegressor pkg = MLJLinearModels),
+        :ridge => :(@load RidgeRegressor pkg = MLJLinearModels),
+        :lasso => :(@load LassoRegressor pkg = MLJLinearModels),
         :evo_tree => :(@load EvoTreeRegressor pkg = EvoTrees),
         :nearest_neighbor => :(@load KNNRegressor pkg = NearestNeighborModels),
-        :light_gbm => :(@load LGBMRegressor pkg = LightGBM),
+        # :light_gbm => :(@load LGBMRegressor pkg = LightGBM),
         # :neural_network => :(@load NeuralNetworkRegressor pkg = MLJFlux),
     ),
     :classification => Dict(
         :logistic => :(@load LogisticClassifier pkg = MLJLinearModels),
         :evo_tree => :(@load EvoTreeClassifier pkg = EvoTrees),
         :nearest_neighbor => :(@load KNNClassifier pkg = NearestNeighborModels),
-        :light_gbm => :(@load LGBMClassifier pkg = LightGBM),
+        # :light_gbm => :(@load LGBMClassifier pkg = LightGBM),
         # :neural_network => :(@load NeuralNetworkClassifier pkg = MLJFlux),
     ),
 )

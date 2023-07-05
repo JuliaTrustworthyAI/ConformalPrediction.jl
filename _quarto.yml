@@ -5,7 +5,7 @@ project:
 crossref:
   fig-prefix: Figure
   tbl-prefix: Table
-bibliography: https://raw.githubusercontent.com/pat-alt/bib/main/bib.bib
+bibliography: bib.bib
 fig-format: png
 
 execute: 
@@ -14,5 +14,5 @@ execute:
   echo: true
   output: false
 
-jupyter: julia-1.8
+jupyter: julia-1.9
 
