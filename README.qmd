@@ -12,7 +12,7 @@ crossref:
   fig-prefix: Figure
   tbl-prefix: Table
 bibliography: https://raw.githubusercontent.com/pat-alt/bib/main/bib.bib
-jupyter: julia-1.8
+jupyter: julia-1.9
 ---
 
 ![](dev/logo/wide_logo.png)
