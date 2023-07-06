@@ -53,10 +53,8 @@ Let's start by loading the necessary packages:
 # ╔═╡ 55a7c16b-a526-41d9-9d73-a0591ad006ce
 # helper functions
 begin
-    function multi_slider(vals::Dict; title = "")
-
+    function multi_slider(vals::Dict; title="")
         return PlutoUI.combine() do Child
-
             inputs = [
                 md""" $(_name): $(
                     Child(_name, Slider(_vals[1], default=_vals[2], show_value=true))
@@ -70,7 +68,6 @@ begin
             $(inputs)
             """
         end
-
     end
 
     MLJFlux.reformat(X, ::Type{<:AbstractMatrix}) = X'
@@ -100,7 +97,7 @@ Most machine learning workflows start with data. In this tutorial you have full 
 
 # ╔═╡ 2f1c8da3-77dc-4bd7-8fa4-7669c2861aaa
 begin
-    function get_data(N = 600, xmax = 3.0, noise = 0.5; fun::Function = fun(X) = X * sin(X))
+    function get_data(N=600, xmax=3.0, noise=0.5; fun::Function=fun(X) = X * sin(X))
         # Inputs:
         d = Distributions.Uniform(-xmax, xmax)
         X = Float32.(rand(d, N))
@@ -130,26 +127,17 @@ The sliders below can be used to change the number of observations `N`, the maxi
 # ╔═╡ 931ce259-d5fb-4a56-beb8-61a69a2fc09e
 begin
     data_dict = Dict(
-        "N" => (100:100:2000, 1000),
-        "noise" => (0.1:0.1:1.0, 0.5),
-        "xmax" => (1:10, 5),
+        "N" => (100:100:2000, 1000), "noise" => (0.1:0.1:1.0, 0.5), "xmax" => (1:10, 5)
     )
-    @bind data_specs multi_slider(data_dict, title = "Parameters")
+    @bind data_specs multi_slider(data_dict, title="Parameters")
 end
 
 # ╔═╡ f0106aa5-b1c5-4857-af94-2711f80d25a8
 begin
-    X, y = get_data(data_specs.N, data_specs.xmax, data_specs.noise; fun = f)
-    scatter(X.x1, y, label = "Observed data")
-    xrange = range(-data_specs.xmax, data_specs.xmax, length = 50)
-    plot!(
-        xrange,
-        @.(f(xrange)),
-        lw = 4,
-        label = "Ground truth",
-        ls = :dash,
-        colour = :black,
-    )
+    X, y = get_data(data_specs.N, data_specs.xmax, data_specs.noise; fun=f)
+    scatter(X.x1, y; label="Observed data")
+    xrange = range(-data_specs.xmax, data_specs.xmax; length=50)
+    plot!(xrange, @.(f(xrange)); lw=4, label="Ground truth", ls=:dash, colour=:black)
 end
 
 # ╔═╡ 2fe1065e-d1b8-4e3c-930c-654f50349222
@@ -169,7 +157,7 @@ To start with, let's split our data into a training and test set:
 """
 
 # ╔═╡ 3a4fe2bc-387c-4d7e-b45f-292075a01bcd
-train, test = partition(eachindex(y), 0.4, 0.4, shuffle = true);
+train, test = partition(eachindex(y), 0.4, 0.4; shuffle=true);
 
 # ╔═╡ a34b8c07-08e0-4a0e-a0f9-8054b41b038b
 md"Now let's choose a model for our regression task:"
@@ -181,8 +169,7 @@ md"Now let's choose a model for our regression task:"
 begin
     Model = eval(tested_atomic_models[:regression][model_name])
     if Model() isa MLJFlux.MLJFluxModel
-        model =
-            Model(builder = MLJFlux.MLP(hidden = (50,), σ = Flux.tanh_fast), epochs = 200)
+        model = Model(; builder=MLJFlux.MLP(; hidden=(50,), σ=Flux.tanh_fast), epochs=200)
     else
         model = Model()
     end
@@ -200,7 +187,7 @@ mach_raw = machine(model, X, y);
 md"Then we fit the machine to the training data:"
 
 # ╔═╡ aabfbbfb-7fb0-4f37-9a05-b96207636232
-MLJBase.fit!(mach_raw, rows = train, verbosity = 0);
+MLJBase.fit!(mach_raw; rows=train, verbosity=0);
 
 # ╔═╡ 5506e1b5-5f2f-4972-a845-9c0434d4b31c
 md"""
@@ -212,17 +199,10 @@ begin
     Xtest = MLJBase.matrix(selectrows(X, test))
     ytest = y[test]
     ŷ = MLJBase.predict(mach_raw, Xtest)
-    scatter(vec(Xtest), vec(ytest), label = "Observed")
+    scatter(vec(Xtest), vec(ytest); label="Observed")
     _order = sortperm(vec(Xtest))
-    plot!(vec(Xtest)[_order], vec(ŷ)[_order], lw = 4, label = "Predicted")
-    plot!(
-        xrange,
-        @.(f(xrange)),
-        lw = 2,
-        ls = :dash,
-        colour = :black,
-        label = "Ground truth",
-    )
+    plot!(vec(Xtest)[_order], vec(ŷ)[_order]; lw=4, label="Predicted")
+    plot!(xrange, @.(f(xrange)); lw=2, ls=:dash, colour=:black, label="Ground truth")
 end
 
 # ╔═╡ 36eef47f-ad55-49be-ac60-7aa1cf50e61a
@@ -256,7 +236,7 @@ Then we fit the machine to the data:
 """
 
 # ╔═╡ 6b574688-ff3c-441a-a616-169685731883
-MLJBase.fit!(mach, rows = train, verbosity = 0);
+MLJBase.fit!(mach; rows=train, verbosity=0);
 
 # ╔═╡ da6e8f90-a3f9-4d06-86ab-b0f6705bbf54
 md"""
@@ -266,22 +246,15 @@ Now let us look at the predictions for our test data again. The chart below show
 """
 
 # ╔═╡ 797746e9-235f-4fb1-8cdb-9be295b54bbe
-@bind coverage Slider(0.1:0.1:1.0, default = 0.8, show_value = true)
+@bind coverage Slider(0.1:0.1:1.0, default=0.8, show_value=true)
 
 # ╔═╡ ad3e290b-c1f5-4008-81c7-a1a56ab10563
 begin
-    _conf_model = conformal_model(model, coverage = coverage)
+    _conf_model = conformal_model(model; coverage=coverage)
     _mach = machine(_conf_model, X, y)
-    MLJBase.fit!(_mach, rows = train, verbosity = 0)
-    plot(_mach.model, _mach.fitresult, Xtest, ytest, zoom = 0, observed_lab = "Test points")
-    plot!(
-        xrange,
-        @.(f(xrange)),
-        lw = 2,
-        ls = :dash,
-        colour = :black,
-        label = "Ground truth",
-    )
+    MLJBase.fit!(_mach; rows=train, verbosity=0)
+    plot(_mach.model, _mach.fitresult, Xtest, ytest; zoom=0, observed_lab="Test points")
+    plot!(xrange, @.(f(xrange)); lw=2, ls=:dash, colour=:black, label="Ground truth")
 end
 
 # ╔═╡ b3a88859-0442-41ff-bfea-313437042830
@@ -302,8 +275,9 @@ To verify the marginal coverage property empirically we can look at the empirica
 
 # ╔═╡ d1140af9-608a-4669-9595-aee72ffbaa46
 begin
-    model_evaluation =
-        evaluate!(_mach, operation = MLJBase.predict, measure = emp_coverage, verbosity = 0)
+    model_evaluation = evaluate!(
+        _mach; operation=MLJBase.predict, measure=emp_coverage, verbosity=0
+    )
     println("Empirical coverage: $(round(model_evaluation.measurement[1], digits=3))")
     println("Coverage per fold: $(round.(model_evaluation.per_fold[1], digits=3))")
 end
@@ -358,23 +332,16 @@ Quite cool, right? Using a single API call we are able to generate rigorous pred
 
 # ╔═╡ 824bd383-2fcb-4888-8ad1-260c85333edf
 @bind xmax_ood Slider(
-    data_specs.xmax:(data_specs.xmax+5),
-    default = (data_specs.xmax),
-    show_value = true,
+    (data_specs.xmax):(data_specs.xmax + 5), default=(data_specs.xmax), show_value=true
 )
 
 # ╔═╡ 072cc72d-20a2-4ee9-954c-7ea70dfb8eea
 begin
-    Xood, yood = get_data(data_specs.N, xmax_ood, data_specs.noise; fun = f)
-    plot(_mach.model, _mach.fitresult, Xood, yood, zoom = 0, observed_lab = "Test points")
-    xood_range = range(-xmax_ood, xmax_ood, length = 50)
+    Xood, yood = get_data(data_specs.N, xmax_ood, data_specs.noise; fun=f)
+    plot(_mach.model, _mach.fitresult, Xood, yood; zoom=0, observed_lab="Test points")
+    xood_range = range(-xmax_ood, xmax_ood; length=50)
     plot!(
-        xood_range,
-        @.(f(xood_range)),
-        lw = 2,
-        ls = :dash,
-        colour = :black,
-        label = "Ground truth",
+        xood_range, @.(f(xood_range)); lw=2, ls=:dash, colour=:black, label="Ground truth"
     )
 end
 

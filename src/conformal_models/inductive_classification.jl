@@ -7,9 +7,9 @@ function score(
     conf_model::ConformalProbabilisticSet,
     fitresult,
     X,
-    y::Union{Nothing,AbstractArray} = nothing,
+    y::Union{Nothing,AbstractArray}=nothing,
 )
-    score(conf_model, typeof(conf_model.model), fitresult, X, y)
+    return score(conf_model, typeof(conf_model.model), fitresult, X, y)
 end
 
 """
@@ -40,9 +40,9 @@ end
 
 function SimpleInductiveClassifier(
     model::Supervised;
-    coverage::AbstractFloat = 0.95,
-    heuristic::Function = f(p̂) = 1.0 - p̂,
-    train_ratio::AbstractFloat = 0.5,
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=f(p̂) = 1.0 - p̂,
+    train_ratio::AbstractFloat=0.5,
 )
     return SimpleInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
 end
@@ -57,7 +57,7 @@ function score(
     ::Type{<:Supervised},
     fitresult,
     X,
-    y::Union{Nothing,AbstractArray} = nothing,
+    y::Union{Nothing,AbstractArray}=nothing,
 )
     p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, X))
     L = p̂.decoder.classes
@@ -110,7 +110,7 @@ where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration da
 """
 function MMI.predict(conf_model::SimpleInductiveClassifier, fitresult, Xnew)
     p̂ = reformat_mlj_prediction(
-        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...),
+        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     )
     v = conf_model.scores[:calibration]
     q̂ = StatsBase.quantile(v, conf_model.coverage)
@@ -140,9 +140,9 @@ end
 
 function AdaptiveInductiveClassifier(
     model::Supervised;
-    coverage::AbstractFloat = 0.95,
-    heuristic::Function = f(y, ŷ) = 1.0 - ŷ,
-    train_ratio::AbstractFloat = 0.5,
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=f(y, ŷ) = 1.0 - ŷ,
+    train_ratio::AbstractFloat=0.5,
 )
     return AdaptiveInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
 end
@@ -181,7 +181,7 @@ function score(
     ::Type{<:Supervised},
     fitresult,
     X,
-    y::Union{Nothing,AbstractArray} = nothing,
+    y::Union{Nothing,AbstractArray}=nothing,
 )
     p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, X))
     L = p̂.decoder.classes
@@ -214,7 +214,7 @@ where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration da
 """
 function MMI.predict(conf_model::AdaptiveInductiveClassifier, fitresult, Xnew)
     p̂ = reformat_mlj_prediction(
-        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...),
+        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     )
     v = conf_model.scores[:calibration]
     q̂ = StatsBase.quantile(v, conf_model.coverage)

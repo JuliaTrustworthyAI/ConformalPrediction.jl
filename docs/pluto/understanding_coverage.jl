@@ -45,10 +45,8 @@ md"""
 # ╔═╡ 59bdf205-b1d3-42ca-a256-f2878a87a691
 # helper functions
 begin
-    function multi_slider(vals::Dict; title = "")
-
+    function multi_slider(vals::Dict; title="")
         return PlutoUI.combine() do Child
-
             inputs = [
                 md""" $(_name): $(
                     Child(_name, Slider(_vals[1], default=_vals[2], show_value=true))
@@ -62,7 +60,6 @@ begin
             $(inputs)
             """
         end
-
     end
 end;
 
@@ -76,10 +73,10 @@ We will use a simple helper function that generates some regression data with a 
 # ╔═╡ 3dfc7d81-0644-4892-ba0d-7f3baba37ece
 begin
     function get_data(
-        N = 600,
-        noise = 0.5;
-        fun::Function = fun(X) = X * sin(X),
-        d::Distribution = Distributions.Normal(0, 1),
+        N=600,
+        noise=0.5;
+        fun::Function=fun(X) = X * sin(X),
+        d::Distribution=Distributions.Normal(0, 1),
     )
         # Inputs:
         X = rand(d, N)
@@ -109,12 +106,9 @@ Below you can select the type of distribution that generates our input $X$:
 # ╔═╡ 39c53541-356a-4051-891e-4342887fd423
 begin
     dist_dict = Dict(
-        "Cauchy" => Cauchy,
-        "Cosine" => Cosine,
-        "Laplace" => Laplace,
-        "Normal" => Normal,
+        "Cauchy" => Cauchy, "Cosine" => Cosine, "Laplace" => Laplace, "Normal" => Normal
     )
-    @bind dist Select(collect(keys(dist_dict)), default = "Normal")
+    @bind dist Select(collect(keys(dist_dict)), default="Normal")
 end
 
 # ╔═╡ 6afc2fe2-e4ac-43d0-a4e5-ea4cd7ce82fc
@@ -132,24 +126,24 @@ begin
         "location" => (-10000:1000:10000, 0),
         "scale" => ([1, 2, 5, 10, 50, 100, 1000], 1),
     )
-    @bind data_specs multi_slider(data_dict, title = "Parameters")
+    @bind data_specs multi_slider(data_dict, title="Parameters")
 end
 
 # ╔═╡ f5bbf50c-21d6-4aad-8d8f-781246382131
 begin
     d = dist_dict[dist](data_specs.location, data_specs.scale)
-    X, y = get_data(data_specs.N, data_specs.noise; fun = f, d = d)
-    train, test = partition(eachindex(y), 0.4, 0.4, shuffle = true)
-    scatter(X.x1, y, label = "Observed data")
-    xrange = range(minimum(X.x1)[1], maximum(X.x1)[1], length = 50)
+    X, y = get_data(data_specs.N, data_specs.noise; fun=f, d=d)
+    train, test = partition(eachindex(y), 0.4, 0.4; shuffle=true)
+    scatter(X.x1, y; label="Observed data")
+    xrange = range(minimum(X.x1)[1], maximum(X.x1)[1]; length=50)
     plot!(
         xrange,
-        @.(f(xrange)),
-        lw = 4,
-        label = "Ground truth",
-        ls = :dash,
-        colour = :black,
-        size = (800, 200),
+        @.(f(xrange));
+        lw=4,
+        label="Ground truth",
+        ls=:dash,
+        colour=:black,
+        size=(800, 200),
     )
 end
 
@@ -168,29 +162,29 @@ begin
 end;
 
 # ╔═╡ e6feb79d-f524-4d06-b18b-51ee6854c30b
-@bind coverage Slider(0.1:0.01:1.0, default = 0.8, show_value = true)
+@bind coverage Slider(0.1:0.01:1.0, default=0.8, show_value=true)
 
 # ╔═╡ bb75d0a7-c0b4-484c-b3da-224e368b743a
 begin
     Xtest = MLJBase.matrix(selectrows(X, test))
     ytest = y[test]
-    conf_model = conformal_model(model, coverage = coverage)
+    conf_model = conformal_model(model; coverage=coverage)
     mach = machine(conf_model, X, y)
-    MLJBase.fit!(mach, rows = train, verbosity = 0)
+    MLJBase.fit!(mach; rows=train, verbosity=0)
     s = conf_model.scores
     α = 1 - conf_model.coverage
     scatter(
         s,
         zeros(length(s));
-        ylim = (-0.5, 0.5),
-        yaxis = nothing,
-        label = "Scores",
-        ms = 10,
-        alpha = 0.2,
-        size = (800, 150),
+        ylim=(-0.5, 0.5),
+        yaxis=nothing,
+        label="Scores",
+        ms=10,
+        alpha=0.2,
+        size=(800, 150),
     )
     q̂ = quantile(s, 1 - α)
-    vline!([q̂], label = "q̂")
+    vline!([q̂]; label="q̂")
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001

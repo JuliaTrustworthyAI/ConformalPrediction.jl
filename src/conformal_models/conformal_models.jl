@@ -1,7 +1,7 @@
 using MLJBase
 import MLJModelInterface as MMI
 import MLJModelInterface: predict, fit, save, restore
-import StatsBase
+using StatsBase: StatsBase
 
 "An abstract base type for conformal models that produce interval-valued predictions. This includes most conformal regression models."
 abstract type ConformalInterval <: MMI.Interval end
@@ -12,8 +12,9 @@ abstract type ConformalProbabilisticSet <: MMI.ProbabilisticSet end
 "An abstract base type for conformal models that produce probabilistic predictions. This includes some conformal classifier like Venn-ABERS."
 abstract type ConformalProbabilistic <: MMI.Probabilistic end
 
-const ConformalModel =
-    Union{ConformalInterval,ConformalProbabilisticSet,ConformalProbabilistic}
+const ConformalModel = Union{
+    ConformalInterval,ConformalProbabilisticSet,ConformalProbabilistic
+}
 
 include("utils.jl")
 include("plotting.jl")
@@ -25,11 +26,8 @@ include("plotting.jl")
 A simple wrapper function that turns a `model::Supervised` into a conformal model. It accepts an optional key argument that can be used to specify the desired `method` for conformal prediction as well as additinal `kwargs...` specific to the `method`.
 """
 function conformal_model(
-    model::Supervised;
-    method::Union{Nothing,Symbol} = nothing,
-    kwargs...,
+    model::Supervised; method::Union{Nothing,Symbol}=nothing, kwargs...
 )
-
     is_classifier = target_scitype(model) <: AbstractVector{<:Finite}
 
     if isnothing(method)
@@ -49,7 +47,6 @@ function conformal_model(
     conf_model = _method(model; kwargs...)
 
     return conf_model
-
 end
 
 # Regression Models:
@@ -64,8 +61,9 @@ include("transductive_classification.jl")
 include("training/training.jl")
 
 # Type unions:
-const InductiveModel =
-    Union{SimpleInductiveRegressor,SimpleInductiveClassifier,AdaptiveInductiveClassifier}
+const InductiveModel = Union{
+    SimpleInductiveRegressor,SimpleInductiveClassifier,AdaptiveInductiveClassifier
+}
 
 const TransductiveModel = Union{
     NaiveRegressor,

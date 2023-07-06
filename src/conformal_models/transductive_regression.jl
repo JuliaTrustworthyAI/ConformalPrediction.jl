@@ -14,8 +14,8 @@ end
 
 function NaiveRegressor(
     model::Supervised;
-    coverage::AbstractFloat = 0.95,
-    heuristic::Function = f(y, ŷ) = abs(y - ŷ),
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
 )
     return NaiveRegressor(model, coverage, nothing, heuristic)
 end
@@ -46,7 +46,6 @@ function MMI.fit(conf_model::NaiveRegressor, verbosity, X, y)
     conf_model.scores = @.(conf_model.heuristic(ytrain, ŷ))
 
     return (fitresult, cache, report)
-
 end
 
 # Prediction
@@ -63,7 +62,7 @@ The naive approach typically produces prediction regions that undercover due to 
 """
 function MMI.predict(conf_model::NaiveRegressor, fitresult, Xnew)
     ŷ = reformat_mlj_prediction(
-        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...),
+        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     )
     v = conf_model.scores
     q̂ = StatsBase.quantile(v, conf_model.coverage)
@@ -83,8 +82,8 @@ end
 
 function JackknifeRegressor(
     model::Supervised;
-    coverage::AbstractFloat = 0.95,
-    heuristic::Function = f(y, ŷ) = abs(y - ŷ),
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
 )
     return JackknifeRegressor(model, coverage, nothing, heuristic)
 end
@@ -114,7 +113,7 @@ function MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
     # Nonconformity Scores:
     T = size(y, 1)
     scores = []
-    for t = 1:T
+    for t in 1:T
         loo_ids = 1:T .!= t
         y₋ᵢ = y[loo_ids]
         X₋ᵢ = selectrows(X, loo_ids)
@@ -122,7 +121,7 @@ function MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
         Xᵢ = selectrows(X, t)
         μ̂₋ᵢ, = MMI.fit(conf_model.model, 0, MMI.reformat(conf_model.model, X₋ᵢ, y₋ᵢ)...)
         ŷᵢ = reformat_mlj_prediction(
-            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xᵢ)...),
+            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xᵢ)...)
         )
         push!(scores, @.(conf_model.heuristic(yᵢ, ŷᵢ))...)
     end
@@ -145,7 +144,7 @@ where ``S_i^{\text{LOO}}`` denotes the nonconformity that is generated as explai
 """
 function MMI.predict(conf_model::JackknifeRegressor, fitresult, Xnew)
     ŷ = reformat_mlj_prediction(
-        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...),
+        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     )
     v = conf_model.scores
     q̂ = StatsBase.quantile(v, conf_model.coverage)
@@ -165,8 +164,8 @@ end
 
 function JackknifePlusRegressor(
     model::Supervised;
-    coverage::AbstractFloat = 0.95,
-    heuristic::Function = f(y, ŷ) = abs(y - ŷ),
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
 )
     return JackknifePlusRegressor(model, coverage, nothing, heuristic)
 end
@@ -190,21 +189,22 @@ function MMI.fit(conf_model::JackknifePlusRegressor, verbosity, X, y)
     # Nonconformity Scores:
     T = size(y, 1)
     scores = []
-    for t = 1:T
+    for t in 1:T
         loo_ids = 1:T .!= t
         y₋ᵢ = y[loo_ids]
         X₋ᵢ = selectrows(X, loo_ids)
         yᵢ = y[t]
         Xᵢ = selectrows(X, t)
         # Store LOO fitresult:
-        μ̂₋ᵢ, cache₋ᵢ, report₋ᵢ =
-            MMI.fit(conf_model.model, 0, MMI.reformat(conf_model.model, X₋ᵢ, y₋ᵢ)...)
+        μ̂₋ᵢ, cache₋ᵢ, report₋ᵢ = MMI.fit(
+            conf_model.model, 0, MMI.reformat(conf_model.model, X₋ᵢ, y₋ᵢ)...
+        )
         push!(fitresult, μ̂₋ᵢ)
         push!(cache, cache₋ᵢ)
         push!(report, report₋ᵢ)
         # Store LOO score:
         ŷᵢ = reformat_mlj_prediction(
-            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xᵢ)...),
+            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xᵢ)...)
         )
         push!(scores, @.(conf_model.heuristic(yᵢ, ŷᵢ))...)
     end
@@ -229,7 +229,7 @@ function MMI.predict(conf_model::JackknifePlusRegressor, fitresult, Xnew)
     # Get all LOO predictions for each Xnew:
     ŷ = [
         reformat_mlj_prediction(
-            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...),
+            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)
         ) for μ̂₋ᵢ in fitresult
     ]
     # All LOO predictions across columns for each Xnew across rows:
@@ -255,8 +255,8 @@ end
 
 function JackknifeMinMaxRegressor(
     model::Supervised;
-    coverage::AbstractFloat = 0.95,
-    heuristic::Function = f(y, ŷ) = abs(y - ŷ),
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
 )
     return JackknifeMinMaxRegressor(model, coverage, nothing, heuristic)
 end
@@ -280,21 +280,22 @@ function MMI.fit(conf_model::JackknifeMinMaxRegressor, verbosity, X, y)
     # Training and Nonconformity Scores:
     T = size(y, 1)
     scores = []
-    for t = 1:T
+    for t in 1:T
         loo_ids = 1:T .!= t
         y₋ᵢ = y[loo_ids]
         X₋ᵢ = selectrows(X, loo_ids)
         yᵢ = y[t]
         Xᵢ = selectrows(X, t)
         # Store LOO fitresult:
-        μ̂₋ᵢ, cache₋ᵢ, report₋ᵢ =
-            MMI.fit(conf_model.model, 0, MMI.reformat(conf_model.model, X₋ᵢ, y₋ᵢ)...)
+        μ̂₋ᵢ, cache₋ᵢ, report₋ᵢ = MMI.fit(
+            conf_model.model, 0, MMI.reformat(conf_model.model, X₋ᵢ, y₋ᵢ)...
+        )
         push!(fitresult, μ̂₋ᵢ)
         push!(cache, cache₋ᵢ)
         push!(report, report₋ᵢ)
         # Store LOO score:
         ŷᵢ = reformat_mlj_prediction(
-            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xᵢ)...),
+            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xᵢ)...)
         )
         push!(scores, @.(conf_model.heuristic(yᵢ, ŷᵢ))...)
     end
@@ -319,7 +320,7 @@ function MMI.predict(conf_model::JackknifeMinMaxRegressor, fitresult, Xnew)
     # Get all LOO predictions for each Xnew:
     ŷ = [
         reformat_mlj_prediction(
-            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...),
+            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)
         ) for μ̂₋ᵢ in fitresult
     ]
     # All LOO predictions across columns for each Xnew across rows:
@@ -345,9 +346,9 @@ end
 
 function CVPlusRegressor(
     model::Supervised;
-    coverage::AbstractFloat = 0.95,
-    heuristic::Function = f(y, ŷ) = abs(y - ŷ),
-    cv::MLJBase.CV = MLJBase.CV(),
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    cv::MLJBase.CV=MLJBase.CV(),
 )
     return CVPlusRegressor(model, coverage, nothing, heuristic, cv)
 end
@@ -372,9 +373,7 @@ function MMI.fit(conf_model::CVPlusRegressor, verbosity, X, y)
         ytrain = y[train]
         Xtrain = selectrows(X, train)
         μ̂ₖ, cache, report = MMI.fit(
-            conf_model.model,
-            0,
-            MMI.reformat(conf_model.model, Xtrain, ytrain)...,
+            conf_model.model, 0, MMI.reformat(conf_model.model, Xtrain, ytrain)...
         )
         Dict(:fitresult => μ̂ₖ, :test => test, :cache => cache, :report => report)
     end
@@ -384,11 +383,12 @@ function MMI.fit(conf_model::CVPlusRegressor, verbosity, X, y)
 
     # Nonconformity Scores:
     scores = []
-    for t = 1:T
+    for t in 1:T
         yᵢ = y[t]
         Xᵢ = selectrows(X, t)
-        resultsᵢ =
-            [(x[:fitresult], x[:cache], x[:report]) for x in cv_fitted if t in x[:test]]
+        resultsᵢ = [
+            (x[:fitresult], x[:cache], x[:report]) for x in cv_fitted if t in x[:test]
+        ]
         @assert length(resultsᵢ) == 1 "Expected each individual to be contained in only one subset."
         μ̂ᵢ, cacheᵢ, reportᵢ = resultsᵢ[1]
         # Store individual CV fitresults
@@ -397,7 +397,7 @@ function MMI.fit(conf_model::CVPlusRegressor, verbosity, X, y)
         push!(report, reportᵢ)
         # Store LOO score:
         ŷᵢ = reformat_mlj_prediction(
-            MMI.predict(conf_model.model, μ̂ᵢ, MMI.reformat(conf_model.model, Xᵢ)...),
+            MMI.predict(conf_model.model, μ̂ᵢ, MMI.reformat(conf_model.model, Xᵢ)...)
         )
         push!(scores, @.(conf_model.heuristic(yᵢ, ŷᵢ))...)
     end
@@ -424,7 +424,7 @@ function MMI.predict(conf_model::CVPlusRegressor, fitresult, Xnew)
     # Get all LOO predictions for each Xnew:
     ŷ = [
         reformat_mlj_prediction(
-            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...),
+            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)
         ) for μ̂₋ᵢ in fitresult
     ]
     # All LOO predictions across columns for each Xnew across rows:
@@ -439,7 +439,6 @@ function MMI.predict(conf_model::CVPlusRegressor, fitresult, Xnew)
     return ŷ
 end
 
-
 # CV MinMax
 "Constructor for `CVMinMaxRegressor`."
 mutable struct CVMinMaxRegressor{Model<:Supervised} <: ConformalInterval
@@ -452,9 +451,9 @@ end
 
 function CVMinMaxRegressor(
     model::Supervised;
-    coverage::AbstractFloat = 0.95,
-    heuristic::Function = f(y, ŷ) = abs(y - ŷ),
-    cv::MLJBase.CV = MLJBase.CV(),
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    cv::MLJBase.CV=MLJBase.CV(),
 )
     return CVMinMaxRegressor(model, coverage, nothing, heuristic, cv)
 end
@@ -479,9 +478,7 @@ function MMI.fit(conf_model::CVMinMaxRegressor, verbosity, X, y)
         ytrain = y[train]
         Xtrain = selectrows(X, train)
         μ̂ₖ, cache, report = MMI.fit(
-            conf_model.model,
-            0,
-            MMI.reformat(conf_model.model, Xtrain, ytrain)...,
+            conf_model.model, 0, MMI.reformat(conf_model.model, Xtrain, ytrain)...
         )
         Dict(:fitresult => μ̂ₖ, :test => test, :cache => cache, :report => report)
     end
@@ -491,11 +488,12 @@ function MMI.fit(conf_model::CVMinMaxRegressor, verbosity, X, y)
 
     # Nonconformity Scores:
     scores = []
-    for t = 1:T
+    for t in 1:T
         yᵢ = y[t]
         Xᵢ = selectrows(X, t)
-        resultsᵢ =
-            [(x[:fitresult], x[:cache], x[:report]) for x in cv_fitted if t in x[:test]]
+        resultsᵢ = [
+            (x[:fitresult], x[:cache], x[:report]) for x in cv_fitted if t in x[:test]
+        ]
         @assert length(resultsᵢ) == 1 "Expected each individual to be contained in only one subset."
         μ̂ᵢ, cacheᵢ, reportᵢ = resultsᵢ[1]
         # Store individual CV fitresults
@@ -504,7 +502,7 @@ function MMI.fit(conf_model::CVMinMaxRegressor, verbosity, X, y)
         push!(report, reportᵢ)
         # Store LOO score:
         ŷᵢ = reformat_mlj_prediction(
-            MMI.predict(conf_model.model, μ̂ᵢ, MMI.reformat(conf_model.model, Xᵢ)...),
+            MMI.predict(conf_model.model, μ̂ᵢ, MMI.reformat(conf_model.model, Xᵢ)...)
         )
         push!(scores, @.(conf_model.heuristic(yᵢ, ŷᵢ))...)
     end
@@ -512,7 +510,6 @@ function MMI.fit(conf_model::CVMinMaxRegressor, verbosity, X, y)
 
     return (fitresult, cache, report)
 end
-
 
 # Prediction
 @doc raw"""
@@ -530,7 +527,7 @@ function MMI.predict(conf_model::CVMinMaxRegressor, fitresult, Xnew)
     # Get all LOO predictions for each Xnew:
     ŷ = [
         reformat_mlj_prediction(
-            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...),
+            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)
         ) for μ̂₋ᵢ in fitresult
     ]
     # All LOO predictions across columns for each Xnew across rows:
@@ -554,7 +551,7 @@ function _aggregate(y, aggregate::Union{Symbol,String})
     valid_methods = Dict(
         :mean => x -> StatsBase.mean(x),
         :median => x -> StatsBase.median(x),
-        :trimmedmean => x -> StatsBase.mean(trim(x, prop = 0.1)),
+        :trimmedmean => x -> StatsBase.mean(trim(x; prop=0.1)),
     )
     @assert aggregate ∈ keys(valid_methods) "`aggregate`=$aggregate is not a valid aggregation method. Should be one of: $valid_methods"
     # Aggregate:
@@ -582,22 +579,15 @@ end
 
 function JackknifePlusAbRegressor(
     model::Supervised;
-    coverage::AbstractFloat = 0.95,
-    heuristic::Function = f(y, ŷ) = abs(y - ŷ),
-    nsampling::Int = 30,
-    sample_size::AbstractFloat = 0.5,
-    replacement::Bool = true,
-    aggregate::Union{Symbol,String} = "mean",
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    nsampling::Int=30,
+    sample_size::AbstractFloat=0.5,
+    replacement::Bool=true,
+    aggregate::Union{Symbol,String}="mean",
 )
     return JackknifePlusAbRegressor(
-        model,
-        coverage,
-        nothing,
-        heuristic,
-        nsampling,
-        sample_size,
-        replacement,
-        aggregate,
+        model, coverage, nothing, heuristic, nsampling, sample_size, replacement, aggregate
     )
 end
 
@@ -613,7 +603,6 @@ $ S_i^{\text{J+ab}} = s(X_i, Y_i) = h(agg(\hat\mu_{B_{K(-i)}}(X_i)), Y_i), \ i \
 where ``agg(\hat\mu_{B_{K(-i)}}(X_i))`` denotes the aggregate predictions, typically mean or median, for each ``X_i`` (with ``K_{-i}`` the bootstraps not containing ``X_i``). In other words, B models are trained on boostrapped sampling, the fitted models are then used to create aggregated prediction of out-of-sample ``X_i``. The corresponding nonconformity score is then computed by applying a heuristic uncertainty measure ``h(\cdot)`` to the fitted value ``agg(\hat\mu_{B_{K(-i)}}(X_i))`` and the true value ``Y_i``.
 """
 function MMI.fit(conf_model::JackknifePlusAbRegressor, verbosity, X, y)
-
     samples, fitresult, cache, report, scores = ([], [], [], [], [])
     replacement = conf_model.replacement
     nsampling = conf_model.nsampling
@@ -622,25 +611,26 @@ function MMI.fit(conf_model::JackknifePlusAbRegressor, verbosity, X, y)
     T = size(y, 1)
     # bootstrap size
     m = floor(Int, T * sample_size)
-    for _ = 1:nsampling
-        samplesᵢ = sample(1:T, m, replace = replacement)
+    for _ in 1:nsampling
+        samplesᵢ = sample(1:T, m; replace=replacement)
         yᵢ = y[samplesᵢ]
         Xᵢ = selectrows(X, samplesᵢ)
-        μ̂ᵢ, cacheᵢ, reportᵢ =
-            MMI.fit(conf_model.model, 0, MMI.reformat(conf_model.model, Xᵢ, yᵢ)...)
+        μ̂ᵢ, cacheᵢ, reportᵢ = MMI.fit(
+            conf_model.model, 0, MMI.reformat(conf_model.model, Xᵢ, yᵢ)...
+        )
         push!(samples, samplesᵢ)
         push!(fitresult, μ̂ᵢ)
         push!(cache, cacheᵢ)
         push!(report, reportᵢ)
     end
-    for t = 1:T
+    for t in 1:T
         index_samples = indexin([v for v in samples if !(t in v)], samples)
         selected_models = fitresult[index_samples]
         Xₜ = selectrows(X, t)
         yₜ = y[t]
         ŷ = [
             reformat_mlj_prediction(
-                MMI.predict(conf_model.model, μ̂₋ₜ, MMI.reformat(conf_model.model, Xₜ)...),
+                MMI.predict(conf_model.model, μ̂₋ₜ, MMI.reformat(conf_model.model, Xₜ)...)
             ) for μ̂₋ₜ in selected_models
         ]
         ŷₜ = _aggregate(ŷ, aggregate)
@@ -667,7 +657,7 @@ function MMI.predict(conf_model::JackknifePlusAbRegressor, fitresult, Xnew)
     # Get all bootstrapped predictions for each Xnew:
     ŷ = [
         reformat_mlj_prediction(
-            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...),
+            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)
         ) for μ̂₋ᵢ in fitresult
     ]
     # Applying aggregation function on bootstrapped predictions across columns for each Xnew across rows:
@@ -695,22 +685,15 @@ end
 
 function JackknifePlusAbMinMaxRegressor(
     model::Supervised;
-    coverage::AbstractFloat = 0.95,
-    heuristic::Function = f(y, ŷ) = abs(y - ŷ),
-    nsampling::Int = 30,
-    sample_size::AbstractFloat = 0.5,
-    replacement::Bool = true,
-    aggregate::Union{Symbol,String} = "mean",
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    nsampling::Int=30,
+    sample_size::AbstractFloat=0.5,
+    replacement::Bool=true,
+    aggregate::Union{Symbol,String}="mean",
 )
     return JackknifePlusAbMinMaxRegressor(
-        model,
-        coverage,
-        nothing,
-        heuristic,
-        nsampling,
-        sample_size,
-        replacement,
-        aggregate,
+        model, coverage, nothing, heuristic, nsampling, sample_size, replacement, aggregate
     )
 end
 
@@ -726,7 +709,6 @@ S_i^{\text{J+MinMax}} = s(X_i, Y_i) = h(agg(\hat\mu_{B_{K(-i)}}(X_i)), Y_i), \ i
 where ``agg(\hat\mu_{B_{K(-i)}}(X_i))`` denotes the aggregate predictions, typically mean or median, for each ``X_i`` (with ``K_{-i}`` the bootstraps not containing ``X_i``). In other words, B models are trained on boostrapped sampling, the fitted models are then used to create aggregated prediction of out-of-sample ``X_i``. The corresponding nonconformity score is then computed by applying a heuristic uncertainty measure ``h(\cdot)`` to the fitted value ``agg(\hat\mu_{B_{K(-i)}}(X_i))`` and the true value ``Y_i``.
 """
 function MMI.fit(conf_model::JackknifePlusAbMinMaxRegressor, verbosity, X, y)
-
     samples, fitresult, cache, report, scores = ([], [], [], [], [])
     replacement = conf_model.replacement
     nsampling = conf_model.nsampling
@@ -735,25 +717,26 @@ function MMI.fit(conf_model::JackknifePlusAbMinMaxRegressor, verbosity, X, y)
     T = size(y, 1)
     # bootstrap size
     m = floor(Int, T * sample_size)
-    for _ = 1:nsampling
-        samplesᵢ = sample(1:T, m, replace = replacement)
+    for _ in 1:nsampling
+        samplesᵢ = sample(1:T, m; replace=replacement)
         yᵢ = y[samplesᵢ]
         Xᵢ = selectrows(X, samplesᵢ)
-        μ̂ᵢ, cacheᵢ, reportᵢ =
-            MMI.fit(conf_model.model, 0, MMI.reformat(conf_model.model, Xᵢ, yᵢ)...)
+        μ̂ᵢ, cacheᵢ, reportᵢ = MMI.fit(
+            conf_model.model, 0, MMI.reformat(conf_model.model, Xᵢ, yᵢ)...
+        )
         push!(samples, samplesᵢ)
         push!(fitresult, μ̂ᵢ)
         push!(cache, cacheᵢ)
         push!(report, reportᵢ)
     end
-    for t = 1:T
+    for t in 1:T
         index_samples = indexin([v for v in samples if !(t in v)], samples)
         selected_models = fitresult[index_samples]
         Xₜ = selectrows(X, t)
         yₜ = y[t]
         ŷ = [
             reformat_mlj_prediction(
-                MMI.predict(conf_model.model, μ̂₋ₜ, MMI.reformat(conf_model.model, Xₜ)...),
+                MMI.predict(conf_model.model, μ̂₋ₜ, MMI.reformat(conf_model.model, Xₜ)...)
             ) for μ̂₋ₜ in selected_models
         ]
         ŷₜ = _aggregate(ŷ, aggregate)
@@ -780,7 +763,7 @@ function MMI.predict(conf_model::JackknifePlusAbMinMaxRegressor, fitresult, Xnew
     # Get all bootstrapped predictions for each Xnew:
     ŷ = [
         reformat_mlj_prediction(
-            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...),
+            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)
         ) for μ̂₋ᵢ in fitresult
     ]
     ŷ = reduce(hcat, ŷ)

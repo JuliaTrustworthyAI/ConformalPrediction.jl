@@ -12,7 +12,7 @@ function score(
     ::Type{<:MLJFluxModel},
     fitresult,
     X,
-    y::Union{Nothing,AbstractArray} = nothing,
+    y::Union{Nothing,AbstractArray}=nothing,
 )
     X = reformat(X)
     X = typeof(X) <: AbstractArray ? X : permutedims(matrix(X))
@@ -36,7 +36,7 @@ function score(
     ::Type{<:EitherEnsembleModel{<:MLJFluxModel}},
     fitresult,
     X,
-    y::Union{Nothing,AbstractArray} = nothing,
+    y::Union{Nothing,AbstractArray}=nothing,
 )
     X = reformat(X)
     X = typeof(X) <: AbstractArray ? X : permutedims(matrix(X))
@@ -44,8 +44,8 @@ function score(
     probas =
         MLUtils.stack(map(chain -> chain(X), _chains)) |>
         p ->
-            mean(p, dims = ndims(p)) |>
-            p -> MLUtils.unstack(p, dims = ndims(p))[1] |> p -> permutedims(p)
+            mean(p; dims=ndims(p)) |>
+            p -> MLUtils.unstack(p; dims=ndims(p))[1] |> p -> permutedims(p)
     scores = @.(conf_model.heuristic(probas))
     if isnothing(y)
         return scores
@@ -65,7 +65,7 @@ function score(
     ::Type{<:MLJFluxModel},
     fitresult,
     X,
-    y::Union{Nothing,AbstractArray} = nothing,
+    y::Union{Nothing,AbstractArray}=nothing,
 )
     L = levels(fitresult[2])
     X = reformat(X)
@@ -96,7 +96,7 @@ function score(
     ::Type{<:EitherEnsembleModel{<:MLJFluxModel}},
     fitresult,
     X,
-    y::Union{Nothing,AbstractArray} = nothing,
+    y::Union{Nothing,AbstractArray}=nothing,
 )
     L = levels(fitresult.ensemble[1][2])
     X = reformat(X)
@@ -105,8 +105,8 @@ function score(
     probas =
         MLUtils.stack(map(chain -> chain(X), _chains)) |>
         p ->
-            mean(p, dims = ndims(p)) |>
-            p -> MLUtils.unstack(p, dims = ndims(p))[1] |> p -> permutedims(p)
+            mean(p; dims=ndims(p)) |>
+            p -> MLUtils.unstack(p; dims=ndims(p))[1] |> p -> permutedims(p)
     scores = map(Base.Iterators.product(eachrow(probas), L)) do Z
         probasᵢ, yₖ = Z
         ranks = sortperm(.-probasᵢ)                                 # rank in descending order

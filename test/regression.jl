@@ -2,8 +2,9 @@ using MLJ
 using Plots
 
 # Data:
-data_specs =
-    ("Single Input - Single Output" => (1, 1), "Multiple Inputs - Single Output" => (5, 1))
+data_specs = (
+    "Single Input - Single Output" => (1, 1), "Multiple Inputs - Single Output" => (5, 1)
+)
 data_sets = Dict{String,Any}()
 for (k, v) in data_specs
     X, y = MLJ.make_regression(500, v[1])
@@ -19,9 +20,7 @@ conformal_models = merge(values(available_models[:regression])...)
 
 # Test workflow:
 @testset "Regression" begin
-
     for (model_name, import_call) in models
-
         @testset "$(model_name)" begin
 
             # Import and instantiate atomic model:
@@ -29,17 +28,15 @@ conformal_models = merge(values(available_models[:regression])...)
             model = Model()
 
             for _method in keys(conformal_models)
-
                 @testset "Method: $(_method)" begin
 
                     # Instantiate conformal models:
                     _cov = 0.85
-                    conf_model = conformal_model(model; method = _method, coverage = _cov)
+                    conf_model = conformal_model(model; method=_method, coverage=_cov)
                     conf_model = conformal_models[_method](model)
                     @test isnothing(conf_model.scores)
 
                     for (data_name, data_set) in data_sets
-
                         @testset "$(data_name)" begin
 
                             # Unpack:
@@ -48,7 +45,7 @@ conformal_models = merge(values(available_models[:regression])...)
 
                             # Fit/Predict:
                             mach = machine(conf_model, X, y)
-                            fit!(mach, rows = train)
+                            fit!(mach; rows=train)
                             @test !isnothing(conf_model.scores)
                             predict(mach, selectrows(X, test))
 
@@ -60,13 +57,13 @@ conformal_models = merge(values(available_models[:regression])...)
                                     mach.fitresult,
                                     X,
                                     y;
-                                    input_var = 1,
-                                    xlims = (-1, 1),
-                                    ylims = (-1, 1),
+                                    input_var=1,
+                                    xlims=(-1, 1),
+                                    ylims=(-1, 1),
                                 ),
                             )
                             @test isplot(
-                                plot(mach.model, mach.fitresult, X, y; input_var = :x1),
+                                plot(mach.model, mach.fitresult, X, y; input_var=:x1)
                             )
                             @test isplot(bar(mach.model, mach.fitresult, X))
 
@@ -74,24 +71,16 @@ conformal_models = merge(values(available_models[:regression])...)
                             # Evaluation takes some time, so only testing for one method.
                             if _method == :simple_inductive
                                 # Empirical coverage:
-                                _eval =
-                                    evaluate!(mach; measure = emp_coverage, verbosity = 0)
+                                _eval = evaluate!(mach; measure=emp_coverage, verbosity=0)
                                 Δ = _eval.measurement[1] - _cov     # over-/under-coverage
                                 @test Δ >= -0.05                    # we don't undercover too much
                                 # Size-stratified coverage:
-                                _eval = evaluate!(mach; measure = ssc, verbosity = 0)
+                                _eval = evaluate!(mach; measure=ssc, verbosity=0)
                             end
-
                         end
-
                     end
-
                 end
-
             end
-
         end
-
     end
-
 end

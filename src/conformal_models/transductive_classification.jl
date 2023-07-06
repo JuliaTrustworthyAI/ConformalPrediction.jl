@@ -8,9 +8,7 @@ mutable struct NaiveClassifier{Model<:Supervised} <: ConformalProbabilisticSet
 end
 
 function NaiveClassifier(
-    model::Supervised;
-    coverage::AbstractFloat = 0.95,
-    heuristic::Function = f(y, ŷ) = 1.0 - ŷ,
+    model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=f(y, ŷ) = 1.0 - ŷ
 )
     return NaiveClassifier(model, coverage, nothing, heuristic)
 end
@@ -45,7 +43,6 @@ function MMI.fit(conf_model::NaiveClassifier, verbosity, X, y)
     conf_model.scores = @.(conf_model.heuristic(y, ŷ))
 
     return (fitresult, cache, report)
-
 end
 
 @doc raw"""
@@ -61,7 +58,7 @@ The naive approach typically produces prediction regions that undercover due to 
 """
 function MMI.predict(conf_model::NaiveClassifier, fitresult, Xnew)
     p̂ = reformat_mlj_prediction(
-        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...),
+        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     )
     v = conf_model.scores
     q̂ = StatsBase.quantile(v, conf_model.coverage)
