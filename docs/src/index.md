@@ -1,4 +1,4 @@
-# 🏃 Quick Tour
+# ConformalPrediction
 
 ``` @meta
 CurrentModule = ConformalPrediction
@@ -9,6 +9,8 @@ CurrentModule = ConformalPrediction
 Documentation for [ConformalPrediction.jl](https://github.com/juliatrustworthyai/ConformalPrediction.jl).
 
 `ConformalPrediction.jl` is a package for Predictive Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) (Blaom et al. 2020). Conformal Prediction is easy-to-understand, easy-to-use and model-agnostic and it works under minimal distributional assumptions.
+
+## 🏃 Quick Tour
 
 > First time here? Take a quick interactive [tour](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl) to see what this package can do: [![Binder](https://mybinder.org/badge_logo.svg)](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl)
 
@@ -109,11 +111,11 @@ ŷ[1:show_first]
 ```
 
     5-element Vector{Tuple{Float64, Float64}}:
-     (0.3633641966158244, 2.4931870917039434)
-     (-0.3996500917580523, 1.7928089786632433)
-     (0.09653821719666224, 2.284119083077198)
-     (0.13354256573784634, 2.260005698592606)
-     (0.21655224395842643, 2.434258746076169)
+     (-0.31710111123009466, 1.814908621823348)
+     (0.4117909000076131, 2.4849160014859484)
+     (0.32534539961817965, 2.422507599232612)
+     (0.05383464132878396, 2.1363938330880448)
+     (-0.19790350122188927, 1.914494222889709)
 
 For simple models like this one, we can call a custom `Plots` recipe on our instance, fit result and data to generate the chart below:
 
@@ -144,13 +146,13 @@ println("SSC: $(round(_eval.measurement[2], digits=3))")
     ┌──────────────────────────────────────────────┬───────────┬─────────────┬──────
     │ measure                                      │ operation │ measurement │ 1.9 ⋯
     ├──────────────────────────────────────────────┼───────────┼─────────────┼──────
-    │ ConformalPrediction.emp_coverage             │ predict   │ 0.95        │ 0.0 ⋯
-    │ ConformalPrediction.size_stratified_coverage │ predict   │ 0.903       │ 0.0 ⋯
+    │ ConformalPrediction.emp_coverage             │ predict   │ 0.947       │ 0.0 ⋯
+    │ ConformalPrediction.size_stratified_coverage │ predict   │ 0.904       │ 0.0 ⋯
     └──────────────────────────────────────────────┴───────────┴─────────────┴──────
                                                                    2 columns omitted
 
-    Empirical coverage: 0.95
-    SSC: 0.903
+    Empirical coverage: 0.947
+    SSC: 0.904
 
 ## 📚 Read on
 
