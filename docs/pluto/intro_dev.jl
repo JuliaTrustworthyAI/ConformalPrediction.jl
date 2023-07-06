@@ -7,7 +7,14 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local iv = try
+            Base.loaded_modules[Base.PkgId(
+                Base.UUID("6e696c72-6542-2067-7265-42206c756150"),
+                "AbstractPlutoDingetjes",
+            )].Bonds.initial_value
+        catch
+            b -> missing
+        end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
@@ -16,17 +23,18 @@ end
 
 # ╔═╡ aad62ef1-4136-4732-a9e6-3746524978ee
 begin
-	using Pkg; Pkg.activate("../")
+    using Pkg
+    Pkg.activate("../")
     using ConformalPrediction
     using DecisionTree: DecisionTreeRegressor
     using Distributions
     using EvoTrees: EvoTreeRegressor
-	using Flux
+    using Flux
     using LightGBM.MLJInterface: LGBMRegressor
     using MLJBase
-	using MLJFlux
-	using MLJFlux: NeuralNetworkRegressor
-	using MLJLinearModels
+    using MLJFlux
+    using MLJFlux: NeuralNetworkRegressor
+    using MLJLinearModels
     using MLJModels
     using NearestNeighborModels: KNNRegressor
     using Plots
@@ -45,27 +53,24 @@ Let's start by loading the necessary packages:
 # ╔═╡ 55a7c16b-a526-41d9-9d73-a0591ad006ce
 # helper functions
 begin
-	function multi_slider(vals::Dict; title = "")
+    function multi_slider(vals::Dict; title="")
+        return PlutoUI.combine() do Child
+            inputs = [
+                md""" $(_name): $(
+                    Child(_name, Slider(_vals[1], default=_vals[2], show_value=true))
+                )"""
 
-	    return PlutoUI.combine() do Child
-	
-	        inputs = [
-	            md""" $(_name): $(
-	                Child(_name, Slider(_vals[1], default=_vals[2], show_value=true))
-	            )"""
-	
-	            for (_name, _vals) in vals
-	        ]
-	
-	        md"""
-	        #### $title
-	        $(inputs)
-	        """
-	    end
-	
-	end
+                for (_name, _vals) in vals
+            ]
 
-	MLJFlux.reformat(X, ::Type{<:AbstractMatrix}) = X'
+            md"""
+            #### $title
+            $(inputs)
+            """
+        end
+    end
+
+    MLJFlux.reformat(X, ::Type{<:AbstractMatrix}) = X'
 end;
 
 # ╔═╡ be8b2fbb-3b3d-496e-9041-9b8f50872350
@@ -122,9 +127,7 @@ The sliders below can be used to change the number of observations `N`, the maxi
 # ╔═╡ 931ce259-d5fb-4a56-beb8-61a69a2fc09e
 begin
     data_dict = Dict(
-        "N" => (100:100:2000, 1000),
-        "noise" => (0.1:0.1:1.0, 0.5),
-        "xmax" => (1:10, 5),
+        "N" => (100:100:2000, 1000), "noise" => (0.1:0.1:1.0, 0.5), "xmax" => (1:10, 5)
     )
     @bind data_specs multi_slider(data_dict, title="Parameters")
 end
@@ -132,16 +135,9 @@ end
 # ╔═╡ f0106aa5-b1c5-4857-af94-2711f80d25a8
 begin
     X, y = get_data(data_specs.N, data_specs.xmax, data_specs.noise; fun=f)
-    scatter(X.x1, y, label="Observed data")
-    xrange = range(-data_specs.xmax, data_specs.xmax, length=50)
-    plot!(
-        xrange,
-        @.(f(xrange)),
-        lw=4,
-        label="Ground truth",
-        ls=:dash,
-        colour=:black,
-    )
+    scatter(X.x1, y; label="Observed data")
+    xrange = range(-data_specs.xmax, data_specs.xmax; length=50)
+    plot!(xrange, @.(f(xrange)); lw=4, label="Ground truth", ls=:dash, colour=:black)
 end
 
 # ╔═╡ 2fe1065e-d1b8-4e3c-930c-654f50349222
@@ -161,7 +157,7 @@ To start with, let's split our data into a training and test set:
 """
 
 # ╔═╡ 3a4fe2bc-387c-4d7e-b45f-292075a01bcd
-train, test = partition(eachindex(y), 0.4, 0.4, shuffle=true);
+train, test = partition(eachindex(y), 0.4, 0.4; shuffle=true);
 
 # ╔═╡ a34b8c07-08e0-4a0e-a0f9-8054b41b038b
 md"Now let's choose a model for our regression task:"
@@ -173,13 +169,10 @@ md"Now let's choose a model for our regression task:"
 begin
     Model = eval(tested_atomic_models[:regression][model_name])
     if Model() isa MLJFlux.MLJFluxModel
-		model = Model(
-			builder=MLJFlux.MLP(hidden=(50,), σ=Flux.tanh_fast), 
-			epochs=200
-		) 
-	else
-		model = Model()
-	end
+        model = Model(; builder=MLJFlux.MLP(; hidden=(50,), σ=Flux.tanh_fast), epochs=200)
+    else
+        model = Model()
+    end
 end;
 
 # ╔═╡ 10340f3f-7981-42da-846a-7599a9edb7f3
@@ -194,7 +187,7 @@ mach_raw = machine(model, X, y);
 md"Then we fit the machine to the training data:"
 
 # ╔═╡ aabfbbfb-7fb0-4f37-9a05-b96207636232
-MLJBase.fit!(mach_raw, rows=train, verbosity=0);
+MLJBase.fit!(mach_raw; rows=train, verbosity=0);
 
 # ╔═╡ 5506e1b5-5f2f-4972-a845-9c0434d4b31c
 md"""
@@ -206,17 +199,10 @@ begin
     Xtest = MLJBase.matrix(selectrows(X, test))
     ytest = y[test]
     ŷ = MLJBase.predict(mach_raw, Xtest)
-    scatter(vec(Xtest), vec(ytest), label="Observed")
+    scatter(vec(Xtest), vec(ytest); label="Observed")
     _order = sortperm(vec(Xtest))
-    plot!(vec(Xtest)[_order], vec(ŷ)[_order], lw=4, label="Predicted")
-    plot!(
-        xrange,
-        @.(f(xrange)),
-        lw=2,
-        ls=:dash,
-        colour=:black,
-        label="Ground truth",
-    )
+    plot!(vec(Xtest)[_order], vec(ŷ)[_order]; lw=4, label="Predicted")
+    plot!(xrange, @.(f(xrange)); lw=2, ls=:dash, colour=:black, label="Ground truth")
 end
 
 # ╔═╡ 36eef47f-ad55-49be-ac60-7aa1cf50e61a
@@ -250,7 +236,7 @@ Then we fit the machine to the data:
 """
 
 # ╔═╡ 6b574688-ff3c-441a-a616-169685731883
-MLJBase.fit!(mach, rows=train, verbosity=0);
+MLJBase.fit!(mach; rows=train, verbosity=0);
 
 # ╔═╡ da6e8f90-a3f9-4d06-86ab-b0f6705bbf54
 md"""
@@ -264,18 +250,11 @@ Now let us look at the predictions for our test data again. The chart below show
 
 # ╔═╡ ad3e290b-c1f5-4008-81c7-a1a56ab10563
 begin
-    _conf_model = conformal_model(model, coverage=coverage)
+    _conf_model = conformal_model(model; coverage=coverage)
     _mach = machine(_conf_model, X, y)
-    MLJBase.fit!(_mach, rows=train, verbosity=0)
-    plot(_mach.model, _mach.fitresult, Xtest, ytest, zoom=0, observed_lab="Test points")
-    plot!(
-        xrange,
-        @.(f(xrange)),
-        lw=2,
-        ls=:dash,
-        colour=:black,
-        label="Ground truth",
-    )
+    MLJBase.fit!(_mach; rows=train, verbosity=0)
+    plot(_mach.model, _mach.fitresult, Xtest, ytest; zoom=0, observed_lab="Test points")
+    plot!(xrange, @.(f(xrange)); lw=2, ls=:dash, colour=:black, label="Ground truth")
 end
 
 # ╔═╡ b3a88859-0442-41ff-bfea-313437042830
@@ -296,8 +275,9 @@ To verify the marginal coverage property empirically we can look at the empirica
 
 # ╔═╡ d1140af9-608a-4669-9595-aee72ffbaa46
 begin
-    model_evaluation =
-        evaluate!(_mach, operation=MLJBase.predict, measure=emp_coverage, verbosity=0)
+    model_evaluation = evaluate!(
+        _mach; operation=MLJBase.predict, measure=emp_coverage, verbosity=0
+    )
     println("Empirical coverage: $(round(model_evaluation.measurement[1], digits=3))")
     println("Coverage per fold: $(round.(model_evaluation.per_fold[1], digits=3))")
 end
@@ -305,23 +285,23 @@ end
 # ╔═╡ f742440b-258e-488a-9c8b-c9267cf1fb99
 begin
     ncal = Int(conf_model.train_ratio * data_specs.N)
-	if model_evaluation.measurement[1] < coverage
-	    Markdown.parse(
-	        """
-			> ❌❌❌ Oh no! You got an empirical coverage rate that is slightly lower than desired 🥲 ... what's happened? 
-			
-			The coverage property is "marginal" in the sense that the probability is averaged over the randomness in the data. For most purposes a large enough calibration set size (``n>1000``) mitigates that randomness enough. Depending on your choices above, the calibration set may be quite small (currently $ncal), which can lead to **coverage slack** (see Section 3 in the [tutorial](https://arxiv.org/pdf/2107.07511.pdf)).
-			"""
-	    )
-	else
-		Markdown.parse(
-			"""
-			> ✅ ✅ ✅  Great! You got an empirical coverage rate that is slightly higher than desired 😁 ... but why isn't it exactly the same? 
-			
-			In most cases it will be slightly higher than desired, since ``(1-\\alpha)`` is a lower bound. But note that it can also be slightly lower than desired. That is because the coverage property is "marginal" in the sense that the probability is averaged over the randomness in the data. For most purposes a large enough calibration set size (``n>1000``) mitigates that randomness enough. Depending on your choices above, the calibration set may be quite small (currently $ncal), which can lead to **coverage slack** (see Section 3 in the [tutorial](https://arxiv.org/pdf/2107.07511.pdf)).
-			"""
-		)
-	end
+    if model_evaluation.measurement[1] < coverage
+        Markdown.parse(
+            """
+      > ❌❌❌ Oh no! You got an empirical coverage rate that is slightly lower than desired 🥲 ... what's happened? 
+
+      The coverage property is "marginal" in the sense that the probability is averaged over the randomness in the data. For most purposes a large enough calibration set size (``n>1000``) mitigates that randomness enough. Depending on your choices above, the calibration set may be quite small (currently $ncal), which can lead to **coverage slack** (see Section 3 in the [tutorial](https://arxiv.org/pdf/2107.07511.pdf)).
+      """,
+        )
+    else
+        Markdown.parse(
+            """
+            > ✅ ✅ ✅  Great! You got an empirical coverage rate that is slightly higher than desired 😁 ... but why isn't it exactly the same? 
+
+            In most cases it will be slightly higher than desired, since ``(1-\\alpha)`` is a lower bound. But note that it can also be slightly lower than desired. That is because the coverage property is "marginal" in the sense that the probability is averaged over the randomness in the data. For most purposes a large enough calibration set size (``n>1000``) mitigates that randomness enough. Depending on your choices above, the calibration set may be quite small (currently $ncal), which can lead to **coverage slack** (see Section 3 in the [tutorial](https://arxiv.org/pdf/2107.07511.pdf)).
+            """,
+        )
+    end
 end
 
 # ╔═╡ f7b2296f-919f-4870-aac1-8e36dd694422
@@ -352,37 +332,34 @@ Quite cool, right? Using a single API call we are able to generate rigorous pred
 
 # ╔═╡ 824bd383-2fcb-4888-8ad1-260c85333edf
 @bind xmax_ood Slider(
-    data_specs.xmax:(data_specs.xmax+5),
-    default=(data_specs.xmax),
-    show_value=true,
+    (data_specs.xmax):(data_specs.xmax + 5), default=(data_specs.xmax), show_value=true
 )
 
 # ╔═╡ 072cc72d-20a2-4ee9-954c-7ea70dfb8eea
 begin
     Xood, yood = get_data(data_specs.N, xmax_ood, data_specs.noise; fun=f)
-    plot(_mach.model, _mach.fitresult, Xood, yood, zoom=0, observed_lab="Test points")
-    xood_range = range(-xmax_ood, xmax_ood, length=50)
+    plot(_mach.model, _mach.fitresult, Xood, yood; zoom=0, observed_lab="Test points")
+    xood_range = range(-xmax_ood, xmax_ood; length=50)
     plot!(
-        xood_range,
-        @.(f(xood_range)),
-        lw=2,
-        ls=:dash,
-        colour=:black,
-        label="Ground truth",
+        xood_range, @.(f(xood_range)); lw=2, ls=:dash, colour=:black, label="Ground truth"
     )
 end
 
 # ╔═╡ 4f41ec7c-aedd-475f-942d-33e2d1174902
 if xmax_ood > data_specs.xmax
-	Markdown.parse("""
-	> Whooooops 🤕 ... looks like we're in trouble! What happened here?
-	
-	By expaning the domain of out inputs, we have violated the exchangeability assumption. When that assumption is violated, the marginal coverage property does not hold. But do not despair! There are ways to deal with this. 
-	""")
+    Markdown.parse(
+        """
+> Whooooops 🤕 ... looks like we're in trouble! What happened here?
+
+By expaning the domain of out inputs, we have violated the exchangeability assumption. When that assumption is violated, the marginal coverage property does not hold. But do not despair! There are ways to deal with this. 
+""",
+    )
 else
-	Markdown.parse("""
-	> Still looking OK 🤨 ... Try moving the slider above the chart to the right to see what will happen.
-	""")
+    Markdown.parse(
+        """
+> Still looking OK 🤨 ... Try moving the slider above the chart to the right to see what will happen.
+""",
+    )
 end
 
 # ╔═╡ c7fa1889-b0be-4d96-b845-e79fa7932b0c

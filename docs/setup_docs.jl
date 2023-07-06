@@ -19,14 +19,13 @@ setup_docs = quote
     using Transformers
     using Transformers.TextEncoders
     using Transformers.HuggingFace
-  
+
     # Explicit imports:
     import MLJModelInterface as MMI
-    import UnicodePlots
+    using UnicodePlots: UnicodePlots
 
     # Setup:
     theme(:wong)
     Random.seed!(2023)
     www_path = "$(pwd())/docs/src/www"
-
 end;

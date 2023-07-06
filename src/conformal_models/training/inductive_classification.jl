@@ -7,7 +7,13 @@ using MLUtils
 
 Overloads the `score` function for the `MLJFluxModel` type.
 """
-function score(conf_model::SimpleInductiveClassifier, ::Type{<:MLJFluxModel}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+function score(
+    conf_model::SimpleInductiveClassifier,
+    ::Type{<:MLJFluxModel},
+    fitresult,
+    X,
+    y::Union{Nothing,AbstractArray}=nothing,
+)
     X = reformat(X)
     X = typeof(X) <: AbstractArray ? X : permutedims(matrix(X))
     probas = permutedims(fitresult[1](X))
@@ -25,14 +31,21 @@ end
 
 Overloads the `score` function for ensembles of `MLJFluxModel` types.
 """
-function score(conf_model::SimpleInductiveClassifier, ::Type{<:EitherEnsembleModel{<:MLJFluxModel}}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+function score(
+    conf_model::SimpleInductiveClassifier,
+    ::Type{<:EitherEnsembleModel{<:MLJFluxModel}},
+    fitresult,
+    X,
+    y::Union{Nothing,AbstractArray}=nothing,
+)
     X = reformat(X)
     X = typeof(X) <: AbstractArray ? X : permutedims(matrix(X))
     _chains = map(res -> res[1], fitresult.ensemble)
-    probas = MLUtils.stack(map(chain -> chain(X), _chains)) |>
-        p -> mean(p, dims=ndims(p)) |>
-                  p -> MLUtils.unstack(p, dims=ndims(p))[1] |>
-                       p -> permutedims(p)
+    probas =
+        MLUtils.stack(map(chain -> chain(X), _chains)) |>
+        p ->
+            mean(p; dims=ndims(p)) |>
+            p -> MLUtils.unstack(p; dims=ndims(p))[1] |> p -> permutedims(p)
     scores = @.(conf_model.heuristic(probas))
     if isnothing(y)
         return scores
@@ -47,7 +60,13 @@ end
 
 Overloads the `score` function for the `MLJFluxModel` type.
 """
-function score(conf_model::AdaptiveInductiveClassifier, ::Type{<:MLJFluxModel}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+function score(
+    conf_model::AdaptiveInductiveClassifier,
+    ::Type{<:MLJFluxModel},
+    fitresult,
+    X,
+    y::Union{Nothing,AbstractArray}=nothing,
+)
     L = levels(fitresult[2])
     X = reformat(X)
     X = typeof(X) <: AbstractArray ? X : permutedims(matrix(X))
@@ -72,15 +91,22 @@ end
 
 Overloads the `score` function for ensembles of `MLJFluxModel` types.
 """
-function score(conf_model::AdaptiveInductiveClassifier, ::Type{<:EitherEnsembleModel{<:MLJFluxModel}}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+function score(
+    conf_model::AdaptiveInductiveClassifier,
+    ::Type{<:EitherEnsembleModel{<:MLJFluxModel}},
+    fitresult,
+    X,
+    y::Union{Nothing,AbstractArray}=nothing,
+)
     L = levels(fitresult.ensemble[1][2])
     X = reformat(X)
     X = typeof(X) <: AbstractArray ? X : permutedims(matrix(X))
     _chains = map(res -> res[1], fitresult.ensemble)
-    probas = MLUtils.stack(map(chain -> chain(X), _chains)) |>
-             p -> mean(p, dims=ndims(p)) |>
-                  p -> MLUtils.unstack(p, dims=ndims(p))[1] |>
-                       p -> permutedims(p)
+    probas =
+        MLUtils.stack(map(chain -> chain(X), _chains)) |>
+        p ->
+            mean(p; dims=ndims(p)) |>
+            p -> MLUtils.unstack(p; dims=ndims(p))[1] |> p -> permutedims(p)
     scores = map(Base.Iterators.product(eachrow(probas), L)) do Z
         probasᵢ, yₖ = Z
         ranks = sortperm(.-probasᵢ)                                 # rank in descending order
