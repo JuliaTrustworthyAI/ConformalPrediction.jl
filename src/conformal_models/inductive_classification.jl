@@ -3,7 +3,12 @@
  
 Generic score method for the [`ConformalProbabilisticSet`](@ref). It computes nonconformity scores using the heuristic function `h` and the softmax probabilities of the true class. Method is dispatched for different Conformal Probabilistic Sets and atomic models.
 """
-function score(conf_model::ConformalProbabilisticSet, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+function score(
+    conf_model::ConformalProbabilisticSet,
+    fitresult,
+    X,
+    y::Union{Nothing,AbstractArray} = nothing,
+)
     score(conf_model, typeof(conf_model.model), fitresult, X, y)
 end
 
@@ -35,9 +40,9 @@ end
 
 function SimpleInductiveClassifier(
     model::Supervised;
-    coverage::AbstractFloat=0.95,
-    heuristic::Function=f(p̂) = 1.0 - p̂,
-    train_ratio::AbstractFloat=0.5,
+    coverage::AbstractFloat = 0.95,
+    heuristic::Function = f(p̂) = 1.0 - p̂,
+    train_ratio::AbstractFloat = 0.5,
 )
     return SimpleInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
 end
@@ -47,7 +52,13 @@ end
 
 Score method for the [`SimpleInductiveClassifier`](@ref) dispatched for any `<:Supervised` model.  
 """
-function score(conf_model::SimpleInductiveClassifier, ::Type{<:Supervised}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+function score(
+    conf_model::SimpleInductiveClassifier,
+    ::Type{<:Supervised},
+    fitresult,
+    X,
+    y::Union{Nothing,AbstractArray} = nothing,
+)
     p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, X))
     L = p̂.decoder.classes
     probas = pdf(p̂, L)
@@ -81,10 +92,7 @@ function MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
 
     # Nonconformity Scores:
     cal_scores, scores = score(conf_model, fitresult, Xcal, ycal)
-    conf_model.scores = Dict(
-        :calibration => cal_scores,
-        :all => scores,
-    )
+    conf_model.scores = Dict(:calibration => cal_scores, :all => scores)
 
     return (fitresult, cache, report)
 end
@@ -132,9 +140,9 @@ end
 
 function AdaptiveInductiveClassifier(
     model::Supervised;
-    coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = 1.0 - ŷ,
-    train_ratio::AbstractFloat=0.5,
+    coverage::AbstractFloat = 0.95,
+    heuristic::Function = f(y, ŷ) = 1.0 - ŷ,
+    train_ratio::AbstractFloat = 0.5,
 )
     return AdaptiveInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
 end
@@ -158,10 +166,7 @@ function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
 
     # Nonconformity Scores:
     cal_scores, scores = score(conf_model, fitresult, Xcal, ycal)
-    conf_model.scores = Dict(
-        :calibration => cal_scores,
-        :all => scores,
-    )
+    conf_model.scores = Dict(:calibration => cal_scores, :all => scores)
 
     return (fitresult, cache, report)
 end
@@ -171,7 +176,13 @@ end
 
 Score method for the [`AdaptiveInductiveClassifier`](@ref) dispatched for any `<:Supervised` model.  
 """
-function score(conf_model::AdaptiveInductiveClassifier, ::Type{<:Supervised}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+function score(
+    conf_model::AdaptiveInductiveClassifier,
+    ::Type{<:Supervised},
+    fitresult,
+    X,
+    y::Union{Nothing,AbstractArray} = nothing,
+)
     p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, X))
     L = p̂.decoder.classes
     probas = pdf(p̂, L)                                              # compute probabilities for all classes

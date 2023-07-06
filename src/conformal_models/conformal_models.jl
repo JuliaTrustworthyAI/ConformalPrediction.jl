@@ -64,11 +64,8 @@ include("transductive_classification.jl")
 include("training/training.jl")
 
 # Type unions:
-const InductiveModel = Union{
-    SimpleInductiveRegressor,
-    SimpleInductiveClassifier,
-    AdaptiveInductiveClassifier,
-}
+const InductiveModel =
+    Union{SimpleInductiveRegressor,SimpleInductiveClassifier,AdaptiveInductiveClassifier}
 
 const TransductiveModel = Union{
     NaiveRegressor,

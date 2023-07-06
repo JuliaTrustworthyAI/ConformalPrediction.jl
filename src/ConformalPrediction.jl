@@ -13,6 +13,6 @@ include("evaluation/evaluation.jl")
 export emp_coverage, size_stratified_coverage, ssc
 
 # Artifacts:
-include("artifacts/core.jl")   
+include("artifacts/core.jl")
 
 end

@@ -19,7 +19,7 @@ setup_docs = quote
     using Transformers
     using Transformers.TextEncoders
     using Transformers.HuggingFace
-  
+
     # Explicit imports:
     import MLJModelInterface as MMI
     import UnicodePlots

@@ -97,7 +97,7 @@ function Plots.contourf(
             @info "No target label supplied, using first."
         end
         target = isnothing(target) ? levels(y)[1] : target
-        if plot_set_size 
+        if plot_set_size
             _default_title = "Set size"
         elseif plot_set_loss
             _default_title = "Smooth set loss"
@@ -107,7 +107,7 @@ function Plots.contourf(
             _default_title = "p̂(y=$(target))"
         end
     else
-        if plot_set_size 
+        if plot_set_size
             _default_title = "Set size"
         elseif plot_set_loss
             _default_title = "Smooth set loss"
@@ -126,10 +126,23 @@ function Plots.contourf(
         if plot_set_size
             z = ismissing(p̂) ? 0 : sum(pdf.(p̂, p̂.decoder.classes) .> 0)
         elseif plot_classification_loss
-            _target = categorical([target], levels=levels(y))
-            z = ConformalPrediction.classification_loss(conf_model, fitresult, [x1 x2], _target; temp=temp, loss_matrix=loss_matrix)
+            _target = categorical([target], levels = levels(y))
+            z = ConformalPrediction.classification_loss(
+                conf_model,
+                fitresult,
+                [x1 x2],
+                _target;
+                temp = temp,
+                loss_matrix = loss_matrix,
+            )
         elseif plot_set_loss
-            z = ConformalPrediction.smooth_size_loss(conf_model, fitresult, [x1 x2]; κ=κ, temp=temp)
+            z = ConformalPrediction.smooth_size_loss(
+                conf_model,
+                fitresult,
+                [x1 x2];
+                κ = κ,
+                temp = temp,
+            )
         else
             z = ismissing(p̂) ? [missing for i = 1:length(levels(y))] : pdf.(p̂, levels(y))
             z = replace(z, 0 => missing)
@@ -165,7 +178,7 @@ function Plots.contourf(
             ylims = ylims,
             clim = clim,
             c = cgrad(:blues),
-            linewidth=0,
+            linewidth = 0,
             kwargs...,
         )
     end
