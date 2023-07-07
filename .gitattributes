@@ -1,0 +1,6 @@
+*.ipynb linguist-vendored
+*.bib linguist-vendored
+*.md linguist-vendored
+*.drawio linguist-vendored
+*.tex linguist-vendored
+*.qmd linguist-vendored
