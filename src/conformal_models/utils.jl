@@ -112,7 +112,7 @@ end
 """
 function blockbootstrap(time_series, block_size)
     n = length(time_series)
-    bootstrap_sample = similar(time_series) #Vector{eltype(time_series)}(undef, n)
+    bootstrap_sample = similar(time_series)
     rand_block = rand(1:n-block_size)
     bootstrap_sample = time_series[rand_block: rand_block+block_size-1,:]
     return vec(bootstrap_sample)
