@@ -3,8 +3,29 @@
  
 Generic score method for the [`ConformalProbabilisticSet`](@ref). It computes nonconformity scores using the heuristic function `h` and the softmax probabilities of the true class. Method is dispatched for different Conformal Probabilistic Sets and atomic models.
 """
-function score(conf_model::ConformalProbabilisticSet, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
-    score(conf_model, typeof(conf_model.model), fitresult, X, y)
+function score(
+    conf_model::ConformalProbabilisticSet,
+    fitresult,
+    X,
+    y::Union{Nothing,AbstractArray}=nothing,
+)
+    return score(conf_model, typeof(conf_model.model), fitresult, X, y)
+end
+
+"""
+    split_data(conf_model::ConformalProbabilisticSet, indices::Base.OneTo{Int})
+
+Splits the data into a proper training and calibration set.
+"""
+function split_data(conf_model::ConformalProbabilisticSet, X, y)
+    train, calibration = partition(eachindex(y), conf_model.train_ratio)
+    Xtrain = selectrows(X, train)
+    ytrain = y[train]
+    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
+    Xcal = selectrows(X, calibration)
+    ycal = y[calibration]
+    Xcal, ycal = MMI.reformat(conf_model.model, Xcal, ycal)
+    return Xtrain, ytrain, Xcal, ycal
 end
 
 # Simple
@@ -21,7 +42,7 @@ function SimpleInductiveClassifier(
     model::Supervised;
     coverage::AbstractFloat=0.95,
     heuristic::Function=f(p̂) = 1.0 - p̂,
-    train_ratio::AbstractFloat=0.5
+    train_ratio::AbstractFloat=0.5,
 )
     return SimpleInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
 end
@@ -31,7 +52,13 @@ end
 
 Score method for the [`SimpleInductiveClassifier`](@ref) dispatched for any `<:Supervised` model.  
 """
-function score(conf_model::SimpleInductiveClassifier, ::Type{<:Supervised}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+function score(
+    conf_model::SimpleInductiveClassifier,
+    ::Type{<:Supervised},
+    fitresult,
+    X,
+    y::Union{Nothing,AbstractArray}=nothing,
+)
     p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, X))
     L = p̂.decoder.classes
     probas = pdf(p̂, L)
@@ -58,23 +85,14 @@ A typical choice for the heuristic function is ``h(\hat\mu(X_i), Y_i)=1-\hat\mu(
 function MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
 
     # Data Splitting:
-    train, calibration = partition(eachindex(y), conf_model.train_ratio)
-    Xtrain = selectrows(X, train)
-    ytrain = y[train]
-    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
-    Xcal = selectrows(X, calibration)
-    ycal = y[calibration]
-    Xcal, ycal = MMI.reformat(conf_model.model, Xcal, ycal)
+    Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
 
     # Training: 
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
     # Nonconformity Scores:
     cal_scores, scores = score(conf_model, fitresult, Xcal, ycal)
-    conf_model.scores = Dict(
-        :calibration => cal_scores,
-        :all => scores,
-    )
+    conf_model.scores = Dict(:calibration => cal_scores, :all => scores)
 
     return (fitresult, cache, report)
 end
@@ -92,7 +110,7 @@ where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration da
 """
 function MMI.predict(conf_model::SimpleInductiveClassifier, fitresult, Xnew)
     p̂ = reformat_mlj_prediction(
-        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...),
+        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     )
     v = conf_model.scores[:calibration]
     q̂ = StatsBase.quantile(v, conf_model.coverage)
@@ -124,7 +142,7 @@ function AdaptiveInductiveClassifier(
     model::Supervised;
     coverage::AbstractFloat=0.95,
     heuristic::Function=f(y, ŷ) = 1.0 - ŷ,
-    train_ratio::AbstractFloat=0.5
+    train_ratio::AbstractFloat=0.5,
 )
     return AdaptiveInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
 end
@@ -141,23 +159,14 @@ S_i^{\text{CAL}} = s(X_i,Y_i) = \sum_{j=1}^k  \hat\mu(X_i)_{\pi_j} \ \text{where
 function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
 
     # Data Splitting:
-    train, calibration = partition(eachindex(y), conf_model.train_ratio)
-    Xtrain = selectrows(X, train)
-    ytrain = y[train]
-    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
-    Xcal = selectrows(X, calibration)
-    ycal = y[calibration]
-    Xcal, ycal = MMI.reformat(conf_model.model, Xcal, ycal)
+    Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
 
     # Training: 
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
     # Nonconformity Scores:
     cal_scores, scores = score(conf_model, fitresult, Xcal, ycal)
-    conf_model.scores = Dict(
-        :calibration => cal_scores,
-        :all => scores,
-    )
+    conf_model.scores = Dict(:calibration => cal_scores, :all => scores)
 
     return (fitresult, cache, report)
 end
@@ -167,15 +176,21 @@ end
 
 Score method for the [`AdaptiveInductiveClassifier`](@ref) dispatched for any `<:Supervised` model.  
 """
-function score(conf_model::AdaptiveInductiveClassifier, ::Type{<:Supervised}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+function score(
+    conf_model::AdaptiveInductiveClassifier,
+    ::Type{<:Supervised},
+    fitresult,
+    X,
+    y::Union{Nothing,AbstractArray}=nothing,
+)
     p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, X))
     L = p̂.decoder.classes
     probas = pdf(p̂, L)                                              # compute probabilities for all classes
     scores = map(Base.Iterators.product(eachrow(probas), L)) do Z
         probasᵢ, yₖ = Z
-        ranks = sortperm(.-probasᵢ)                                 # rank in descending order
-        index_y = findall(L[ranks] .== yₖ)[1]                       # index of true y in sorted array
-        scoresᵢ = last(cumsum(probasᵢ[ranks][1:index_y]))           # sum up until true y is reached
+        Π = sortperm(.-probasᵢ)                                 # rank in descending order
+        πₖ = findall(L[Π] .== yₖ)[1]                            # index of true y in sorted array
+        scoresᵢ = last(cumsum(probasᵢ[Π][1:πₖ]))                # sum up until true y is reached
         return scoresᵢ
     end
     if isnothing(y)
@@ -199,19 +214,23 @@ where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration da
 """
 function MMI.predict(conf_model::AdaptiveInductiveClassifier, fitresult, Xnew)
     p̂ = reformat_mlj_prediction(
-        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...),
+        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     )
     v = conf_model.scores[:calibration]
     q̂ = StatsBase.quantile(v, conf_model.coverage)
     p̂ = map(p̂) do pp
         L = p̂.decoder.classes
         probas = pdf.(pp, L)
-        is_in_set = 1.0 .- probas .<= q̂
-        if !all(is_in_set .== false)
-            pp = UnivariateFinite(L[is_in_set], probas[is_in_set])
+        Π = sortperm(.-probas)                      # rank in descending order
+        in_set = findall(cumsum(probas[Π]) .> q̂)
+        if length(in_set) > 0
+            k = in_set[1]  # index of first class with probability > q̂ (supremum)
         else
-            pp = missing
+            k = 0
         end
+        k += 1
+        final_idx = minimum([k, length(Π)])
+        pp = UnivariateFinite(L[Π][1:final_idx], probas[Π][1:final_idx])
         return pp
     end
     return p̂

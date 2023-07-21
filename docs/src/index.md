@@ -1,3 +1,4 @@
+# ConformalPrediction
 
 ``` @meta
 CurrentModule = ConformalPrediction
@@ -110,11 +111,11 @@ ŷ[1:show_first]
 ```
 
     5-element Vector{Tuple{Float64, Float64}}:
-     (0.3514065102722679, 2.4948272235282696)
-     (-0.36580206168104035, 1.7780775120607)
-     (0.13671800582612756, 2.2792132778975933)
-     (0.15237308545277795, 2.2801138611534326)
-     (0.19080981472120032, 2.3863592104933966)
+     (-0.31710111123009466, 1.814908621823348)
+     (0.4117909000076131, 2.4849160014859484)
+     (0.32534539961817965, 2.422507599232612)
+     (0.05383464132878396, 2.1363938330880448)
+     (-0.19790350122188927, 1.914494222889709)
 
 For simple models like this one, we can call a custom `Plots` recipe on our instance, fit result and data to generate the chart below:
 
@@ -142,16 +143,16 @@ println("SSC: $(round(_eval.measurement[2], digits=3))")
       per_observation, fitted_params_per_fold,
       report_per_fold, train_test_rows
     Extract:
-    ┌───────────────────────────────────────────────────────────┬───────────┬───────
-    │ measure                                                   │ operation │ meas ⋯
-    ├───────────────────────────────────────────────────────────┼───────────┼───────
-    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.95 ⋯
-    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.84 ⋯
-    └───────────────────────────────────────────────────────────┴───────────┴───────
-                                                                   3 columns omitted
+    ┌──────────────────────────────────────────────┬───────────┬─────────────┬──────
+    │ measure                                      │ operation │ measurement │ 1.9 ⋯
+    ├──────────────────────────────────────────────┼───────────┼─────────────┼──────
+    │ ConformalPrediction.emp_coverage             │ predict   │ 0.947       │ 0.0 ⋯
+    │ ConformalPrediction.size_stratified_coverage │ predict   │ 0.904       │ 0.0 ⋯
+    └──────────────────────────────────────────────┴───────────┴─────────────┴──────
+                                                                   2 columns omitted
 
-    Empirical coverage: 0.95
-    SSC: 0.841
+    Empirical coverage: 0.947
+    SSC: 0.904
 
 ## 📚 Read on
 
@@ -200,10 +201,11 @@ The package has been tested for the following supervised models offered by [MLJ]
 keys(tested_atomic_models[:regression])
 ```
 
-    KeySet for a Dict{Symbol, Expr} with 4 entries. Keys:
-      :nearest_neighbor
+    KeySet for a Dict{Symbol, Expr} with 5 entries. Keys:
+      :ridge
+      :lasso
       :evo_tree
-      :light_gbm
+      :nearest_neighbor
       :linear
 
 **Classification**:
@@ -212,10 +214,9 @@ keys(tested_atomic_models[:regression])
 keys(tested_atomic_models[:classification])
 ```
 
-    KeySet for a Dict{Symbol, Expr} with 4 entries. Keys:
+    KeySet for a Dict{Symbol, Expr} with 3 entries. Keys:
       :nearest_neighbor
       :evo_tree
-      :light_gbm
       :logistic
 
 ### Implemented Evaluation Metrics

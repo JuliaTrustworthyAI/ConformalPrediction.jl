@@ -1,0 +1,15 @@
+["artifacts-1.9"]
+git-tree-sha1 = "bec02b003dffbb73e3f57b9235c80737cbf22e24"
+lazy = true
+
+    [["artifacts-1.9".download]]
+    sha256 = "5fb37496350a12c091b670d5fbb73932ef8e24a9d18f7ee828a1b1a8049db547"
+    url = "https://github.com/JuliaTrustworthyAI/ConformalPrediction.jl/releases/download/artifacts-1.9/artifacts-1.9.tar.gz"
+
+[dev-artifacts-]
+git-tree-sha1 = "68fc0d857369455c7fc0999c87b29c1e5eeee6b7"
+lazy = true
+
+    [[dev-artifacts-.download]]
+    sha256 = "47da7053908d9709d3bd54ecf92e7435efc9e2796cfe610ae0c69ced16b5eae6"
+    url = "https://github.com/JuliaTrustworthyAI/ConformalPrediction.jl/releases/download/artifacts-1.9/dev-artifacts-.tar.gz"

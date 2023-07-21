@@ -7,7 +7,14 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local iv = try
+            Base.loaded_modules[Base.PkgId(
+                Base.UUID("6e696c72-6542-2067-7265-42206c756150"),
+                "AbstractPlutoDingetjes",
+            )].Bonds.initial_value
+        catch
+            b -> missing
+        end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
@@ -16,7 +23,7 @@ end
 
 # ╔═╡ 435e65de-c2d5-436f-8c21-00fdee731959
 begin
-	 using ConformalPrediction
+    using ConformalPrediction
     using DecisionTree: DecisionTreeRegressor
     using Distributions
     using EvoTrees: EvoTreeRegressor
@@ -38,25 +45,22 @@ md"""
 # ╔═╡ 59bdf205-b1d3-42ca-a256-f2878a87a691
 # helper functions
 begin
-	function multi_slider(vals::Dict; title = "")
+    function multi_slider(vals::Dict; title="")
+        return PlutoUI.combine() do Child
+            inputs = [
+                md""" $(_name): $(
+                    Child(_name, Slider(_vals[1], default=_vals[2], show_value=true))
+                )"""
 
-	    return PlutoUI.combine() do Child
-	
-	        inputs = [
-	            md""" $(_name): $(
-	                Child(_name, Slider(_vals[1], default=_vals[2], show_value=true))
-	            )"""
-	
-	            for (_name, _vals) in vals
-	        ]
-	
-	        md"""
-	        #### *$title*
-	        $(inputs)
-	        """
-	    end
-	
-	end
+                for (_name, _vals) in vals
+            ]
+
+            md"""
+            #### *$title*
+            $(inputs)
+            """
+        end
+    end
 end;
 
 # ╔═╡ 7bad3b98-8172-4a06-a838-114d3954c594
@@ -69,10 +73,11 @@ We will use a simple helper function that generates some regression data with a 
 # ╔═╡ 3dfc7d81-0644-4892-ba0d-7f3baba37ece
 begin
     function get_data(
-		N=600, noise=0.5; 
-		fun::Function=fun(X) = X * sin(X),
-		d::Distribution=Distributions.Normal(0, 1)
-	)
+        N=600,
+        noise=0.5;
+        fun::Function=fun(X) = X * sin(X),
+        d::Distribution=Distributions.Normal(0, 1),
+    )
         # Inputs:
         X = rand(d, N)
         X = MLJBase.table(reshape(X, :, 1))
@@ -100,13 +105,10 @@ Below you can select the type of distribution that generates our input $X$:
 
 # ╔═╡ 39c53541-356a-4051-891e-4342887fd423
 begin
-	dist_dict = Dict(
-		"Cauchy" => Cauchy,
-		"Cosine" => Cosine,
-		"Laplace" => Laplace,
-		"Normal" => Normal,
-	)
-	@bind dist Select(collect(keys(dist_dict)), default="Normal")
+    dist_dict = Dict(
+        "Cauchy" => Cauchy, "Cosine" => Cosine, "Laplace" => Laplace, "Normal" => Normal
+    )
+    @bind dist Select(collect(keys(dist_dict)), default="Normal")
 end
 
 # ╔═╡ 6afc2fe2-e4ac-43d0-a4e5-ea4cd7ce82fc
@@ -119,29 +121,29 @@ The chart below shows the resulting data (dots) and ground-truth according to ho
 # ╔═╡ 22ca7c3a-f06c-4a08-8805-27e0071cccb8
 begin
     data_dict = Dict(
-		"N" => (100:100:2000, 1000),
+        "N" => (100:100:2000, 1000),
         "noise" => (0.1:0.1:1.0, 0.5),
         "location" => (-10000:1000:10000, 0),
-        "scale" => ([1,2,5,10,50,100,1000], 1),
+        "scale" => ([1, 2, 5, 10, 50, 100, 1000], 1),
     )
     @bind data_specs multi_slider(data_dict, title="Parameters")
 end
 
 # ╔═╡ f5bbf50c-21d6-4aad-8d8f-781246382131
 begin
-	d = dist_dict[dist](data_specs.location, data_specs.scale)
+    d = dist_dict[dist](data_specs.location, data_specs.scale)
     X, y = get_data(data_specs.N, data_specs.noise; fun=f, d=d)
-	train, test = partition(eachindex(y), 0.4, 0.4, shuffle=true)
-    scatter(X.x1, y, label="Observed data")
-    xrange = range(minimum(X.x1)[1], maximum(X.x1)[1], length=50)
+    train, test = partition(eachindex(y), 0.4, 0.4; shuffle=true)
+    scatter(X.x1, y; label="Observed data")
+    xrange = range(minimum(X.x1)[1], maximum(X.x1)[1]; length=50)
     plot!(
         xrange,
-        @.(f(xrange)),
+        @.(f(xrange));
         lw=4,
         label="Ground truth",
         ls=:dash,
         colour=:black,
-		size=(800,200)
+        size=(800, 200),
     )
 end
 
@@ -164,20 +166,25 @@ end;
 
 # ╔═╡ bb75d0a7-c0b4-484c-b3da-224e368b743a
 begin
-	Xtest = MLJBase.matrix(selectrows(X, test))
+    Xtest = MLJBase.matrix(selectrows(X, test))
     ytest = y[test]
-    conf_model = conformal_model(model, coverage=coverage)
+    conf_model = conformal_model(model; coverage=coverage)
     mach = machine(conf_model, X, y)
-    MLJBase.fit!(mach, rows=train, verbosity=0)
+    MLJBase.fit!(mach; rows=train, verbosity=0)
     s = conf_model.scores
-	α = 1 - conf_model.coverage
-	scatter(
-		s, zeros(length(s)); 
-		ylim=(-0.5,0.5), yaxis=nothing, label="Scores", ms=10, alpha=0.2,
-		size=(800,150)
-	)
-	q̂ = quantile(s, 1-α)
-	vline!([q̂], label="q̂")
+    α = 1 - conf_model.coverage
+    scatter(
+        s,
+        zeros(length(s));
+        ylim=(-0.5, 0.5),
+        yaxis=nothing,
+        label="Scores",
+        ms=10,
+        alpha=0.2,
+        size=(800, 150),
+    )
+    q̂ = quantile(s, 1 - α)
+    vline!([q̂]; label="q̂")
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001

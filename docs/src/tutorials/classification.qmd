@@ -1,9 +1,5 @@
 # Classification 
 
-```@meta
-CurrentModule = ConformalPrediction
-```
-
 ```{julia}
 #| echo: false
 using Pkg; Pkg.activate("docs")
@@ -28,6 +24,7 @@ Random.seed!(123)
 
 # Data:
 X, y = make_moons(500; noise=0.15)
+X = MLJ.table(convert.(Float32, MLJ.matrix(X)))
 train, test = partition(eachindex(y), 0.8, shuffle=true)
 ```
 
@@ -45,7 +42,7 @@ $$ {#eq-set}
 
 This is the default procedure used for classification and regression in [`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl). 
 
-Now let's take this to our 🌙 data. To illustrate the package functionality we will demonstrate the envisioned workflow. We first define our atomic machine learning model following standard [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/v0.18/) conventions. Using [`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl) we then wrap our atomic model in a conformal model using the standard API call `conformal_model(model::Supervised; kwargs...)`. To train and predict from our conformal model we can then rely on the conventional [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/v0.18/) procedure again. In particular, we wrap our conformal model in data (turning it into a machine) and then fit it on the training set. Finally, we use our machine to predict the label for a new test sample `Xtest`:
+Now let's take this to our 🌙 data. To illustrate the package functionality we will demonstrate the envisioned workflow. We first define our atomic machine learning model following standard [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/v0.18/) conventions. Using [`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl) we then wrap our atomic model in a conformal model using the standard API call `conformal_model(model::Supervised; kwargs...)`. To train and predict from our conformal model we can then rely on the conventional [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/v0.18/) procedure again. In particular, we wrap our conformal model in data (turning it into a machine) and then fit it to the training data. Finally, we use our machine to predict the label for a new test sample `Xtest`:
 
 ```{julia}
 #| output: true
@@ -83,7 +80,7 @@ When specifying a coverage rate very close to one, the prediction set will typic
 ```{julia}
 #| output: true
 
-conf_model = conformal_model(model; coverage=coverage, method=:adaptive_inductive)
+conf_model = conformal_model(model; coverage=coverage, method=:simple_inductive)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 
@@ -132,7 +129,7 @@ The following chart shows the resulting predicted probabilities for ``y=1`` (lef
 using Plots
 p_proba = contourf(mach.model, mach.fitresult, X, y)
 p_set_size = contourf(mach.model, mach.fitresult, X, y; plot_set_size=true)
-contourf(p_proba, p_set_size, size=(800,250))
+plot(p_proba, p_set_size, size=(800,250))
 ```
 
 ```{julia}
@@ -167,7 +164,7 @@ Well, for low coverage rates (roughly ``<0.9``) the conformal prediction set doe
 These two examples illustrate an interesting point: for regions characterized by high predictive uncertainty, conformal prediction sets are typically empty (for low coverage) or large (for high coverage). While set-valued predictions may be something to get used to, this notion is overall intuitive. 
 
 ```{julia}
-#| output: true
+#| output: false
 #| label: fig-anim
 #| fig-cap: "The effect of the coverage rate on the conformal prediction set. Softmax probabilities are shown on the left. The size of the prediction set is shown on the right."
 
@@ -205,6 +202,13 @@ conf_model = conformal_model(model; coverage=cov_, method=:adaptive_inductive)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 results[:adaptive_inductive] = mach
+```
+
+```{julia}
+using Plots
+p_proba = contourf(mach.model, mach.fitresult, X, y)
+p_set_size = contourf(mach.model, mach.fitresult, X, y; plot_set_size=true)
+plot(p_proba, p_set_size, size=(800,250))
 ```
 
 ## Evaluation

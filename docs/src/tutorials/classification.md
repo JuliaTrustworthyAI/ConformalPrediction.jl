@@ -1,9 +1,4 @@
-
 # Classification
-
-``` @meta
-CurrentModule = ConformalPrediction
-```
 
 This tutorial is based in parts on this [blog post](https://www.paltmeyer.com/blog/posts/conformal-prediction/).
 
@@ -18,6 +13,7 @@ Random.seed!(123)
 
 # Data:
 X, y = make_moons(500; noise=0.15)
+X = MLJ.table(convert.(Float32, MLJ.matrix(X)))
 train, test = partition(eachindex(y), 0.8, shuffle=true)
 ```
 
@@ -33,7 +29,7 @@ Here we will use a specific case of CP called *split conformal prediction* which
 
 This is the default procedure used for classification and regression in [`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl).
 
-Now let’s take this to our 🌙 data. To illustrate the package functionality we will demonstrate the envisioned workflow. We first define our atomic machine learning model following standard [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/v0.18/) conventions. Using [`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl) we then wrap our atomic model in a conformal model using the standard API call `conformal_model(model::Supervised; kwargs...)`. To train and predict from our conformal model we can then rely on the conventional [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/v0.18/) procedure again. In particular, we wrap our conformal model in data (turning it into a machine) and then fit it on the training set. Finally, we use our machine to predict the label for a new test sample `Xtest`:
+Now let’s take this to our 🌙 data. To illustrate the package functionality we will demonstrate the envisioned workflow. We first define our atomic machine learning model following standard [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/v0.18/) conventions. Using [`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl) we then wrap our atomic model in a conformal model using the standard API call `conformal_model(model::Supervised; kwargs...)`. To train and predict from our conformal model we can then rely on the conventional [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/v0.18/) procedure again. In particular, we wrap our conformal model in data (turning it into a machine) and then fit it to the training data. Finally, we use our machine to predict the label for a new test sample `Xtest`:
 
 ``` julia
 # Model:
@@ -55,17 +51,14 @@ ŷ[1]
 
     import NearestNeighborModels ✔
 
-               UnivariateFinite{Multiclass{2}}      
-         ┌                                        ┐ 
-       0 ┤■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 0.94   
-         └                                        ┘ 
+    UnivariateFinite{Multiclass{2}}(0=>0.94)
 
 The final predictions are set-valued. While the softmax output remains unchanged for the `SimpleInductiveClassifier`, the size of the prediction set depends on the chosen coverage rate, (1−*α*).
 
 When specifying a coverage rate very close to one, the prediction set will typically include many (in some cases all) of the possible labels. Below, for example, both classes are included in the prediction set when setting the coverage rate equal to (1−*α*)=1.0. This is intuitive, since high coverage quite literally requires that the true label is covered by the prediction set with high probability.
 
 ``` julia
-conf_model = conformal_model(model; coverage=coverage)
+conf_model = conformal_model(model; coverage=coverage, method=:simple_inductive)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 
@@ -74,11 +67,7 @@ Xtest = (x1=[1],x2=[0])
 predict(mach, Xtest)[1]
 ```
 
-               UnivariateFinite{Multiclass{2}}      
-         ┌                                        ┐ 
-       0 ┤■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 0.5   
-       1 ┤■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 0.5   
-         └                                        ┘ 
+    UnivariateFinite{Multiclass{2}}(0=>0.5, 1=>0.5)
 
 Conversely, for low coverage rates, prediction sets can also be empty. For a choice of (1−*α*)=0.1, for example, the prediction set for our test sample is empty. This is a bit difficult to think about intuitively and I have not yet come across a satisfactory, intuitive interpretation.[2] When the prediction set is empty, the `predict` call currently returns `missing`:
 
@@ -109,7 +98,7 @@ The following chart shows the resulting predicted probabilities for *y* = 1 
 using Plots
 p_proba = contourf(mach.model, mach.fitresult, X, y)
 p_set_size = contourf(mach.model, mach.fitresult, X, y; plot_set_size=true)
-contourf(p_proba, p_set_size, size=(800,250))
+plot(p_proba, p_set_size, size=(800,250))
 ```
 
 ![](classification_files/figure-commonmark/cell-10-output-1.svg)
@@ -153,8 +142,6 @@ end
 gif(anim, joinpath(www_path,"classification.gif"), fps=1)
 ```
 
-The effect of the coverage rate on the conformal prediction set. Softmax probabilities are shown on the left. The size of the prediction set is shown on the right.
-
 ![](../www/classification.gif)
 
 ## Adaptive Sets
@@ -166,6 +153,13 @@ conf_model = conformal_model(model; coverage=cov_, method=:adaptive_inductive)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 results[:adaptive_inductive] = mach
+```
+
+``` julia
+using Plots
+p_proba = contourf(mach.model, mach.fitresult, X, y)
+p_set_size = contourf(mach.model, mach.fitresult, X, y; plot_set_size=true)
+plot(p_proba, p_set_size, size=(800,250))
 ```
 
 ## Evaluation
@@ -198,8 +192,8 @@ println("Empirical coverage for $(_mod): $(round(_eval.measurement[1], digits=3)
 println("SSC for $(_mod): $(round(_eval.measurement[2], digits=3))")
 ```
 
-    Empirical coverage for adaptive_inductive: 1.0
-    SSC for adaptive_inductive: 1.0
+    Empirical coverage for adaptive_inductive: 0.962
+    SSC for adaptive_inductive: 0.962
 
 ## References
 

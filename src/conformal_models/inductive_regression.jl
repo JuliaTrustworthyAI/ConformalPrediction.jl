@@ -9,9 +9,9 @@ end
 
 function SimpleInductiveRegressor(
     model::Supervised;
-    coverage::AbstractFloat = 0.95,
-    heuristic::Function = f(y, ŷ) = abs(y - ŷ),
-    train_ratio::AbstractFloat = 0.5,
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    train_ratio::AbstractFloat=0.5,
 )
     return SimpleInductiveRegressor(model, coverage, nothing, heuristic, train_ratio)
 end
@@ -62,7 +62,7 @@ where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration da
 """
 function MMI.predict(conf_model::SimpleInductiveRegressor, fitresult, Xnew)
     ŷ = reformat_mlj_prediction(
-        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...),
+        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     )
     v = conf_model.scores
     q̂ = StatsBase.quantile(v, conf_model.coverage)
