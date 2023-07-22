@@ -8,6 +8,7 @@ setup_docs = quote
     using ConformalPrediction
     using CSV
     using DataFrames
+    using Dates
     using Flux
     using MLJBase
     using MLJFlux
@@ -15,6 +16,7 @@ setup_docs = quote
     using Plots.PlotMeasures
     using Random
     using Serialization
+    using SharedArrays
     using StatsBase
     using Transformers
     using Transformers.TextEncoders

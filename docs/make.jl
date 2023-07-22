@@ -42,6 +42,7 @@ makedocs(;
             "Overview" => "how_to_guides/index.md",
             "How to Conformalize a Deep Image Classifier" => "how_to_guides/mnist.md",
             "How to Conformalize a Large Language Model" => "how_to_guides/llm.md",
+            "How to Conformalize a Time Series Model" => "how_to_guides/timeseries.md",
         ],
         "🤓 Explanation" => [
             "Overview" => "explanation/index.md",
