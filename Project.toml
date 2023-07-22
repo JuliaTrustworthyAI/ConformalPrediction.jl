@@ -22,7 +22,7 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 [compat]
 CategoricalArrays = "0.10"
 ChainRules = "1.49.0"
-Flux = "0.13.16"
+Flux = "0.13.16, 0.14"
 MLJBase = "0.20, 0.21"
 MLJEnsembles = "0.3.3"
 MLJFlux = "0.2.10"
