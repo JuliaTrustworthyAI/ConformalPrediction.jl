@@ -774,29 +774,29 @@ function MMI.predict(conf_model::JackknifePlusAbMinMaxRegressor, fitresult, Xnew
     return ŷ
 end
 
-
-
 # TimeSeries_Regressor_Ensemble_Batch_Prediction_Interval
 "Constructor for `TimeSeriesRegressorEnsemble`."
-mutable struct TimeSeriesRegressorEnsembleBatch{Model <: Supervised} <: ConformalInterval
+mutable struct TimeSeriesRegressorEnsembleBatch{Model<:Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
     heuristic::Function
     nsampling::Int
     sample_size::AbstractFloat
-    aggregate::Union{Symbol, String}
+    aggregate::Union{Symbol,String}
 end
 
 function TimeSeriesRegressorEnsembleBatch(
-    model::Supervised; 
-    coverage::AbstractFloat=0.95, 
-    heuristic::Function=f(y,ŷ)=abs(y-ŷ), 
-    nsampling::Int=50, 
+    model::Supervised;
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    nsampling::Int=50,
     sample_size::AbstractFloat=0.3,
-    aggregate::Union{Symbol, String}="mean"
+    aggregate::Union{Symbol,String}="mean",
 )
-    return TimeSeriesRegressorEnsembleBatch(model, coverage, nothing, heuristic, nsampling, sample_size, aggregate)
+    return TimeSeriesRegressorEnsembleBatch(
+        model, coverage, nothing, heuristic, nsampling, sample_size, aggregate
+    )
 end
 
 @doc raw"""
@@ -811,32 +811,37 @@ $ S_i^{\text{J+ab}} = s(X_i, Y_i) = h(agg(\hat\mu_{B_{K(-i)}}(X_i)), Y_i), \ i \
 where ``agg(\hat\mu_{B_{K(-i)}}(X_i))`` denotes the aggregate predictions, typically mean or median, for each ``X_i`` (with ``K_{-i}`` the bootstraps not containing ``X_i``). In other words, B models are trained on boostrapped sampling, the fitted models are then used to create aggregated prediction of out-of-sample ``X_i``. The corresponding nonconformity score is then computed by applying a heuristic uncertainty measure ``h(\cdot)`` to the fitted value ``agg(\hat\mu_{B_{K(-i)}}(X_i))`` and the true value ``Y_i``.
 """
 function MMI.fit(conf_model::TimeSeriesRegressorEnsembleBatch, verbosity, X, y)
-    
-    samples, fitresult, cache, report, scores = ([],[],[],[],[])
+    samples, fitresult, cache, report, scores = ([], [], [], [], [])
     nsampling = conf_model.nsampling
     sample_size = conf_model.sample_size
     aggregate = conf_model.aggregate
     # bootstrap size
-    T = size(y,1)
-    m = floor(Int, T* sample_size)
+    T = size(y, 1)
+    m = floor(Int, T * sample_size)
     for _ in 1:nsampling
         samplesᵢ = blockbootstrap(1:T, m)
-        yᵢ = y[samplesᵢ] 
+        yᵢ = y[samplesᵢ]
         Xᵢ = selectrows(X, samplesᵢ)
-        μ̂ᵢ, cacheᵢ, reportᵢ = MMI.fit(conf_model.model, 0, MMI.reformat(conf_model.model, Xᵢ, yᵢ)...)
+        μ̂ᵢ, cacheᵢ, reportᵢ = MMI.fit(
+            conf_model.model, 0, MMI.reformat(conf_model.model, Xᵢ, yᵢ)...
+        )
         push!(samples, samplesᵢ)
         push!(fitresult, μ̂ᵢ)
         push!(cache, cacheᵢ)
         push!(report, reportᵢ)
     end
     for t in 1:T
-        index_samples = indexin([v for v in samples if !(t in v) && any(t.>v)], samples)
+        index_samples = indexin([v for v in samples if !(t in v) && any(t .> v)], samples)
         selected_models = fitresult[index_samples]
         Xₜ = selectrows(X, t)
         yₜ = y[t]
-        ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ₜ, MMI.reformat(conf_model.model, Xₜ)...)) for μ̂₋ₜ in selected_models] 
+        ŷ = [
+            reformat_mlj_prediction(
+                MMI.predict(conf_model.model, μ̂₋ₜ, MMI.reformat(conf_model.model, Xₜ)...)
+            ) for μ̂₋ₜ in selected_models
+        ]
         ŷₜ = _aggregate(ŷ, aggregate)
-        push!(scores,@.(conf_model.heuristic(yₜ, ŷₜ))...)
+        push!(scores, @.(conf_model.heuristic(yₜ, ŷₜ))...)
     end
     scores = filter(!isnan, scores)
     conf_model.scores = scores
@@ -849,13 +854,19 @@ For the [`TimeSeriesRegressorEnsembleBatch`](@ref) Non-conformity scores are upd
 determines how many points in Non-conformity scores will be discarded.
 
 """
-function partial_fit(conf_model::TimeSeriesRegressorEnsembleBatch, fitresult, X, y, shift_size= 0)
-    ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ₜ, MMI.reformat(conf_model.model, X)...)) for μ̂₋ₜ in fitresult] 
+function partial_fit(
+    conf_model::TimeSeriesRegressorEnsembleBatch, fitresult, X, y, shift_size=0
+)
+    ŷ = [
+        reformat_mlj_prediction(
+            MMI.predict(conf_model.model, μ̂₋ₜ, MMI.reformat(conf_model.model, X)...)
+        ) for μ̂₋ₜ in fitresult
+    ]
     aggregate = conf_model.aggregate
     ŷₜ = _aggregate(ŷ, aggregate)
-    push!(conf_model.scores,@.(conf_model.heuristic(y, ŷₜ))...)
+    push!(conf_model.scores, @.(conf_model.heuristic(y, ŷₜ))...)
     conf_model.scores = filter(!isnan, conf_model.scores)
-    conf_model.scores = conf_model.scores[(shift_size+1):length( conf_model.scores)]
+    conf_model.scores = conf_model.scores[(shift_size + 1):length(conf_model.scores)]
     return conf_model.scores
 end
 
@@ -874,7 +885,11 @@ where ``\hat\mu_{agg(-i)}`` denotes the aggregated models ``\hat\mu_{1}, ...., \
 function MMI.predict(conf_model::TimeSeriesRegressorEnsembleBatch, fitresult, Xnew)
 
     # Get all bootstrapped predictions for each Xnew:
-    ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)) for μ̂₋ᵢ in fitresult]
+    ŷ = [
+        reformat_mlj_prediction(
+            MMI.predict(conf_model.model, μ̂₋ᵢ, MMI.reformat(conf_model.model, Xnew)...)
+        ) for μ̂₋ᵢ in fitresult
+    ]
     # Applying aggregation function on bootstrapped predictions across columns for each Xnew across rows:
     aggregate = conf_model.aggregate
     ŷ = _aggregate(ŷ, aggregate)

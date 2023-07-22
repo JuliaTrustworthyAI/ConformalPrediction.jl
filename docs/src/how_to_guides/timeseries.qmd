@@ -14,12 +14,12 @@ using Random
 Random.seed!(2022)
 ```
 
-Time series data is prevalent across various domains, such as finance, weather forecasting, energy, and supply chains. However, accurately quantifying uncertainty in time series predictions is often a complex task due to inherent temporal dependencies, non-stationarity, and noise in the data. In this context, Conformal Prediction offers a valuable solution by providing prediction intervals which offer a sound way to quantify uncertainty. This how-to guide demonstrate how you can conformalize a time series data using Ensemble Batch Prediction Intervals (EnbPI) [@chen2021conformal]. This method enables the updating of prediction intervals whenever new observations are available. This dynamic update process allows the method to adapt to changing conditions, accounting for the potential degradation of predictions or the increase in noise levels in the data.
+Time series data is prevalent across various domains, such as finance, weather forecasting, energy, and supply chains. However, accurately quantifying uncertainty in time series predictions is often a complex task due to inherent temporal dependencies, non-stationarity, and noise in the data. In this context, Conformal Prediction offers a valuable solution by providing prediction intervals which offer a sound way to quantify uncertainty. This how-to guide demonstrates how you can conformalize a time series data using Ensemble Batch Prediction Intervals (EnbPI) [@chen2021conformal]. This method enables the updating of prediction intervals whenever new observations are available. This dynamic update process allows the method to adapt to changing conditions, accounting for the potential degradation of predictions or the increase in noise levels in the data.
 
 
 ## The Task at Hand 
 
-Inspired by [MAPIE](https://mapie.readthedocs.io/en/latest/examples_regression/4-tutorials/plot_ts-tutorial.html), we employ the Victoria electricity demand dataset. This dataset contains hourly electriciry demand (in GW) for the Victoria state in Australia, along with corresponding temperature data (in Celsius degrees). 
+Inspired by [MAPIE](https://mapie.readthedocs.io/en/latest/examples_regression/4-tutorials/plot_ts-tutorial.html), we employ the Victoria electricity demand dataset. This dataset contains hourly electricity demand (in GW) for Victoria state in Australia, along with corresponding temperature data (in Celsius degrees). 
 
 ```{julia}
 using CSV, DataFrames
@@ -30,7 +30,8 @@ df = CSV.read("./dev/artifacts/electricity_demand.csv", DataFrame)
 
 In this how-to guide, we only focus on data, time and lag features.
 
-### Date and Time related features
+### Date and Time-related features
+
 We create temporal features out of the date and hour:
 
 ```{julia}
@@ -41,7 +42,7 @@ df.Weekday = Dates.dayofweek.(df.Datetime)
 df.hour = Dates.hour.(df.Datetime) 
 ```
 
-Additionally, to simulate sudden changes caused by unforeseen events, such as blackouts or lockdowns, we deliberately reduce the electricity demand by 2GW on February 22nd onward. 
+Additionally, to simulate sudden changes caused by unforeseen events, such as blackouts or lockdowns, we deliberately reduce the electricity demand by 2GW from February 22nd onward. 
 
 ```{julia}
 condition = df.Datetime .>= Date("2014-02-22")
@@ -114,7 +115,7 @@ plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime,
 ```
 
 
-We can use partial_fit method in EnbPI implementation in ConformalPrediction in order to adjust prediction intervals to sudden change points on test sets that have not been seen by the model during training. In the below experiment, sample_size indicates the batch of new observations. You can decide if you want to upate residuals by sample_size or update and remove first n residuals (shift_size = n). The latter will allow to remove early residuals that won't have positive impact on the current observations. 
+We can use `partial_fit` method in EnbPI implementation in ConformalPrediction in order to adjust prediction intervals to sudden change points on test sets that have not been seen by the model during training. In the below experiment, sample_size indicates the batch of new observations. You can decide if you want to update residuals by sample_size or update and remove first $n$ residuals (shift_size = n). The latter will allow to remove early residuals that will not have a positive impact on the current observations. 
 
 ```{julia}
 
@@ -154,4 +155,4 @@ plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime,
 
 In time series problems, unexpected incidents can lead to sudden changes, and such scenarios are highly probable. As illustrated earlier, the model's training data lacks information about these change points, making it unable to anticipate them. The top figure demonstrates that when residuals are not updated, the prediction intervals solely rely on the distribution of residuals from the training set. Consequently, these intervals fail to encompass the true observations after the change point, resulting in a sudden drop in coverage.
 
-However, by partially updating the residuals, the method becomes adept at capturing the increasing uncertainties in model predictions. It is important to note that the changes in uncertainty occurs approximately one day after the change point. This delay is attributed to the requirement of having a sufficient number of new residuals to alter the quantiles obtained from the residuals distribution.
+However, by partially updating the residuals, the method becomes adept at capturing the increasing uncertainties in model predictions. It is important to note that the changes in uncertainty occur approximately one day after the change point. This delay is attributed to the requirement of having a sufficient number of new residuals to alter the quantiles obtained from the residual distribution.
