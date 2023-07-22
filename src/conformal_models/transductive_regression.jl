@@ -849,7 +849,7 @@ For the [`TimeSeriesRegressorEnsembleBatch`](@ref) Non-conformity scores are upd
 determines how many points in Non-conformity scores will be discarded.
 
 """
-function partial_fit(conf_model::TimeSeriesRegressorEnsembleBatch, fitresult, X, y, shift_size)
+function partial_fit(conf_model::TimeSeriesRegressorEnsembleBatch, fitresult, X, y, shift_size= 0)
     ŷ = [reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂₋ₜ, MMI.reformat(conf_model.model, X)...)) for μ̂₋ₜ in fitresult] 
     aggregate = conf_model.aggregate
     ŷₜ = _aggregate(ŷ, aggregate)
