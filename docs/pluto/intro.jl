@@ -7,7 +7,14 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local iv = try
+            Base.loaded_modules[Base.PkgId(
+                Base.UUID("6e696c72-6542-2067-7265-42206c756150"),
+                "AbstractPlutoDingetjes",
+            )].Bonds.initial_value
+        catch
+            b -> missing
+        end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
@@ -17,8 +24,8 @@ end
 # ╔═╡ aad62ef1-4136-4732-a9e6-3746524978ee
 # ╠═╡ show_logs = false
 begin
-	using Pkg
-	Pkg.develop(url="https://github.com/JuliaTrustworthyAI/ConformalPrediction.jl")
+    using Pkg
+    Pkg.develop(; url="https://github.com/JuliaTrustworthyAI/ConformalPrediction.jl")
     using ConformalPrediction
     using DecisionTree: DecisionTreeRegressor
     using Distributions
