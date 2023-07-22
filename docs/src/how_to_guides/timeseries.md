@@ -2,7 +2,7 @@
 
 Time series data is prevalent across various domains, such as finance, weather forecasting, energy, and supply chains. However, accurately quantifying uncertainty in time series predictions is often a complex task due to inherent temporal dependencies, non-stationarity, and noise in the data. In this context, Conformal Prediction offers a valuable solution by providing prediction intervals which offer a sound way to quantify uncertainty.
 
-This how-to guide demonstrates how you can conformalize a time series data using Ensemble Batch Prediction Intervals (EnbPI) (Xu and Xie 2022). This method enables the updating of prediction intervals whenever new observations are available. This dynamic update process allows the method to adapt to changing conditions, accounting for the potential degradation of predictions or the increase in noise levels in the data.
+This how-to guide demonstrates how you can conformalize a time series model using Ensemble Batch Prediction Intervals (EnbPI) (Xu and Xie 2022). This method enables the updating of prediction intervals whenever new observations are available. This dynamic update process allows the method to adapt to changing conditions, accounting for the potential degradation of predictions or the increase in noise levels in the data.
 
 ## The Task at Hand
 
@@ -15,7 +15,7 @@ df = CSV.read("./dev/artifacts/electricity_demand.csv", DataFrame)
 
 ## Feature engineering
 
-In this how-to guide, we only focus on data, time and lag features.
+In this how-to guide, we only focus on date, time and lag features.
 
 ### Date and Time-related features
 
@@ -51,8 +51,10 @@ df_dropped_missing
 
 ## Train-test split
 
+As usual, we split the data into train and test sets. We use the first 90% of the data for training and the remaining 10% for testing.
+
 ``` julia
-features_cols = select(df_dropped_missing, Not([:Datetime, :Demand]))
+features_cols = DataFrames.select(df_dropped_missing, Not([:Datetime, :Demand]))
 X = Matrix(features_cols)
 y = Matrix(df_dropped_missing[:, [:Demand]])
 split_index = floor(Int, 0.9 * size(y , 1)) 
@@ -65,15 +67,17 @@ y_test = y[split_index+1 : size(y,1), :]
 
 ## Loading model using MLJ interface
 
+As our baseline model, we use a boosted tree regressor:
+
 ``` julia
 using MLJ
 EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees verbosity=0
-model =  EvoTreeRegressor(nrounds =100, max_depth=10, rng=123)
+model = EvoTreeRegressor(nrounds =100, max_depth=10, rng=123)
 ```
 
 ## Conformal time series
 
-We start off with using EnbPI without updating training set residuals to build prediction intervals:
+Next, we conformalize the model using EnbPI. First, we will proceed without updating training set residuals to build prediction intervals. The result is shown in the following figure:
 
 ``` julia
 using ConformalPrediction
@@ -83,7 +87,7 @@ mach = machine(conf_model, X_train, y_train)
 train = [1:split_index;]
 fit!(mach, rows=train)
 
-y_pred_interval = predict(conf_model, mach.fitresult, X_test)
+y_pred_interval = MLJ.predict(conf_model, mach.fitresult, X_test)
 lb = [ minimum(tuple_data) for tuple_data in y_pred_interval]
 ub = [ maximum(tuple_data) for tuple_data in y_pred_interval]
 y_pred = [mean(tuple_data) for tuple_data in y_pred_interval]
@@ -93,6 +97,8 @@ y_pred = [mean(tuple_data) for tuple_data in y_pred_interval]
 
 We can use `partial_fit` method in EnbPI implementation in ConformalPrediction in order to adjust prediction intervals to sudden change points on test sets that have not been seen by the model during training. In the below experiment, sample_size indicates the batch of new observations. You can decide if you want to update residuals by sample_size or update and remove first *n* residuals (shift_size = n). The latter will allow to remove early residuals that will not have a positive impact on the current observations.
 
+The chart below compares the results to the previous experiment without updating residuals:
+
 ``` julia
 sample_size = 10
 shift_size = 10
@@ -100,10 +106,10 @@ last_index = size(X_test , 1)
 lb_updated , ub_updated = ([], [])
 for step in 1:sample_size:last_index
     if last_index - step < sample_size
-        y_interval = predict(conf_model, mach.fitresult, X_test[step:last_index , :])
+        y_interval = MLJ.predict(conf_model, mach.fitresult, X_test[step:last_index , :])
         partial_fit(mach.model , mach.fitresult, X_test[step:last_index , :], y_test[step:last_index , :], shift_size)
     else
-        y_interval = predict(conf_model, mach.fitresult, X_test[step:step+sample_size-1 , :])
+        y_interval = MLJ.predict(conf_model, mach.fitresult, X_test[step:step+sample_size-1 , :])
         partial_fit(mach.model , mach.fitresult, X_test[step:step+sample_size-1 , :], y_test[step:step+sample_size-1 , :], shift_size)        
     end 
     lb_updatedᵢ= [ minimum(tuple_data) for tuple_data in y_interval]
