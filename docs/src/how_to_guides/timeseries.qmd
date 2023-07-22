@@ -148,7 +148,7 @@ p2 = plot(df_dropped_missing[cutoff_point:split_index, [:Datetime]].Datetime, y_
 plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime, y_test, label="test", color=:orange)
 plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime ,y_pred, label ="prediction", color=:green)
 plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime,
- lb_updated, fillrange = ub_updated, fillalpha = 0.2, label = "PI with adjusted reiduals", color=:green, linewidth=0)
+ lb_updated, fillrange = ub_updated, fillalpha = 0.2, label = "PI with adjusted residuals", color=:green, linewidth=0)
 
  plot(p1,p2, layout= (2,1))
 
