@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.22
+# v0.19.27
 
 using Markdown
 using InteractiveUtils
@@ -22,7 +22,10 @@ macro bind(def, element)
 end
 
 # ╔═╡ aad62ef1-4136-4732-a9e6-3746524978ee
+# ╠═╡ show_logs = false
 begin
+    using Pkg
+    Pkg.develop(; url="https://github.com/JuliaTrustworthyAI/ConformalPrediction.jl")
     using ConformalPrediction
     using DecisionTree: DecisionTreeRegressor
     using Distributions
@@ -35,9 +38,6 @@ begin
     using Plots
     using PlutoUI
 end;
-
-# ╔═╡ 8a2e7eb1-3a7a-49b0-83db-09966e8e891a
-pwd()
 
 # ╔═╡ bc0d7575-dabd-472d-a0ce-db69d242ced8
 md"""
@@ -368,7 +368,6 @@ Enjoy!
 """
 
 # ╔═╡ Cell order:
-# ╠═8a2e7eb1-3a7a-49b0-83db-09966e8e891a
 # ╟─bc0d7575-dabd-472d-a0ce-db69d242ced8
 # ╠═aad62ef1-4136-4732-a9e6-3746524978ee
 # ╟─55a7c16b-a526-41d9-9d73-a0591ad006ce
@@ -404,7 +403,7 @@ Enjoy!
 # ╟─ad3e290b-c1f5-4008-81c7-a1a56ab10563
 # ╟─b3a88859-0442-41ff-bfea-313437042830
 # ╟─98cc9ea7-444d-4449-ab30-e02bfc5b5791
-# ╟─d1140af9-608a-4669-9595-aee72ffbaa46
+# ╠═d1140af9-608a-4669-9595-aee72ffbaa46
 # ╟─f742440b-258e-488a-9c8b-c9267cf1fb99
 # ╟─f7b2296f-919f-4870-aac1-8e36dd694422
 # ╟─74444c01-1a0a-47a7-9b14-749946614f07

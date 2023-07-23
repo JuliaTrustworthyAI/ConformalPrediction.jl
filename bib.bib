@@ -1,3 +1,18 @@
+@TechReport{xu2022conformal,
+  author      = {Xu, Chen and Xie, Yao},
+  date        = {2022-06},
+  institution = {arXiv},
+  title       = {Conformal prediction set for time-series},
+  doi         = {10.48550/arXiv.2206.07851},
+  note        = {arXiv:2206.07851 [cs, stat] type: article},
+  url         = {http://arxiv.org/abs/2206.07851},
+  urldate     = {2023-07-22},
+  abstract    = {When building either prediction intervals for regression (with real-valued response) or prediction sets for classification (with categorical responses), uncertainty quantification is essential to studying complex machine learning methods. In this paper, we develop Ensemble Regularized Adaptive Prediction Set (ERAPS) to construct prediction sets for time-series (with categorical responses), based on the prior work of [Xu and Xie, 2021]. In particular, we allow unknown dependencies to exist within features and responses that arrive in sequence. Method-wise, ERAPS is a distribution-free and ensemble-based framework that is applicable for arbitrary classifiers. Theoretically, we bound the coverage gap without assuming data exchangeability and show asymptotic set convergence. Empirically, we demonstrate valid marginal and conditional coverage by ERAPS, which also tends to yield smaller prediction sets than competing methods.},
+  annotation  = {Comment: Strongly accepted by the Workshop on Distribution-Free Uncertainty Quantification at ICML 2022},
+  file        = {arXiv Fulltext PDF:https\://arxiv.org/pdf/2206.07851.pdf:application/pdf},
+  keywords    = {Statistics - Machine Learning, Computer Science - Machine Learning, Statistics - Methodology},
+}
+
 @TechReport{kingma2017adam,
   author      = {Kingma, Diederik P. and Ba, Jimmy},
   date        = {2017-01},
@@ -3030,6 +3045,21 @@
   annotation  = {Comment: Reduction ratio formula corrected. Removed incorrect claim about geodesics in footnote},
   file        = {arXiv Fulltext PDF:https\://arxiv.org/pdf/1503.05671.pdf:application/pdf},
   keywords    = {Computer Science - Machine Learning, Computer Science - Neural and Evolutionary Computing, Statistics - Machine Learning},
+}
+
+@TechReport{fong2021conformal,
+  author      = {Fong, Edwin and Holmes, Chris},
+  date        = {2021-06},
+  institution = {arXiv},
+  title       = {Conformal {Bayesian} {Computation}},
+  doi         = {10.48550/arXiv.2106.06137},
+  note        = {arXiv:2106.06137 [stat] type: article},
+  url         = {http://arxiv.org/abs/2106.06137},
+  urldate     = {2023-07-19},
+  abstract    = {We develop scalable methods for producing conformal Bayesian predictive intervals with finite sample calibration guarantees. Bayesian posterior predictive distributions, \$p(y {\textbackslash}mid x)\$, characterize subjective beliefs on outcomes of interest, \$y\$, conditional on predictors, \$x\$. Bayesian prediction is well-calibrated when the model is true, but the predictive intervals may exhibit poor empirical coverage when the model is misspecified, under the so called \$\{{\textbackslash}cal\{M\}\}\$-open perspective. In contrast, conformal inference provides finite sample frequentist guarantees on predictive confidence intervals without the requirement of model fidelity. Using 'add-one-in' importance sampling, we show that conformal Bayesian predictive intervals are efficiently obtained from re-weighted posterior samples of model parameters. Our approach contrasts with existing conformal methods that require expensive refitting of models or data-splitting to achieve computational efficiency. We demonstrate the utility on a range of examples including extensions to partially exchangeable settings such as hierarchical models.},
+  annotation  = {Comment: 19 pages, 4 figures, 12 tables; added references and fixed typos},
+  file        = {arXiv Fulltext PDF:https\://arxiv.org/pdf/2106.06137.pdf:application/pdf},
+  keywords    = {Statistics - Methodology, Statistics - Computation},
 }
 
 @Comment{jabref-meta: databaseType:biblatex;}
