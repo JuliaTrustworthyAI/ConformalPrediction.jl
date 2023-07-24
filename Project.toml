@@ -1,7 +1,7 @@
 name = "ConformalPrediction"
 uuid = "98bfc277-1877-43dc-819b-a3e38c30242f"
 authors = ["Patrick Altmeyer"]
-version = "0.1.7"
+version = "0.1.8"
 
 [deps]
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
