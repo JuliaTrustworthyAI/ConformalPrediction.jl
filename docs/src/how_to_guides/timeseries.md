@@ -2,7 +2,7 @@
 
 Time series data is prevalent across various domains, such as finance, weather forecasting, energy, and supply chains. However, accurately quantifying uncertainty in time series predictions is often a complex task due to inherent temporal dependencies, non-stationarity, and noise in the data. In this context, Conformal Prediction offers a valuable solution by providing prediction intervals which offer a sound way to quantify uncertainty.
 
-This how-to guide demonstrates how you can conformalize a time series model using Ensemble Batch Prediction Intervals (EnbPI) (Xu and Xie 2022). This method enables the updating of prediction intervals whenever new observations are available. This dynamic update process allows the method to adapt to changing conditions, accounting for the potential degradation of predictions or the increase in noise levels in the data.
+This how-to guide demonstrates how you can conformalize a time series model using Ensemble Batch Prediction Intervals (EnbPI) (Xu and Xie 2021). This method enables the updating of prediction intervals whenever new observations are available. This dynamic update process allows the method to adapt to changing conditions, accounting for the potential degradation of predictions or the increase in noise levels in the data.
 
 ## The Task at Hand
 
@@ -131,4 +131,4 @@ However, by partially updating the residuals, the method becomes adept at captur
 
 ## References
 
-Xu, Chen, and Yao Xie. 2022. “Conformal Prediction Set for Time-Series.” arXiv. <https://doi.org/10.48550/arXiv.2206.07851>.
+Xu, Chen, and Yao Xie. 2021. “Conformal Prediction Interval for Dynamic Time-Series.” In, 11559–69. PMLR. <https://proceedings.mlr.press/v139/xu21h.html>.
