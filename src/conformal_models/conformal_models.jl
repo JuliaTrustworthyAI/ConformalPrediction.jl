@@ -113,6 +113,7 @@ const tested_atomic_models = Dict(
         :nearest_neighbor => :(@load KNNRegressor pkg = NearestNeighborModels),
         # :light_gbm => :(@load LGBMRegressor pkg = LightGBM),
         # :neural_network => :(@load NeuralNetworkRegressor pkg = MLJFlux),
+        # :symbolic_regression => (@load SRRegressor pkg = SymbolicRegression),
     ),
     :classification => Dict(
         :logistic => :(@load LogisticClassifier pkg = MLJLinearModels),

@@ -84,18 +84,22 @@ y = vec(y)
 train, test = partition(eachindex(y), 0.4, 0.4, shuffle=true)
 ```
 
-We then import a decision-tree based regressor ([`EvoTrees.jl`](https://github.com/Evovest/EvoTrees.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
+We then import Symbolic Regressor ([`SymbolicRegression.jl`](https://github.com/MilesCranmer/SymbolicRegression.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
 
 ``` julia
-EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
-model = EvoTreeRegressor(rounds=100) 
+regressor = @load SRRegressor pkg=SymbolicRegression
+model = regressor(
+    niterations=50,
+    binary_operators=[+, -, *],
+    unary_operators=[sin],
+)
 ```
 
 To turn our conventional model into a conformal model, we just need to declare it as such by using `conformal_model` wrapper function. The generated conformal model instance can wrapped in data to create a *machine*. Finally, we proceed by fitting the machine on training data using the generic `fit!` method:
 
 ``` julia
 using ConformalPrediction
-conf_model = conformal_model(model; method=:jackknife_plus)
+conf_model = conformal_model(model)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 ```
@@ -111,20 +115,20 @@ ŷ[1:show_first]
 ```
 
     5-element Vector{Tuple{Float64, Float64}}:
-     (-0.31710111123009466, 1.814908621823348)
-     (0.4117909000076131, 2.4849160014859484)
-     (0.32534539961817965, 2.422507599232612)
-     (0.05383464132878396, 2.1363938330880448)
-     (-0.19790350122188927, 1.914494222889709)
+     (-0.40997718991694765, 1.449009293726001)
+     (0.8484810430118421, 2.7074675266547907)
+     (0.547852151594671, 2.4068386352376194)
+     (-0.022697652913589494, 1.8362888307293592)
+     (0.07435130847990101, 1.9333377921228496)
 
 For simple models like this one, we can call a custom `Plots` recipe on our instance, fit result and data to generate the chart below:
 
 ``` julia
 using Plots
 zoom = 0
-plt = plot(mach.model, mach.fitresult, Xtest, ytest, zoom=zoom, observed_lab="Test points")
+plt = plot(mach.model, mach.fitresult, Xtest, ytest, lw=5, zoom=zoom, observed_lab="Test points")
 xrange = range(-xmax+zoom,xmax-zoom,length=N)
-plot!(plt, xrange, @.(fun(xrange)), lw=1, ls=:dash, colour=:black, label="Ground truth")
+plot!(plt, xrange, @.(fun(xrange)), lw=2, ls=:dash, colour=:darkorange, label="Ground truth")
 ```
 
 ![](index_files/figure-commonmark/cell-7-output-1.svg)
@@ -138,6 +142,8 @@ println("Empirical coverage: $(round(_eval.measurement[1], digits=3))")
 println("SSC: $(round(_eval.measurement[2], digits=3))")
 ```
 
+    Started!
+
     PerformanceEvaluation object with these fields:
       measure, operation, measurement, per_fold,
       per_observation, fitted_params_per_fold,
@@ -146,13 +152,10 @@ println("SSC: $(round(_eval.measurement[2], digits=3))")
     ┌──────────────────────────────────────────────┬───────────┬─────────────┬──────
     │ measure                                      │ operation │ measurement │ 1.9 ⋯
     ├──────────────────────────────────────────────┼───────────┼─────────────┼──────
-    │ ConformalPrediction.emp_coverage             │ predict   │ 0.947       │ 0.0 ⋯
-    │ ConformalPrediction.size_stratified_coverage │ predict   │ 0.904       │ 0.0 ⋯
+    │ ConformalPrediction.emp_coverage             │ predict   │ 0.945       │ 0.0 ⋯
+    │ ConformalPrediction.size_stratified_coverage │ predict   │ 0.945       │ 0.0 ⋯
     └──────────────────────────────────────────────┴───────────┴─────────────┴──────
                                                                    2 columns omitted
-
-    Empirical coverage: 0.947
-    SSC: 0.904
 
 ## 📚 Read on
 

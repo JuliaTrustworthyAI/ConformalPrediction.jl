@@ -86,18 +86,22 @@ y = vec(y)
 train, test = partition(eachindex(y), 0.4, 0.4, shuffle=true)
 ```
 
-We then import a decision-tree based regressor ([`EvoTrees.jl`](https://github.com/Evovest/EvoTrees.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
+We then import Symbolic Regressor ([`SymbolicRegression.jl`](https://github.com/MilesCranmer/SymbolicRegression.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
 
 ```{julia}
-EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
-model = EvoTreeRegressor(rounds=100) 
+regressor = @load SRRegressor pkg=SymbolicRegression
+model = regressor(
+    niterations=50,
+    binary_operators=[+, -, *],
+    unary_operators=[sin],
+)
 ```
 
 To turn our conventional model into a conformal model, we just need to declare it as such by using `conformal_model` wrapper function. The generated conformal model instance can wrapped in data to create a *machine*. Finally, we proceed by fitting the machine on training data using the generic `fit!` method:
 
 ```{julia}
 using ConformalPrediction
-conf_model = conformal_model(model; method=:jackknife_plus)
+conf_model = conformal_model(model)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 ```
@@ -120,9 +124,9 @@ For simple models like this one, we can call a custom `Plots` recipe on our inst
 
 using Plots
 zoom = 0
-plt = plot(mach.model, mach.fitresult, Xtest, ytest, zoom=zoom, observed_lab="Test points")
+plt = plot(mach.model, mach.fitresult, Xtest, ytest, lw=5, zoom=zoom, observed_lab="Test points")
 xrange = range(-xmax+zoom,xmax-zoom,length=N)
-plot!(plt, xrange, @.(fun(xrange)), lw=1, ls=:dash, colour=:black, label="Ground truth")
+plot!(plt, xrange, @.(fun(xrange)), lw=2, ls=:dash, colour=:darkorange, label="Ground truth")
 ```
 
 We can evaluate the conformal model using the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) workflow with a custom performance measure. You can use either `emp_coverage` for the overall empirical coverage (correctness) or `ssc` for the size-stratified coverage rate (adaptiveness).
