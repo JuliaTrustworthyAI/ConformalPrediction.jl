@@ -21,6 +21,7 @@ begin
     using Distributions
     using EvoTrees: EvoTreeRegressor
     using MLJBase
+	using MLJFlux: NeuralNetworkRegressor
     using MLJLinearModels
     using MLJModels
     using NearestNeighborModels: KNNRegressor
@@ -144,15 +145,21 @@ To start with, let's split our data into a training and test set:
 # ╔═╡ 3a4fe2bc-387c-4d7e-b45f-292075a01bcd
 train, test = partition(eachindex(y), 0.4, 0.4; shuffle=true);
 
+# ╔═╡ 698b1429-f478-45ac-8799-d73f6a0ab869
+begin
+	model_dict = tested_atomic_models[:regression]
+	model_dict[:neural_network] = :(@load NeuralNetworkRegressor pkg = MLJFlux)
+end;
+
 # ╔═╡ a34b8c07-08e0-4a0e-a0f9-8054b41b038b
 md"Now let's choose a model for our regression task:"
 
 # ╔═╡ 6d410eac-bbbf-4a69-9029-b2d603357a7c
-@bind model_name Select(collect(keys(tested_atomic_models[:regression])))
+@bind model_name Select(collect(keys(model_dict)))
 
 # ╔═╡ 292978a2-1941-44d3-af5b-13456d16b656
 begin
-    Model = eval(tested_atomic_models[:regression][model_name])
+    Model = eval(model_dict[model_name])
     model = Model()
 end;
 
@@ -256,11 +263,15 @@ To verify the marginal coverage property empirically we can look at the empirica
 
 # ╔═╡ d1140af9-608a-4669-9595-aee72ffbaa46
 begin
+	holdout = Holdout(fraction_train=0.8)
     model_evaluation = evaluate!(
-        _mach; operation=MLJBase.predict, measure=emp_coverage, verbosity=0
+        _mach; 
+		operation=MLJBase.predict, 
+		measure=emp_coverage, 
+		verbosity=0,
+		resampling=holdout,
     )
     println("Empirical coverage: $(round(model_evaluation.measurement[1], digits=3))")
-    println("Coverage per fold: $(round.(model_evaluation.per_fold[1], digits=3))")
 end
 
 # ╔═╡ f742440b-258e-488a-9c8b-c9267cf1fb99
@@ -297,6 +308,25 @@ Inductive Conformal Prediction (also referred to as Split Conformal Prediction) 
 4. For the given coverage ratio compute the corresponding quantile of the empirical distribution of nonconformity scores.
 5. For the given quantile and test sample $X_{\text{test}}$, form the corresponding conformal prediction set like so: $C(X_{\text{test}})=\{y:s(X_{\text{test}},y) \le \hat{q}\}$
 """
+
+# ╔═╡ c28ae42d-b177-4d73-9efd-6279dd46f214
+md"""
+## 😄 More Methods
+
+Below you can test out other available regression methods.
+"""
+
+# ╔═╡ 2a51b6a0-feca-487d-8060-69d09b722421
+@bind conf_model_name Select(collect(keys(available_models[:regression][:transductive])))
+
+# ╔═╡ 45212d6a-2a09-4a6e-aa39-16cc659d1e18
+begin
+	new_conf_model = conformal_model(model; method=conf_model_name)
+	new_mach = machine(new_conf_model, X, y)
+	MLJBase.fit!(new_mach; rows=train, verbosity=0)
+    plot(new_mach.model, new_mach.fitresult, Xtest, ytest; zoom=0, observed_lab="Test points")
+    plot!(xrange, @.(f(xrange)); lw=2, ls=:dash, colour=:black, label="Ground truth")
+end
 
 # ╔═╡ 74444c01-1a0a-47a7-9b14-749946614f07
 md"""
@@ -363,6 +393,7 @@ ConformalPrediction = "98bfc277-1877-43dc-819b-a3e38c30242f"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 EvoTrees = "f6006082-12f8-11e9-0c9c-0d5d367ab1e5"
 MLJBase = "a7f614a8-145f-11e9-1d2a-a57a1082229d"
+MLJFlux = "094fc8d1-fd35-5302-93ea-dabda2abf845"
 MLJLinearModels = "6ee0df7b-362f-4a72-a706-9e79364fb692"
 MLJModels = "d491faf4-2d78-11e9-2867-c94bc002c0b7"
 NearestNeighborModels = "636a865e-7cf4-491e-846c-de09b730eb36"
@@ -374,6 +405,7 @@ ConformalPrediction = "~0.1.8"
 Distributions = "~0.25.98"
 EvoTrees = "~0.15.0"
 MLJBase = "~0.21.12"
+MLJFlux = "~0.2.10"
 MLJLinearModels = "~0.9.2"
 MLJModels = "~0.16.9"
 NearestNeighborModels = "~0.2.3"
@@ -387,7 +419,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.2"
 manifest_format = "2.0"
-project_hash = "b5bbc49a8a1d90badc6b1c57ae69f56a1fbe6f56"
+project_hash = "2eee1c43662a9061f1d47d6301537405e8423daa"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -2319,6 +2351,7 @@ version = "1.4.1+0"
 # ╟─2fe1065e-d1b8-4e3c-930c-654f50349222
 # ╟─787f7ee9-2247-4a1b-9519-51394933428c
 # ╠═3a4fe2bc-387c-4d7e-b45f-292075a01bcd
+# ╟─698b1429-f478-45ac-8799-d73f6a0ab869
 # ╟─a34b8c07-08e0-4a0e-a0f9-8054b41b038b
 # ╟─6d410eac-bbbf-4a69-9029-b2d603357a7c
 # ╟─292978a2-1941-44d3-af5b-13456d16b656
@@ -2337,12 +2370,15 @@ version = "1.4.1+0"
 # ╠═6b574688-ff3c-441a-a616-169685731883
 # ╟─da6e8f90-a3f9-4d06-86ab-b0f6705bbf54
 # ╟─797746e9-235f-4fb1-8cdb-9be295b54bbe
-# ╟─ad3e290b-c1f5-4008-81c7-a1a56ab10563
+# ╠═ad3e290b-c1f5-4008-81c7-a1a56ab10563
 # ╟─b3a88859-0442-41ff-bfea-313437042830
 # ╟─98cc9ea7-444d-4449-ab30-e02bfc5b5791
 # ╠═d1140af9-608a-4669-9595-aee72ffbaa46
 # ╟─f742440b-258e-488a-9c8b-c9267cf1fb99
 # ╟─f7b2296f-919f-4870-aac1-8e36dd694422
+# ╟─c28ae42d-b177-4d73-9efd-6279dd46f214
+# ╟─2a51b6a0-feca-487d-8060-69d09b722421
+# ╟─45212d6a-2a09-4a6e-aa39-16cc659d1e18
 # ╟─74444c01-1a0a-47a7-9b14-749946614f07
 # ╟─824bd383-2fcb-4888-8ad1-260c85333edf
 # ╟─072cc72d-20a2-4ee9-954c-7ea70dfb8eea
