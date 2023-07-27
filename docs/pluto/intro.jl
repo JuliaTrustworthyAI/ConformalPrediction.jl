@@ -256,14 +256,18 @@ I don't expect you to believe me that the marginal coverage property really hold
 md"""
 ## 🧐 Evaluation
 
-To verify the marginal coverage property empirically we can look at the empirical coverage rate of our conformal predictor (see Section 3 of the [tutorial](https://arxiv.org/pdf/2107.07511.pdf) for details). To this end our package provides a custom performance measure `emp_coverage` that is compatible with `MLJ.jl` model evaluation workflows. In particular, we will call `evaluate!` on our conformal model using `emp_coverage` as our performance metric. The resulting empirical coverage rate should then be close to the desired level of coverage.
+To verify the marginal coverage property empirically we can look at the empirical coverage rate of our conformal predictor (see Section 3 of the [tutorial](https://arxiv.org/pdf/2107.07511.pdf) for details). To this end our package provides a custom performance measure `emp_coverage` that is compatible with `MLJ.jl` model evaluation workflows. 
+
+> **Pro tip**: Check out `MLJ`'s [documentation](https://alan-turing-institute.github.io/MLJ.jl/dev/evaluating_model_performance/) to find out how you can use more involved evaluation procedures like cross-validation (CV).
+
+In particular, we will call `evaluate!` on our conformal model using `emp_coverage` as our performance metric. The resulting empirical coverage rate should then be close to the desired level of coverage.
 
 > Use the slider above again to change the coverage rate. Is the empirical coverage rate in line with expectations?
 """
 
 # ╔═╡ d1140af9-608a-4669-9595-aee72ffbaa46
 begin
-	holdout = Holdout(fraction_train=0.8)
+	holdout = Holdout(fraction_train=0.8) # pro tip: change this to CV
     model_evaluation = evaluate!(
         _mach; 
 		operation=MLJBase.predict, 
@@ -311,9 +315,11 @@ Inductive Conformal Prediction (also referred to as Split Conformal Prediction) 
 
 # ╔═╡ c28ae42d-b177-4d73-9efd-6279dd46f214
 md"""
-## 😄 More Methods
+## 🧰 More Tools
 
-Below you can test out other available regression methods.
+Many different approaches to Conformal Prediction have been proposed in the literature, each of them coming with its own advantages and drawbacks. If you're interested in learning more about how they compare, check out this [tutorial](https://juliatrustworthyai.github.io/ConformalPrediction.jl/dev/tutorials/regression/) in the docs.
+
+Below you can test out other available regression methods. While you may not be able to see much of a difference in the left panel showing the actual intervals, the chart on the right shows how the interval width is distributed. Generally here we are looking for widely spread out distributions, which indicates that the prediction intervals adapt well to the true underlying uncertainty. You can read more about this in the [docs](https://juliatrustworthyai.github.io/ConformalPrediction.jl/dev/tutorials/regression/#Evaluation), where you'll also find links to additional resources. 
 """
 
 # ╔═╡ 2a51b6a0-feca-487d-8060-69d09b722421
@@ -321,11 +327,19 @@ Below you can test out other available regression methods.
 
 # ╔═╡ 45212d6a-2a09-4a6e-aa39-16cc659d1e18
 begin
+	# Predictions:
 	new_conf_model = conformal_model(model; method=conf_model_name)
 	new_mach = machine(new_conf_model, X, y)
 	MLJBase.fit!(new_mach; rows=train, verbosity=0)
-    plot(new_mach.model, new_mach.fitresult, Xtest, ytest; zoom=0, observed_lab="Test points")
-    plot!(xrange, @.(f(xrange)); lw=2, ls=:dash, colour=:black, label="Ground truth")
+    p1 = plot(new_mach.model, new_mach.fitresult, Xtest, ytest; 
+		zoom=0, observed_lab="Test points", title="Predictions")
+    plot!(p1, xrange, @.(f(xrange)); 
+		lw=2, ls=:dash, colour=:black, label="Ground truth")
+
+	# Interval width:
+	p2 = bar(new_mach.model, new_mach.fitresult, Xtest, title="Interval Width")
+	
+	plot(p1, p2, size=(1000,400))
 end
 
 # ╔═╡ 74444c01-1a0a-47a7-9b14-749946614f07
@@ -346,16 +360,6 @@ Quite cool, right? Using a single API call we are able to generate rigorous pred
     (data_specs.xmax):(data_specs.xmax + 5), default=(data_specs.xmax), show_value=true
 )
 
-# ╔═╡ 072cc72d-20a2-4ee9-954c-7ea70dfb8eea
-begin
-    Xood, yood = get_data(data_specs.N, xmax_ood, data_specs.noise; fun=f)
-    plot(_mach.model, _mach.fitresult, Xood, yood; zoom=0, observed_lab="Test points")
-    xood_range = range(-xmax_ood, xmax_ood; length=50)
-    plot!(
-        xood_range, @.(f(xood_range)); lw=2, ls=:dash, colour=:black, label="Ground truth"
-    )
-end
-
 # ╔═╡ 4f41ec7c-aedd-475f-942d-33e2d1174902
 if xmax_ood > data_specs.xmax
     Markdown.parse(
@@ -370,6 +374,16 @@ else
         """
 > Still looking OK 🤨 ... Try moving the slider above the chart to the right to see what will happen.
 """,
+    )
+end
+
+# ╔═╡ 072cc72d-20a2-4ee9-954c-7ea70dfb8eea
+begin
+    Xood, yood = get_data(data_specs.N, xmax_ood, data_specs.noise; fun=f)
+    plot(_mach.model, _mach.fitresult, Xood, yood; zoom=0, observed_lab="Test points")
+    xood_range = range(-xmax_ood, xmax_ood; length=50)
+    plot!(
+        xood_range, @.(f(xood_range)); lw=2, ls=:dash, colour=:black, label="Ground truth"
     )
 end
 
@@ -2346,8 +2360,8 @@ version = "1.4.1+0"
 # ╟─eb251479-ce0f-4158-8627-099da3516c73
 # ╠═aa69f9ef-96c6-4846-9ce7-80dd9945a7a8
 # ╟─2e36ea74-125e-46d6-b558-6e920aa2663c
-# ╠═931ce259-d5fb-4a56-beb8-61a69a2fc09e
-# ╠═f0106aa5-b1c5-4857-af94-2711f80d25a8
+# ╟─931ce259-d5fb-4a56-beb8-61a69a2fc09e
+# ╟─f0106aa5-b1c5-4857-af94-2711f80d25a8
 # ╟─2fe1065e-d1b8-4e3c-930c-654f50349222
 # ╟─787f7ee9-2247-4a1b-9519-51394933428c
 # ╠═3a4fe2bc-387c-4d7e-b45f-292075a01bcd
@@ -2370,7 +2384,7 @@ version = "1.4.1+0"
 # ╠═6b574688-ff3c-441a-a616-169685731883
 # ╟─da6e8f90-a3f9-4d06-86ab-b0f6705bbf54
 # ╟─797746e9-235f-4fb1-8cdb-9be295b54bbe
-# ╠═ad3e290b-c1f5-4008-81c7-a1a56ab10563
+# ╟─ad3e290b-c1f5-4008-81c7-a1a56ab10563
 # ╟─b3a88859-0442-41ff-bfea-313437042830
 # ╟─98cc9ea7-444d-4449-ab30-e02bfc5b5791
 # ╠═d1140af9-608a-4669-9595-aee72ffbaa46
@@ -2381,8 +2395,8 @@ version = "1.4.1+0"
 # ╟─45212d6a-2a09-4a6e-aa39-16cc659d1e18
 # ╟─74444c01-1a0a-47a7-9b14-749946614f07
 # ╟─824bd383-2fcb-4888-8ad1-260c85333edf
-# ╟─072cc72d-20a2-4ee9-954c-7ea70dfb8eea
 # ╟─4f41ec7c-aedd-475f-942d-33e2d1174902
+# ╟─072cc72d-20a2-4ee9-954c-7ea70dfb8eea
 # ╟─c7fa1889-b0be-4d96-b845-e79fa7932b0c
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
