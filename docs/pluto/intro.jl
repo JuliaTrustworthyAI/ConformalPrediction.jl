@@ -325,10 +325,13 @@ Below you can test out other available regression methods. While you may not be 
 # ╔═╡ 2a51b6a0-feca-487d-8060-69d09b722421
 @bind conf_model_name Select(collect(keys(available_models[:regression][:transductive])))
 
+# ╔═╡ 4e4e07cf-cd81-49b2-ba7f-754eca107b7d
+@bind new_cov Slider(0.1:0.1:1.0, default=0.8, show_value=true)
+
 # ╔═╡ 45212d6a-2a09-4a6e-aa39-16cc659d1e18
 begin
 	# Predictions:
-	new_conf_model = conformal_model(model; method=conf_model_name)
+	new_conf_model = conformal_model(model; method=conf_model_name, coverage=new_cov)
 	new_mach = machine(new_conf_model, X, y)
 	MLJBase.fit!(new_mach; rows=train, verbosity=0)
     p1 = plot(new_mach.model, new_mach.fitresult, Xtest, ytest; 
@@ -2392,6 +2395,7 @@ version = "1.4.1+0"
 # ╟─f7b2296f-919f-4870-aac1-8e36dd694422
 # ╟─c28ae42d-b177-4d73-9efd-6279dd46f214
 # ╟─2a51b6a0-feca-487d-8060-69d09b722421
+# ╟─4e4e07cf-cd81-49b2-ba7f-754eca107b7d
 # ╟─45212d6a-2a09-4a6e-aa39-16cc659d1e18
 # ╟─74444c01-1a0a-47a7-9b14-749946614f07
 # ╟─824bd383-2fcb-4888-8ad1-260c85333edf
