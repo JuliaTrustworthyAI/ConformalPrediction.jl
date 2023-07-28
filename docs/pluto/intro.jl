@@ -18,8 +18,10 @@ end
 # ╠═╡ show_logs = false
 begin
     using ConformalPrediction
+	using ConformalPrediction: set_size
     using Distributions
     using EvoTrees: EvoTreeRegressor
+	using LinearAlgebra: norm
     using MLJBase
 	using MLJFlux: NeuralNetworkRegressor
     using MLJLinearModels
@@ -27,6 +29,8 @@ begin
     using NearestNeighborModels: KNNRegressor
     using Plots
     using PlutoUI
+	using Random
+	using StatsBase: quantile
 end;
 
 # ╔═╡ bc0d7575-dabd-472d-a0ce-db69d242ced8
@@ -41,6 +45,8 @@ Let's start by loading the necessary packages:
 # ╔═╡ 55a7c16b-a526-41d9-9d73-a0591ad006ce
 # helper functions
 begin
+
+	# UI stuff
     function multi_slider(vals::Dict; title="")
         return PlutoUI.combine() do Child
             inputs = [
@@ -57,6 +63,54 @@ begin
             """
         end
     end
+
+	# SCP illustration:
+	function illustrate_scp(;cov=0.9, xcord=0.0, ycord=0.0)
+		# Data:
+		n = 250
+		D = 5
+		X, y = make_blobs(n, 2; centers=D, cluster_std=2.0)
+		train, test = partition(eachindex(y), 0.8, shuffle=true)
+		
+		# Model:
+		KNNClassifier = @load KNNClassifier pkg=NearestNeighborModels
+		model = KNNClassifier(;K=10) 
+		
+		# Training:
+		conf_model = conformal_model(model; coverage=cov)
+		mach = machine(conf_model, X, y)
+		fit!(mach, rows=train)
+	
+		# Test set:
+		s_test = predict(mach, rows=test)
+		Xtest = MLJBase.matrix(X)[test,:]
+		i_test = argmin(map(X -> norm(X - [xcord,ycord]), eachrow(Xtest)))
+		x1, x2 = Xtest[i_test,:]
+		y_test = y[test][i_test]
+		
+		# Plotting:
+		p1 = contourf(mach.model, mach.fitresult, X, y, 
+			cbar=false)
+		scatter!([x1], [x2], label="Test point", color=:yellow, ms=10, marker=:star)
+		s = mach.model.scores[:calibration]
+		n_cal = length(s)
+		cov = mach.model.coverage
+		x = 1:n_cal
+		p2 = bar(x, s, title="Cal. scores: 1 - p̂[y]", label="")
+		
+		p3 = bar(x, sort(s), label="", title="(1-α) quantile")
+		q̂ = quantile(s, cov)
+		hline!([q̂], label="q̂", lw=3, ls=:dash, color=2)
+	
+		p̂ = pdf.(predict(mach.model.model, mach.fitresult, [x1 x2])[1], classes(y))
+		p4 = bar(1:D, 1 .- p̂, label="", 
+		  title="Test scores: 1-p̂",ylim=(0.0,1.0),
+		  alpha=map(x -> x < q̂ ? 1.0 : 0.2, 1 .- p̂),
+		  linecolor=map(y -> y == y_test ? :yellow : :black ,1:D),
+		  lw = map(y -> y == y_test ? 5 : 1 ,1:D),)
+		hline!([q̂], label="q̂", lw=3, ls=:dash, color=2)
+		plot(p1,p2,p3,p4,layout=(2,2),size=(550,500),dpi=300)
+	end
 end;
 
 # ╔═╡ be8b2fbb-3b3d-496e-9041-9b8f50872350
@@ -69,8 +123,46 @@ Don't worry, we're not about to deep-dive into methodology. But just to give you
 >
 > --- Angelopoulos and Bates ([2022](https://arxiv.org/pdf/2107.07511.pdf))
 
-Intuitively, CP works under the premise of turning heuristic notions of uncertainty into rigorous uncertainty estimates through repeated sampling or the use of dedicated calibration data. 
+Intuitively, CP works under the premise of turning heuristic notions of uncertainty into rigorous uncertainty estimates through repeated sampling or the use of dedicated calibration data.
 
+#### Example: *Split Conformal Prediction*
+		
+Split Conformal Prediction (also referred to as inductive Conformal Prediction) broadly speaking works as follows:
+
+1. Partition the training into a proper training set and a separate calibration set
+2. Train the machine learning model on the proper training set.
+3. Using some heuristic notion of uncertainty (e.g., absolute error in the regression case), compute nonconformity scores using the calibration data and the fitted model.
+4. For the given coverage ratio compute the corresponding quantile of the empirical distribution of nonconformity scores.
+5. For the given quantile and test sample $X_{\text{test}}$, form the corresponding conformal prediction set like so: $C(X_{\text{test}})=\{y:s(X_{\text{test}},y) \le \hat{q}\}$
+
+Next, let's try and understand visually what SCP is all about. The figure below shows the following: the calibrated softmax output for class 1 (top left); the non-conformity scores for the calibration set (top right); the quantile $\hat{q}$ (bottom left); the non-conformity function applied to test point (bottom right). Solid bars make it into prediction set.
+
+The test point is chosen based on the $x$- and $y$-coordinate that can be specified below. In particular, we choose the sample form the test set that minimizes the Euclidean distance to these coordinates. 
+
+> Play around with the coordinates and the coverage rate to get a feel for what's going on.
+"""
+
+# ╔═╡ ebd25f7a-7cd7-4578-8bd0-1332dd5bc47e
+begin
+    illu_dict = Dict(
+        "Coverage" => (0.0:0.05:1.0, 0.9), 
+		"x" => (-20.0:1.0:20.0, 0.0), 
+		"y" => (-20.0:1.0:20.0, 0.0)
+    )
+    @bind illu_specs multi_slider(illu_dict, title="")
+end
+
+# ╔═╡ e1115c04-42c8-4b8a-8845-fc55f63defbf
+begin
+	Random.seed!(123)
+	illustrate_scp(;
+		cov=illu_specs.Coverage,
+		xcord=illu_specs.x,
+		ycord=illu_specs.y)
+end
+
+# ╔═╡ b47b9bd5-f4c1-439c-b1a8-ef042aa6adc6
+md"""
 In what follows we will explore what CP can do by going through a standard machine learning workflow using [`MLJ.jl`](https://alan-turing-institute.github.io/MLJ.jl/dev/) and [`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl). There will be less focus on how exactly CP works, but references will point you to additional resources.
 """
 
@@ -103,7 +195,7 @@ You're in control of the ground-truth that generates the data. In particular, yo
 """
 
 # ╔═╡ aa69f9ef-96c6-4846-9ce7-80dd9945a7a8
-f(X) = X * cos(X); # 𝒻: 𝒳 ↦ 𝒴
+f(X) = X * sin(X); # 𝒻: 𝒳 ↦ 𝒴
 
 # ╔═╡ 2e36ea74-125e-46d6-b558-6e920aa2663c
 md"""
@@ -300,19 +392,6 @@ begin
     end
 end
 
-# ╔═╡ f7b2296f-919f-4870-aac1-8e36dd694422
-md"""
-### *So what's happening under the hood?*
-		
-Inductive Conformal Prediction (also referred to as Split Conformal Prediction) broadly speaking works as follows:
-
-1. Partition the training into a proper training set and a separate calibration set
-2. Train the machine learning model on the proper training set.
-3. Using some heuristic notion of uncertainty (e.g., absolute error in the regression case), compute nonconformity scores using the calibration data and the fitted model.
-4. For the given coverage ratio compute the corresponding quantile of the empirical distribution of nonconformity scores.
-5. For the given quantile and test sample $X_{\text{test}}$, form the corresponding conformal prediction set like so: $C(X_{\text{test}})=\{y:s(X_{\text{test}},y) \le \hat{q}\}$
-"""
-
 # ╔═╡ c28ae42d-b177-4d73-9efd-6279dd46f214
 md"""
 ## 🧰 More Tools
@@ -409,6 +488,7 @@ PLUTO_PROJECT_TOML_CONTENTS = """
 ConformalPrediction = "98bfc277-1877-43dc-819b-a3e38c30242f"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 EvoTrees = "f6006082-12f8-11e9-0c9c-0d5d367ab1e5"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MLJBase = "a7f614a8-145f-11e9-1d2a-a57a1082229d"
 MLJFlux = "094fc8d1-fd35-5302-93ea-dabda2abf845"
 MLJLinearModels = "6ee0df7b-362f-4a72-a706-9e79364fb692"
@@ -416,6 +496,8 @@ MLJModels = "d491faf4-2d78-11e9-2867-c94bc002c0b7"
 NearestNeighborModels = "636a865e-7cf4-491e-846c-de09b730eb36"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 ConformalPrediction = "~0.1.8"
@@ -428,6 +510,7 @@ MLJModels = "~0.16.9"
 NearestNeighborModels = "~0.2.3"
 Plots = "~1.38.16"
 PlutoUI = "~0.7.52"
+StatsBase = "~0.34.0"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -436,7 +519,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.9.2"
 manifest_format = "2.0"
-project_hash = "2eee1c43662a9061f1d47d6301537405e8423daa"
+project_hash = "0325e459912af1b8ca12be30495f58548ed956e4"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -2358,6 +2441,9 @@ version = "1.4.1+0"
 # ╠═aad62ef1-4136-4732-a9e6-3746524978ee
 # ╟─55a7c16b-a526-41d9-9d73-a0591ad006ce
 # ╟─be8b2fbb-3b3d-496e-9041-9b8f50872350
+# ╟─ebd25f7a-7cd7-4578-8bd0-1332dd5bc47e
+# ╟─e1115c04-42c8-4b8a-8845-fc55f63defbf
+# ╟─b47b9bd5-f4c1-439c-b1a8-ef042aa6adc6
 # ╟─2a3570b0-8a1f-4836-965e-2e2740a2e995
 # ╠═2f1c8da3-77dc-4bd7-8fa4-7669c2861aaa
 # ╟─eb251479-ce0f-4158-8627-099da3516c73
@@ -2392,7 +2478,6 @@ version = "1.4.1+0"
 # ╟─98cc9ea7-444d-4449-ab30-e02bfc5b5791
 # ╠═d1140af9-608a-4669-9595-aee72ffbaa46
 # ╟─f742440b-258e-488a-9c8b-c9267cf1fb99
-# ╟─f7b2296f-919f-4870-aac1-8e36dd694422
 # ╟─c28ae42d-b177-4d73-9efd-6279dd46f214
 # ╟─2a51b6a0-feca-487d-8060-69d09b722421
 # ╟─4e4e07cf-cd81-49b2-ba7f-754eca107b7d

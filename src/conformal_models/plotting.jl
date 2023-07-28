@@ -141,7 +141,7 @@ function Plots.contourf(
         push!(Z, z)
     end
     Z = reduce(hcat, Z)
-    Z = Z[findall.(levels(y) .== target)[1][1], :]
+    Z = Z[findall(levels(y) .== target)[1][1], :]
 
     # Contour:
     if plot_set_size
