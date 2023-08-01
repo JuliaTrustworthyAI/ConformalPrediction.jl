@@ -77,7 +77,7 @@ X = reshape(X, :, 1)
 
 # Outputs:
 noise = 0.5
-fun(X) = X * sin(X)
+fun(X) = sin(X)
 ε = randn(N) .* noise
 y = @.(fun(X)) + ε
 y = vec(y)
@@ -127,6 +127,40 @@ zoom = 0
 plt = plot(mach.model, mach.fitresult, Xtest, ytest, lw=5, zoom=zoom, observed_lab="Test points")
 xrange = range(-xmax+zoom,xmax-zoom,length=N)
 plot!(plt, xrange, @.(fun(xrange)), lw=2, ls=:dash, colour=:darkorange, label="Ground truth")
+```
+
+```{julia}
+#| eval: false
+#| echo: false
+
+theme(:lime)
+
+Xtest = selectrows(X, test)
+ytest = y[test]
+
+max_z = 5
+anim = @animate for z in 0:0.1:max_z
+
+    z = -z
+
+    # Test points:
+    xleft = -xmax + z
+    xright = xmax - z
+    global Xtest = vcat(xleft, Xtest, xright)
+    yleft =  fun(xleft) .+ randn(1) .* noise
+    yright =  fun(xright) .+ randn(1) .* noise
+    global ytest = vcat(yleft, ytest, yright)
+
+    # Plot:
+    plt = plot(mach.model, mach.fitresult, Xtest, ytest, 
+        lw=5, zoom=zoom, observed_lab="Test points", dpi=300, legend=false, axis=true,
+        size=(800,400))
+    xrange = range(-xmax-max_z,xmax+max_z,length=N)
+    plot!(plt, xrange, @.(fun(xrange)), 
+        lw=2, ls=:dash, label="Ground truth", xlim=extrema(xrange), ylim=(-2.0,2.0))
+end
+
+gif(anim, fps=10)
 ```
 
 We can evaluate the conformal model using the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) workflow with a custom performance measure. You can use either `emp_coverage` for the overall empirical coverage (correctness) or `ssc` for the size-stratified coverage rate (adaptiveness).
