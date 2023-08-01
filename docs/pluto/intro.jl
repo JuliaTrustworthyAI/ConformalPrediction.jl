@@ -195,7 +195,7 @@ You're in control of the ground-truth that generates the data. In particular, yo
 """
 
 # ╔═╡ aa69f9ef-96c6-4846-9ce7-80dd9945a7a8
-f(X) = X * sin(X); # 𝒻: 𝒳 ↦ 𝒴
+f(X) = X * cos(X); # 𝒻: 𝒳 ↦ 𝒴
 
 # ╔═╡ 2e36ea74-125e-46d6-b558-6e920aa2663c
 md"""
