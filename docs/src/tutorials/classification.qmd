@@ -36,9 +36,9 @@ Here we will use a specific case of CP called *split conformal prediction* which
 4. For a user-specified desired coverage ratio $(1-\alpha)$ compute the corresponding quantile, $\hat{q}$, of the empirical distribution of nonconformity scores, $\mathcal{S}$.
 5. For the given quantile and test sample $X_{\text{test}}$, form the corresponding conformal prediction set: 
 
-$$
+```math
 C(X_{\text{test}})=\{y:s(X_{\text{test}},y) \le \hat{q}\}
-$$ {#eq-set}
+```
 
 This is the default procedure used for classification and regression in [`ConformalPrediction.jl`](https://github.com/juliatrustworthyai/ConformalPrediction.jl). 
 

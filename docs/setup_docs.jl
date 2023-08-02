@@ -18,6 +18,7 @@ setup_docs = quote
     using Serialization
     using SharedArrays
     using StatsBase
+    using StatsPlots
     using Transformers
     using Transformers.TextEncoders
     using Transformers.HuggingFace

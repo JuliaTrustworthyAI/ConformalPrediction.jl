@@ -2,7 +2,7 @@
 
 julia_version = "1.9.2"
 manifest_format = "2.0"
-project_hash = "31cd76ebe2189514892e5384387c85920222063e"
+project_hash = "e1685a29d6d370eab88233cc5ac9d849e2f3994f"
 
 [[deps.ANSIColoredPrinters]]
 git-tree-sha1 = "574baf8110975760d391c710b6341da1afa48d8c"
@@ -1754,6 +1754,11 @@ git-tree-sha1 = "5ee110f3d54e0f29daacc3bdde01b638bf05b9bc"
 uuid = "12afc1b8-fad6-47e1-9132-84abc478905f"
 version = "0.2.10"
 
+[[deps.Observables]]
+git-tree-sha1 = "6862738f9796b3edc1c09d0890afce4eca9e7e93"
+uuid = "510215fc-4207-5dde-b226-833fc4488ee2"
+version = "0.5.4"
+
 [[deps.OffsetArrays]]
 deps = ["Adapt"]
 git-tree-sha1 = "2ac17d29c523ce1cd38e27785a7d23024853a4bb"
@@ -2391,6 +2396,12 @@ git-tree-sha1 = "8cc7a5385ecaa420f0b3426f9b0135d0df0638ed"
 uuid = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
 version = "0.7.2"
 
+[[deps.StatsPlots]]
+deps = ["AbstractFFTs", "Clustering", "DataStructures", "Distributions", "Interpolations", "KernelDensity", "LinearAlgebra", "MultivariateStats", "NaNMath", "Observables", "Plots", "RecipesBase", "RecipesPipeline", "Reexport", "StatsBase", "TableOperations", "Tables", "Widgets"]
+git-tree-sha1 = "9115a29e6c2cf66cf213ccc17ffd61e27e743b24"
+uuid = "f3b207a7-027a-5e70-b257-86293d7955fd"
+version = "0.15.6"
+
 [[deps.StrTables]]
 deps = ["Dates"]
 git-tree-sha1 = "5998faae8c6308acc25c25896562a1e66a3bb038"
@@ -2464,6 +2475,12 @@ version = "0.21.2"
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 version = "1.0.3"
+
+[[deps.TableOperations]]
+deps = ["SentinelArrays", "Tables", "Test"]
+git-tree-sha1 = "e383c87cf2a1dc41fa30c093b2a19877c83e1bc1"
+uuid = "ab02a1b2-a7df-11e8-156e-fb1833f50b87"
+version = "1.2.0"
 
 [[deps.TableTraits]]
 deps = ["IteratorInterfaceExtensions"]
@@ -2673,6 +2690,12 @@ deps = ["DataAPI", "InlineStrings", "Parsers"]
 git-tree-sha1 = "b1be2855ed9ed8eac54e5caff2afcdb442d52c23"
 uuid = "ea10d353-3f73-51f8-a26c-33c1cb351aa5"
 version = "1.4.2"
+
+[[deps.Widgets]]
+deps = ["Colors", "Dates", "Observables", "OrderedCollections"]
+git-tree-sha1 = "fcdae142c1cfc7d89de2d11e08721d0f2f86c98a"
+uuid = "cc8bc4a8-27d6-5769-a93b-9d913e69aa62"
+version = "0.6.6"
 
 [[deps.WoodburyMatrices]]
 deps = ["LinearAlgebra", "SparseArrays"]

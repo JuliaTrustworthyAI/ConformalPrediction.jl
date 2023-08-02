@@ -1,4 +1,31 @@
 using CategoricalArrays
+using StatsBase: quantile
+
+@doc raw"""
+    qplus(v::AbstractArray, coverage::AbstractFloat=0.9)
+
+Implements the ``\hat{q}_{n,\alpha}^{+}`` finite-sample corrected quantile function as defined in Barber et al. (2020): https://arxiv.org/pdf/1905.02928.pdf. 
+"""
+function qplus(v::AbstractArray, coverage::AbstractFloat=0.9; kwrgs...)
+    n = length(v)
+    p̂ = ceil(((n + 1) * coverage)) / n
+    p̂ = clamp(p̂, 0.0, 1.0)
+    q̂ = quantile(v, p̂; kwrgs...)
+    return q̂
+end
+
+@doc raw"""
+    qminus(v::AbstractArray, coverage::AbstractFloat=0.9)
+
+Implements the ``\hat{q}_{n,\alpha}^{-}`` finite-sample corrected quantile function as defined in Barber et al. (2020): https://arxiv.org/pdf/1905.02928.pdf. 
+"""
+function qminus(v::AbstractArray, coverage::AbstractFloat=0.9; kwrgs...)
+    n = length(v)
+    p̂ = floor(((n + 1) * coverage)) / n
+    p̂ = clamp(p̂, 0.0, 1.0)
+    q̂ = quantile(v, p̂; kwrgs...)
+    return q̂
+end
 
 """
     reformat_interval(ŷ)
