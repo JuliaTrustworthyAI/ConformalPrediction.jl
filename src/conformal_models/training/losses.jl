@@ -12,7 +12,7 @@ function soft_assignment(
 )
     temp = isnothing(temp) ? 0.5 : temp
     v = sort(conf_model.scores[:calibration])
-    q̂ = StatsBase.quantile(v, conf_model.coverage; sorted=true)
+    q̂ = qplus(v, conf_model.coverage; sorted=true)
     scores = conf_model.scores[:all]
     return @.(σ((q̂ - scores) / temp))
 end
@@ -27,7 +27,7 @@ function soft_assignment(
 )
     temp = isnothing(temp) ? 0.5 : temp
     v = sort(conf_model.scores[:calibration])
-    q̂ = StatsBase.quantile(v, conf_model.coverage; sorted=true)
+    q̂ = qplus(v, conf_model.coverage; sorted=true)
     scores = score(conf_model, fitresult, X)
     return @.(σ((q̂ - scores) / temp))
 end

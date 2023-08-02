@@ -47,6 +47,7 @@ makedocs(;
         "🤓 Explanation" => [
             "Overview" => "explanation/index.md",
             "Package Architecture" => "explanation/architecture.md",
+            "Finite-sample Correction" => "explanation/finite_sample_correction.md",
         ],
         "🧐 Reference" => "reference.md",
         "🛠 Contribute" => "contribute.md",

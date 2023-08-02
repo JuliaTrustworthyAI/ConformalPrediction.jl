@@ -61,7 +61,7 @@ function MMI.predict(conf_model::NaiveClassifier, fitresult, Xnew)
         MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     )
     v = conf_model.scores
-    q̂ = StatsBase.quantile(v, conf_model.coverage)
+    q̂ = qplus(v, conf_model.coverage)
     p̂ = map(p̂) do pp
         L = p̂.decoder.classes
         probas = pdf.(pp, L)

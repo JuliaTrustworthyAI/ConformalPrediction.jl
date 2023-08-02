@@ -1,5 +1,5 @@
 using MLJBase: CV
-using StatsBase: sample, trim
+using StatsBase: sample, trim, mean, median
 
 # Naive
 """
@@ -65,7 +65,7 @@ function MMI.predict(conf_model::NaiveRegressor, fitresult, Xnew)
         MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     )
     v = conf_model.scores
-    q̂ = StatsBase.quantile(v, conf_model.coverage)
+    q̂ = qplus(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
     return ŷ
@@ -147,7 +147,7 @@ function MMI.predict(conf_model::JackknifeRegressor, fitresult, Xnew)
         MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     )
     v = conf_model.scores
-    q̂ = StatsBase.quantile(v, conf_model.coverage)
+    q̂ = qplus(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
     return ŷ
@@ -236,8 +236,8 @@ function MMI.predict(conf_model::JackknifePlusRegressor, fitresult, Xnew)
     ŷ = reduce(hcat, ŷ)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
     ŷ = map(eachrow(ŷ)) do yᵢ
-        lb = -StatsBase.quantile(.-yᵢ .+ conf_model.scores, conf_model.coverage)
-        ub = StatsBase.quantile(yᵢ .+ conf_model.scores, conf_model.coverage)
+        lb = qminus(yᵢ .+ conf_model.scores, conf_model.coverage)
+        ub = qplus(yᵢ .+ conf_model.scores, conf_model.coverage)
         return (lb, ub)
     end
     ŷ = reformat_interval(ŷ)
@@ -327,7 +327,7 @@ function MMI.predict(conf_model::JackknifeMinMaxRegressor, fitresult, Xnew)
     ŷ = reduce(hcat, ŷ)
     # Get all LOO residuals:
     v = conf_model.scores
-    q̂ = StatsBase.quantile(v, conf_model.coverage)
+    q̂ = qplus(v, conf_model.coverage)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
     ŷ = map(yᵢ -> (minimum(yᵢ .- q̂), maximum(yᵢ .+ q̂)), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
@@ -431,8 +431,8 @@ function MMI.predict(conf_model::CVPlusRegressor, fitresult, Xnew)
     ŷ = reduce(hcat, ŷ)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
     ŷ = map(eachrow(ŷ)) do yᵢ
-        lb = -StatsBase.quantile(.-yᵢ .+ conf_model.scores, conf_model.coverage)
-        ub = StatsBase.quantile(yᵢ .+ conf_model.scores, conf_model.coverage)
+        lb = qminus(yᵢ .+ conf_model.scores, conf_model.coverage)
+        ub = qplus(yᵢ .+ conf_model.scores, conf_model.coverage)
         return (lb, ub)
     end
     ŷ = reformat_interval(ŷ)
@@ -534,7 +534,7 @@ function MMI.predict(conf_model::CVMinMaxRegressor, fitresult, Xnew)
     ŷ = reduce(hcat, ŷ)
     # Get all LOO residuals:
     v = conf_model.scores
-    q̂ = StatsBase.quantile(v, conf_model.coverage)
+    q̂ = qplus(v, conf_model.coverage)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
     ŷ = map(yᵢ -> (minimum(yᵢ .- q̂), maximum(yᵢ .+ q̂)), eachrow(ŷ))
     return ŷ
@@ -549,9 +549,9 @@ function _aggregate(y, aggregate::Union{Symbol,String})
     # Setup:
     aggregate = Symbol(aggregate)
     valid_methods = Dict(
-        :mean => x -> StatsBase.mean(x),
-        :median => x -> StatsBase.median(x),
-        :trimmedmean => x -> StatsBase.mean(trim(x; prop=0.1)),
+        :mean => x -> mean(x),
+        :median => x -> median(x),
+        :trimmedmean => x -> mean(trim(x; prop=0.1)),
     )
     @assert aggregate ∈ keys(valid_methods) "`aggregate`=$aggregate is not a valid aggregation method. Should be one of: $valid_methods"
     # Aggregate:
@@ -664,7 +664,7 @@ function MMI.predict(conf_model::JackknifePlusAbRegressor, fitresult, Xnew)
     aggregate = conf_model.aggregate
     ŷ = _aggregate(ŷ, aggregate)
     v = conf_model.scores
-    q̂ = StatsBase.quantile(v, conf_model.coverage)
+    q̂ = qplus(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
     return ŷ
@@ -768,7 +768,7 @@ function MMI.predict(conf_model::JackknifePlusAbMinMaxRegressor, fitresult, Xnew
     ]
     ŷ = reduce(hcat, ŷ)
     v = conf_model.scores
-    q̂ = StatsBase.quantile(v, conf_model.coverage)
+    q̂ = qplus(v, conf_model.coverage)
     ŷ = map(yᵢ -> (minimum(yᵢ .- q̂), maximum(yᵢ .+ q̂)), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
     return ŷ
@@ -894,7 +894,7 @@ function MMI.predict(conf_model::TimeSeriesRegressorEnsembleBatch, fitresult, Xn
     aggregate = conf_model.aggregate
     ŷ = _aggregate(ŷ, aggregate)
     v = conf_model.scores
-    q̂ = StatsBase.quantile(v, conf_model.coverage)
+    q̂ = qplus(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
     return ŷ
