@@ -24,7 +24,10 @@ function ConformalNNRegressor(;
     builder::B=default_builder,
     optimiser::O=Flux.Optimise.Adam(),
     loss::L=Flux.mse,
-    epochs::Int=100, batch_size::Int=100, lambda::Float64=0.0, alpha::Float64=0.0,
+    epochs::Int=100,
+    batch_size::Int=100,
+    lambda::Float64=0.0,
+    alpha::Float64=0.0,
     rng::Union{AbstractRNG,Int64}=Random.GLOBAL_RNG,
     optimiser_changes_trigger_retraining::Bool=false,
     acceleration::AbstractResource=CPU1(),
@@ -32,8 +35,16 @@ function ConformalNNRegressor(;
 
     # Initialise the MLJFlux wrapper:
     mod = ConformalNNRegressor(
-        builder, optimiser, loss, epochs, batch_size, lambda, alpha, rng,
-        optimiser_changes_trigger_retraining, acceleration,
+        builder,
+        optimiser,
+        loss,
+        epochs,
+        batch_size,
+        lambda,
+        alpha,
+        rng,
+        optimiser_changes_trigger_retraining,
+        acceleration,
     )
 
     return mod
@@ -51,22 +62,21 @@ function MLJFlux.shape(model::ConformalNNRegressor, X, y)
     return (n_input, 1)
 end
 
-MLJFlux.build(model::ConformalNNRegressor, rng, shape) =
-    MLJFlux.build(model.builder, rng, shape...)
+function MLJFlux.build(model::ConformalNNRegressor, rng, shape)
+    return MLJFlux.build(model.builder, rng, shape...)
+end
 
 MLJFlux.fitresult(model::ConformalNNRegressor, chain, y) = (chain, nothing)
 
-function MMI.predict(model::ConformalNNRegressor,
-    fitresult,
-    Xnew)
+function MMI.predict(model::ConformalNNRegressor, fitresult, Xnew)
     chain = fitresult[1]
     Xnew_ = MLJFlux.reformat(Xnew)
-    return [chain(values.(MLJFlux.tomat(Xnew_[:, i])))[1]
-            for i in 1:size(Xnew_, 2)]
+    return [chain(values.(MLJFlux.tomat(Xnew_[:, i])))[1] for i in 1:size(Xnew_, 2)]
 end
 
-MMI.metadata_model(ConformalNNRegressor,
+MMI.metadata_model(
+    ConformalNNRegressor;
     input=Union{AbstractMatrix{Continuous},MMI.Table(MMI.Continuous)},
     target=AbstractVector{<:MMI.Continuous},
-    path="MLJFlux.ConformalNNRegressor")
-
+    path="MLJFlux.ConformalNNRegressor",
+)

@@ -3,8 +3,8 @@ module ConformalTraining
 using ConformalPrediction
 using Flux
 using MLJFlux
-   
-const default_builder = MLJFlux.MLP(hidden=(32, 32, 32,), σ=Flux.relu)
+
+const default_builder = MLJFlux.MLP(; hidden=(32, 32, 32), σ=Flux.relu)
 
 include("losses.jl")
 include("inductive_classification.jl")

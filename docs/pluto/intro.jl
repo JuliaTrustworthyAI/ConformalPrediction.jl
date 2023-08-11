@@ -7,7 +7,14 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
-        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local iv = try
+            Base.loaded_modules[Base.PkgId(
+                Base.UUID("6e696c72-6542-2067-7265-42206c756150"),
+                "AbstractPlutoDingetjes",
+            )].Bonds.initial_value
+        catch
+            b -> missing
+        end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
@@ -18,19 +25,19 @@ end
 # ╠═╡ show_logs = false
 begin
     using ConformalPrediction
-	using ConformalPrediction: set_size
+    using ConformalPrediction: set_size
     using Distributions
     using EvoTrees: EvoTreeRegressor
-	using LinearAlgebra: norm
+    using LinearAlgebra: norm
     using MLJBase
-	using MLJFlux: NeuralNetworkRegressor
+    using MLJFlux: NeuralNetworkRegressor
     using MLJLinearModels
     using MLJModels
     using NearestNeighborModels: KNNRegressor
     using Plots
     using PlutoUI
-	using Random
-	using StatsBase: quantile
+    using Random
+    using StatsBase: quantile
 end;
 
 # ╔═╡ bc0d7575-dabd-472d-a0ce-db69d242ced8
@@ -46,7 +53,7 @@ Let's start by loading the necessary packages:
 # helper functions
 begin
 
-	# UI stuff
+    # UI stuff
     function multi_slider(vals::Dict; title="")
         return PlutoUI.combine() do Child
             inputs = [
@@ -64,53 +71,57 @@ begin
         end
     end
 
-	# SCP illustration:
-	function illustrate_scp(;cov=0.9, xcord=0.0, ycord=0.0)
-		# Data:
-		n = 250
-		D = 5
-		X, y = make_blobs(n, 2; centers=D, cluster_std=2.0)
-		train, test = partition(eachindex(y), 0.8, shuffle=true)
-		
-		# Model:
-		KNNClassifier = @load KNNClassifier pkg=NearestNeighborModels
-		model = KNNClassifier(;K=10) 
-		
-		# Training:
-		conf_model = conformal_model(model; coverage=cov)
-		mach = machine(conf_model, X, y)
-		fit!(mach, rows=train)
-	
-		# Test set:
-		s_test = predict(mach, rows=test)
-		Xtest = MLJBase.matrix(X)[test,:]
-		i_test = argmin(map(X -> norm(X - [xcord,ycord]), eachrow(Xtest)))
-		x1, x2 = Xtest[i_test,:]
-		y_test = y[test][i_test]
-		
-		# Plotting:
-		p1 = contourf(mach.model, mach.fitresult, X, y, 
-			cbar=false)
-		scatter!([x1], [x2], label="Test point", color=:yellow, ms=10, marker=:star)
-		s = mach.model.scores[:calibration]
-		n_cal = length(s)
-		cov = mach.model.coverage
-		x = 1:n_cal
-		p2 = bar(x, s, title="Cal. scores: 1 - p̂[y]", label="")
-		
-		p3 = bar(x, sort(s), label="", title="(1-α) quantile")
-		q̂ = quantile(s, cov)
-		hline!([q̂], label="q̂", lw=3, ls=:dash, color=2)
-	
-		p̂ = pdf.(predict(mach.model.model, mach.fitresult, [x1 x2])[1], classes(y))
-		p4 = bar(1:D, 1 .- p̂, label="", 
-		  title="Test scores: 1-p̂",ylim=(0.0,1.0),
-		  alpha=map(x -> x < q̂ ? 1.0 : 0.2, 1 .- p̂),
-		  linecolor=map(y -> y == y_test ? :yellow : :black ,1:D),
-		  lw = map(y -> y == y_test ? 5 : 1 ,1:D),)
-		hline!([q̂], label="q̂", lw=3, ls=:dash, color=2)
-		plot(p1,p2,p3,p4,layout=(2,2),size=(550,500),dpi=300)
-	end
+    # SCP illustration:
+    function illustrate_scp(; cov=0.9, xcord=0.0, ycord=0.0)
+        # Data:
+        n = 250
+        D = 5
+        X, y = make_blobs(n, 2; centers=D, cluster_std=2.0)
+        train, test = partition(eachindex(y), 0.8; shuffle=true)
+
+        # Model:
+        KNNClassifier = @load KNNClassifier pkg = NearestNeighborModels
+        model = KNNClassifier(; K=10)
+
+        # Training:
+        conf_model = conformal_model(model; coverage=cov)
+        mach = machine(conf_model, X, y)
+        fit!(mach; rows=train)
+
+        # Test set:
+        s_test = predict(mach; rows=test)
+        Xtest = MLJBase.matrix(X)[test, :]
+        i_test = argmin(map(X -> norm(X - [xcord, ycord]), eachrow(Xtest)))
+        x1, x2 = Xtest[i_test, :]
+        y_test = y[test][i_test]
+
+        # Plotting:
+        p1 = contourf(mach.model, mach.fitresult, X, y; cbar=false)
+        scatter!([x1], [x2]; label="Test point", color=:yellow, ms=10, marker=:star)
+        s = mach.model.scores[:calibration]
+        n_cal = length(s)
+        cov = mach.model.coverage
+        x = 1:n_cal
+        p2 = bar(x, s; title="Cal. scores: 1 - p̂[y]", label="")
+
+        p3 = bar(x, sort(s); label="", title="(1-α) quantile")
+        q̂ = quantile(s, cov)
+        hline!([q̂]; label="q̂", lw=3, ls=:dash, color=2)
+
+        p̂ = pdf.(predict(mach.model.model, mach.fitresult, [x1 x2])[1], classes(y))
+        p4 = bar(
+            1:D,
+            1 .- p̂;
+            label="",
+            title="Test scores: 1-p̂",
+            ylim=(0.0, 1.0),
+            alpha=map(x -> x < q̂ ? 1.0 : 0.2, 1 .- p̂),
+            linecolor=map(y -> y == y_test ? :yellow : :black, 1:D),
+            lw=map(y -> y == y_test ? 5 : 1, 1:D),
+        )
+        hline!([q̂]; label="q̂", lw=3, ls=:dash, color=2)
+        return plot(p1, p2, p3, p4; layout=(2, 2), size=(550, 500), dpi=300)
+    end
 end;
 
 # ╔═╡ be8b2fbb-3b3d-496e-9041-9b8f50872350
@@ -145,20 +156,17 @@ The test point is chosen based on the $x$- and $y$-coordinate that can be specif
 # ╔═╡ ebd25f7a-7cd7-4578-8bd0-1332dd5bc47e
 begin
     illu_dict = Dict(
-        "Coverage" => (0.0:0.05:1.0, 0.9), 
-		"x" => (-20.0:1.0:20.0, 0.0), 
-		"y" => (-20.0:1.0:20.0, 0.0)
+        "Coverage" => (0.0:0.05:1.0, 0.9),
+        "x" => (-20.0:1.0:20.0, 0.0),
+        "y" => (-20.0:1.0:20.0, 0.0),
     )
     @bind illu_specs multi_slider(illu_dict, title="")
 end
 
 # ╔═╡ e1115c04-42c8-4b8a-8845-fc55f63defbf
 begin
-	Random.seed!(123)
-	illustrate_scp(;
-		cov=illu_specs.Coverage,
-		xcord=illu_specs.x,
-		ycord=illu_specs.y)
+    Random.seed!(123)
+    illustrate_scp(; cov=illu_specs.Coverage, xcord=illu_specs.x, ycord=illu_specs.y)
 end
 
 # ╔═╡ b47b9bd5-f4c1-439c-b1a8-ef042aa6adc6
@@ -239,8 +247,8 @@ train, test = partition(eachindex(y), 0.4, 0.4; shuffle=true);
 
 # ╔═╡ 698b1429-f478-45ac-8799-d73f6a0ab869
 begin
-	model_dict = tested_atomic_models[:regression]
-	model_dict[:neural_network] = :(@load NeuralNetworkRegressor pkg = MLJFlux)
+    model_dict = tested_atomic_models[:regression]
+    model_dict[:neural_network] = :(@load NeuralNetworkRegressor pkg = MLJFlux)
 end;
 
 # ╔═╡ a34b8c07-08e0-4a0e-a0f9-8054b41b038b
@@ -359,13 +367,13 @@ In particular, we will call `evaluate!` on our conformal model using `emp_covera
 
 # ╔═╡ d1140af9-608a-4669-9595-aee72ffbaa46
 begin
-	holdout = Holdout(fraction_train=0.8) # pro tip: change this to CV
+    holdout = Holdout(; fraction_train=0.8) # pro tip: change this to CV
     model_evaluation = evaluate!(
-        _mach; 
-		operation=MLJBase.predict, 
-		measure=emp_coverage, 
-		verbosity=0,
-		resampling=holdout,
+        _mach;
+        operation=MLJBase.predict,
+        measure=emp_coverage,
+        verbosity=0,
+        resampling=holdout,
     )
     println("Empirical coverage: $(round(model_evaluation.measurement[1], digits=3))")
 end
@@ -409,19 +417,25 @@ Below you can test out other available regression methods. While you may not be 
 
 # ╔═╡ 45212d6a-2a09-4a6e-aa39-16cc659d1e18
 begin
-	# Predictions:
-	new_conf_model = conformal_model(model; method=conf_model_name, coverage=new_cov)
-	new_mach = machine(new_conf_model, X, y)
-	MLJBase.fit!(new_mach; rows=train, verbosity=0)
-    p1 = plot(new_mach.model, new_mach.fitresult, Xtest, ytest; 
-		zoom=0, observed_lab="Test points", title="Predictions")
-    plot!(p1, xrange, @.(f(xrange)); 
-		lw=2, ls=:dash, colour=:black, label="Ground truth")
+    # Predictions:
+    new_conf_model = conformal_model(model; method=conf_model_name, coverage=new_cov)
+    new_mach = machine(new_conf_model, X, y)
+    MLJBase.fit!(new_mach; rows=train, verbosity=0)
+    p1 = plot(
+        new_mach.model,
+        new_mach.fitresult,
+        Xtest,
+        ytest;
+        zoom=0,
+        observed_lab="Test points",
+        title="Predictions",
+    )
+    plot!(p1, xrange, @.(f(xrange)); lw=2, ls=:dash, colour=:black, label="Ground truth")
 
-	# Interval width:
-	p2 = bar(new_mach.model, new_mach.fitresult, Xtest, title="Interval Width")
-	
-	plot(p1, p2, size=(1000,400))
+    # Interval width:
+    p2 = bar(new_mach.model, new_mach.fitresult, Xtest; title="Interval Width")
+
+    plot(p1, p2; size=(1000, 400))
 end
 
 # ╔═╡ 74444c01-1a0a-47a7-9b14-749946614f07

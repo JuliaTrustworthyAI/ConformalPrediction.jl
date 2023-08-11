@@ -9,7 +9,13 @@ using MLUtils
 
 Overloads the `score` function for the `MLJFluxModel` type.
 """
-function ConformalPrediction.score(conf_model::SimpleInductiveClassifier, ::Type{<:MLJFluxModel}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+function ConformalPrediction.score(
+    conf_model::SimpleInductiveClassifier,
+    ::Type{<:MLJFluxModel},
+    fitresult,
+    X,
+    y::Union{Nothing,AbstractArray}=nothing,
+)
     X = permutedims(matrix(X))
     probas = permutedims(fitresult[1](X))
     scores = @.(conf_model.heuristic(probas))
@@ -26,7 +32,13 @@ end
 
 Overloads the `score` function for ensembles of `MLJFluxModel` types.
 """
-function ConformalPrediction.score(conf_model::SimpleInductiveClassifier, ::Type{<:EitherEnsembleModel{<:MLJFluxModel}}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+function ConformalPrediction.score(
+    conf_model::SimpleInductiveClassifier,
+    ::Type{<:EitherEnsembleModel{<:MLJFluxModel}},
+    fitresult,
+    X,
+    y::Union{Nothing,AbstractArray}=nothing,
+)
     X = permutedims(matrix(X))
     _chains = map(res -> res[1], fitresult.ensemble)
     probas =

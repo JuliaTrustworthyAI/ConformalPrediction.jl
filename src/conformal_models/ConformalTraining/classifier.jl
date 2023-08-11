@@ -26,7 +26,10 @@ function ConformalNNClassifier(;
     finaliser::F=Flux.softmax,
     optimiser::O=Flux.Optimise.Adam(),
     loss::L=Flux.crossentropy,
-    epochs::Int=100, batch_size::Int=100, lambda::Float64=0.0, alpha::Float64=0.0,
+    epochs::Int=100,
+    batch_size::Int=100,
+    lambda::Float64=0.0,
+    alpha::Float64=0.0,
     rng::Union{AbstractRNG,Int64}=Random.GLOBAL_RNG,
     optimiser_changes_trigger_retraining::Bool=false,
     acceleration::AbstractResource=CPU1(),
@@ -34,8 +37,17 @@ function ConformalNNClassifier(;
 
     # Initialise the MLJFlux wrapper:
     mod = ConformalNNClassifier(
-        builder, finaliser, optimiser, loss, epochs, batch_size, lambda, alpha, rng,
-        optimiser_changes_trigger_retraining, acceleration,
+        builder,
+        finaliser,
+        optimiser,
+        loss,
+        epochs,
+        batch_size,
+        lambda,
+        alpha,
+        rng,
+        optimiser_changes_trigger_retraining,
+        acceleration,
     )
 
     return mod
@@ -55,29 +67,25 @@ function MLJFlux.build(model::ConformalNNClassifier, rng, shape)
 
     # Chain:
     chain = Flux.Chain(MLJFlux.build(model.builder, rng, shape...), model.finaliser)
-    
+
     return chain
 end
 
 # returns the model `fitresult` (see "Adding Models for General Use"
 # section of the MLJ manual) which must always have the form `(chain,
 # metadata)`, where `metadata` is anything extra needed by `predict`:
-MLJFlux.fitresult(model::ConformalNNClassifier, chain, y) =
-    (chain, MMI.classes(y[1]))
+MLJFlux.fitresult(model::ConformalNNClassifier, chain, y) = (chain, MMI.classes(y[1]))
 
-function MMI.predict(
-    model::ConformalNNClassifier,
-    fitresult,
-    Xnew
-)
+function MMI.predict(model::ConformalNNClassifier, fitresult, Xnew)
     chain, levels = fitresult
     X = MLJFlux.reformat(Xnew)
     probs = vcat([chain(MLJFlux.tomat(X[:, i]))' for i in 1:size(X, 2)]...)
     return MMI.UnivariateFinite(levels, probs)
 end
 
-MMI.metadata_model(ConformalNNClassifier,
+MMI.metadata_model(
+    ConformalNNClassifier;
     input=Union{AbstractArray,MMI.Table(MMI.Continuous)},
     target=AbstractVector{<:MMI.Finite},
-    path="MLJFlux.ConformalNNClassifier")
-
+    path="MLJFlux.ConformalNNClassifier",
+)
