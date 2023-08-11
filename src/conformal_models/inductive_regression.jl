@@ -16,17 +16,6 @@ function SimpleInductiveRegressor(
     return SimpleInductiveRegressor(model, coverage, nothing, heuristic, train_ratio)
 end
 
-"""
-    score(conf_model::SimpleInductiveRegressor, ::Type{<:Supervised}, fitresult, X, y)
-
-Score method for the [`SimpleInductiveRegressor`](@ref) dispatched for any `<:Supervised` model.  
-"""
-function score(conf_model::SimpleInductiveRegressor, ::Type{<:Supervised}, fitresult, X, y)
-    ŷ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, X))
-    scores = @.(conf_model.heuristic(y, ŷ))
-    return scores
-end
-
 @doc raw"""
     MMI.fit(conf_model::SimpleInductiveRegressor, verbosity, X, y)
 
@@ -53,7 +42,8 @@ function MMI.fit(conf_model::SimpleInductiveRegressor, verbosity, X, y)
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
     # Nonconformity Scores:
-    conf_model.scores = score(conf_model, fitresult, Xcal, ycal)
+    ŷ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, Xcal))
+    conf_model.scores = @.(conf_model.heuristic(ycal, ŷ))
 
     return (fitresult, cache, report)
 end
