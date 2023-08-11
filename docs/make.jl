@@ -17,20 +17,20 @@ ex_meta = quote
     model = DecisionTreeRegressor()
 end
 
-DocMeta.setdocmeta!(ConformalPrediction, :DocTestSetup, ex_meta; recursive = true)
+DocMeta.setdocmeta!(ConformalPrediction, :DocTestSetup, ex_meta; recursive=true)
 
 makedocs(;
-    modules = [ConformalPrediction],
-    authors = "Patrick Altmeyer",
-    repo = "https://github.com/juliatrustworthyai/ConformalPrediction.jl/blob/{commit}{path}#{line}",
-    sitename = "ConformalPrediction.jl",
-    format = Documenter.HTML(;
-        prettyurls = get(ENV, "CI", "false") == "true",
-        canonical = "https://juliatrustworthyai.github.io/ConformalPrediction.jl",
-        edit_link = "main",
-        assets = String[],
+    modules=[ConformalPrediction],
+    authors="Patrick Altmeyer",
+    repo="https://github.com/juliatrustworthyai/ConformalPrediction.jl/blob/{commit}{path}#{line}",
+    sitename="ConformalPrediction.jl",
+    format=Documenter.HTML(;
+        prettyurls=get(ENV, "CI", "false") == "true",
+        canonical="https://juliatrustworthyai.github.io/ConformalPrediction.jl",
+        edit_link="main",
+        assets=String[],
     ),
-    pages = [
+    pages=[
         "🏠 Home" => "index.md",
         "🫣 Tutorials" => [
             "Overview" => "tutorials/index.md",
@@ -41,18 +41,18 @@ makedocs(;
         "🫡 How-To Guides" => [
             "Overview" => "how_to_guides/index.md",
             "How to Conformalize a Deep Image Classifier" => "how_to_guides/mnist.md",
+            "How to Conformalize a Large Language Model" => "how_to_guides/llm.md",
+            "How to Conformalize a Time Series Model" => "how_to_guides/timeseries.md",
         ],
         "🤓 Explanation" => [
             "Overview" => "explanation/index.md",
             "Package Architecture" => "explanation/architecture.md",
+            "Finite-sample Correction" => "explanation/finite_sample_correction.md",
         ],
-        "🧐 Reference" => "_reference.md",
+        "🧐 Reference" => "reference.md",
         "🛠 Contribute" => "contribute.md",
         "❓ FAQ" => "faq.md",
     ],
 )
 
-deploydocs(;
-    repo = "github.com/JuliaTrustworthyAI/ConformalPrediction.jl", 
-    devbranch = "main"
-)
+deploydocs(; repo="github.com/JuliaTrustworthyAI/ConformalPrediction.jl", devbranch="main")

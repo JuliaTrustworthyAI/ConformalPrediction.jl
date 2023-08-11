@@ -1,9 +1,4 @@
-
 # Regression
-
-``` @meta
-CurrentModule = ConformalPrediction
-```
 
 This tutorial presents and compares different approaches to Conformal Regression using a simple synthetic dataset. It is inspired by this MAPIE [tutorial](https://mapie.readthedocs.io/en/latest/examples_regression/4-tutorials/plot_main-tutorial-regression.html#).
 
@@ -61,7 +56,7 @@ results = Dict()
 for _mod in keys(conformal_models) 
     conf_model = conformal_model(pipe; method=_mod, coverage=0.95)
     global mach = machine(conf_model, X, y)
-    fit!(mach, rows=train)
+    MLJ.fit!(mach, rows=train)
     results[_mod] = mach
 end
 ```
@@ -102,7 +97,7 @@ plt
 
 ![Figure 2: Prediction interval width.](regression_files/figure-commonmark/fig-setsize-output-1.svg)
 
-We can also use specific metrics like **empirical coverage** and **size-stratified coverage** to check for correctness and adaptiveness, respectively. To this end, the package provides custom measures that are compatible with `MLJ.jl`. In other words, we can evaluate model performance in true `MLJ.jl` fashion (see [here](https://alan-turing-institute.github.io/MLJ.jl/dev/evaluating_model_performance/)).
+We can also use specific metrics like **empirical coverage** and **size-stratified coverage** to check for correctness and adaptiveness, respectively (**angelopoulus2021gentle?**). To this end, the package provides custom measures that are compatible with `MLJ.jl`. In other words, we can evaluate model performance in true `MLJ.jl` fashion (see [here](https://alan-turing-institute.github.io/MLJ.jl/dev/evaluating_model_performance/)).
 
 The code below runs the evaluation with respect to both metrics, `emp_coverage` and `ssc` for a single conformal machine:
 
@@ -123,16 +118,18 @@ println("SSC for $(_mod): $(round(_eval.measurement[2], digits=3))")
       per_observation, fitted_params_per_fold,
       report_per_fold, train_test_rows
     Extract:
-    ┌───────────────────────────────────────────────────────────┬───────────┬───────
-    │ measure                                                   │ operation │ meas ⋯
-    ├───────────────────────────────────────────────────────────┼───────────┼───────
-    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.94 ⋯
-    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.89 ⋯
-    └───────────────────────────────────────────────────────────┴───────────┴───────
-                                                                   3 columns omitted
+    ┌──────────────────────────────────────────────┬───────────┬─────────────┬──────
+    │ measure                                      │ operation │ measurement │ 1.9 ⋯
+    ├──────────────────────────────────────────────┼───────────┼─────────────┼──────
+    │ ConformalPrediction.emp_coverage             │ predict   │ 0.94        │ 0.0 ⋯
+    │ ConformalPrediction.size_stratified_coverage │ predict   │ 0.94        │ 0.0 ⋯
+    └──────────────────────────────────────────────┴───────────┴─────────────┴──────
+                                                                   2 columns omitted
 
-    Empirical coverage for jackknife_plus: 0.942
-    SSC for jackknife_plus: 0.899
+    Empirical coverage for jackknife_plus_ab: 0.94
+    SSC for jackknife_plus_ab: 0.94
+
+Note that, in the regression case, stratified set sizes correspond to discretized interval widths.
 
 To benchmark the different approaches, we evaluate them iteratively below. As expected, more conservative approaches like Jackknife-min max  and CV-min max  attain higher aggregate and conditional coverage. Note that size-stratified is not available for methods that produce constant intervals, like standard Jackknife.
 
@@ -159,17 +156,19 @@ end
 show(sort(select!(bmk, [2,1,3]), 2, rev=true))
 ```
 
-    7×3 DataFrame
-     Row │ model             emp_coverage  ssc         
-         │ Symbol            Float64       Float64     
-    ─────┼─────────────────────────────────────────────
-       1 │ cv_minmax             0.96         0.916667
-       2 │ simple_inductive      0.953333  -Inf
-       3 │ jackknife_minmax      0.946667     0.908333
-       4 │ cv_plus               0.945        0.841667
-       5 │ jackknife_plus        0.941667     0.873
-       6 │ jackknife             0.941667  -Inf
-       7 │ naive                 0.938333  -Inf
+    9×3 DataFrame
+     Row │ model                     emp_coverage  ssc      
+         │ Symbol                    Float64       Float64  
+    ─────┼──────────────────────────────────────────────────
+       1 │ jackknife_plus_ab_minmax      0.988333  0.980547
+       2 │ cv_minmax                     0.96      0.910873
+       3 │ simple_inductive              0.953333  0.953333
+       4 │ jackknife_minmax              0.946667  0.869103
+       5 │ cv_plus                       0.945     0.866549
+       6 │ jackknife_plus_ab             0.941667  0.941667
+       7 │ jackknife_plus                0.941667  0.871606
+       8 │ jackknife                     0.941667  0.941667
+       9 │ naive                         0.938333  0.938333
 
 ## References
 

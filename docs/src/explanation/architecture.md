@@ -9,7 +9,7 @@ The goal is to make this package as compatible as possible with MLJ to tab into 
 
 ## Abstract Subtypes
 
-Currently I intend to work with three different abstract subtypes:
+Currently, I intend to work with three different abstract subtypes:
 
 - [`ConformalPrediction.ConformalInterval`](@ref)
 - [`ConformalPrediction.ConformalProbabilisticSet`](@ref)

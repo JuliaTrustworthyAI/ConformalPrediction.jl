@@ -1,4 +1,3 @@
-
 # Visualization using `Plots.jl` recipes
 
 ``` @meta

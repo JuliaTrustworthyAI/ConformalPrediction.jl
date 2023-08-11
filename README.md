@@ -1,3 +1,4 @@
+# ConformalPrediction
 
 ![](dev/logo/wide_logo.png)
 
@@ -79,18 +80,22 @@ y = vec(y)
 train, test = partition(eachindex(y), 0.4, 0.4, shuffle=true)
 ```
 
-We then import a decision-tree based regressor ([`EvoTrees.jl`](https://github.com/Evovest/EvoTrees.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
+We then import Symbolic Regressor ([`SymbolicRegression.jl`](https://github.com/MilesCranmer/SymbolicRegression.jl)) following the standard [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) procedure.
 
 ``` julia
-EvoTreeRegressor = @load EvoTreeRegressor pkg=EvoTrees
-model = EvoTreeRegressor(rounds=100) 
+regressor = @load SRRegressor pkg=SymbolicRegression
+model = regressor(
+    niterations=50,
+    binary_operators=[+, -, *],
+    unary_operators=[sin],
+)
 ```
 
 To turn our conventional model into a conformal model, we just need to declare it as such by using `conformal_model` wrapper function. The generated conformal model instance can wrapped in data to create a *machine*. Finally, we proceed by fitting the machine on training data using the generic `fit!` method:
 
 ``` julia
 using ConformalPrediction
-conf_model = conformal_model(model; method=:jackknife_plus)
+conf_model = conformal_model(model)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 ```
@@ -106,20 +111,20 @@ ŷ[1:show_first]
 ```
 
     5-element Vector{Tuple{Float64, Float64}}:
-     (0.3514065102722679, 2.4948272235282696)
-     (-0.36580206168104035, 1.7780775120607)
-     (0.13671800582612756, 2.2792132778975933)
-     (0.15237308545277795, 2.2801138611534326)
-     (0.19080981472120032, 2.3863592104933966)
+     (-0.40997718991694765, 1.449009293726001)
+     (0.8484810430118421, 2.7074675266547907)
+     (0.547852151594671, 2.4068386352376194)
+     (-0.022697652913589494, 1.8362888307293592)
+     (0.07435130847990101, 1.9333377921228496)
 
 For simple models like this one, we can call a custom `Plots` recipe on our instance, fit result and data to generate the chart below:
 
 ``` julia
 using Plots
 zoom = 0
-plt = plot(mach.model, mach.fitresult, Xtest, ytest, zoom=zoom, observed_lab="Test points")
+plt = plot(mach.model, mach.fitresult, Xtest, ytest, lw=5, zoom=zoom, observed_lab="Test points")
 xrange = range(-xmax+zoom,xmax-zoom,length=N)
-plot!(plt, xrange, @.(fun(xrange)), lw=1, ls=:dash, colour=:black, label="Ground truth")
+plot!(plt, xrange, @.(fun(xrange)), lw=2, ls=:dash, colour=:darkorange, label="Ground truth")
 ```
 
 ![](README_files/figure-commonmark/cell-7-output-1.svg)
@@ -133,21 +138,20 @@ println("Empirical coverage: $(round(_eval.measurement[1], digits=3))")
 println("SSC: $(round(_eval.measurement[2], digits=3))")
 ```
 
+    Started!
+
     PerformanceEvaluation object with these fields:
       measure, operation, measurement, per_fold,
       per_observation, fitted_params_per_fold,
       report_per_fold, train_test_rows
     Extract:
-    ┌───────────────────────────────────────────────────────────┬───────────┬───────
-    │ measure                                                   │ operation │ meas ⋯
-    ├───────────────────────────────────────────────────────────┼───────────┼───────
-    │ emp_coverage (generic function with 1 method)             │ predict   │ 0.95 ⋯
-    │ size_stratified_coverage (generic function with 1 method) │ predict   │ 0.84 ⋯
-    └───────────────────────────────────────────────────────────┴───────────┴───────
-                                                                   3 columns omitted
-
-    Empirical coverage: 0.95
-    SSC: 0.841
+    ┌──────────────────────────────────────────────┬───────────┬─────────────┬──────
+    │ measure                                      │ operation │ measurement │ 1.9 ⋯
+    ├──────────────────────────────────────────────┼───────────┼─────────────┼──────
+    │ ConformalPrediction.emp_coverage             │ predict   │ 0.945       │ 0.0 ⋯
+    │ ConformalPrediction.size_stratified_coverage │ predict   │ 0.945       │ 0.0 ⋯
+    └──────────────────────────────────────────────┴───────────┴─────────────┴──────
+                                                                   2 columns omitted
 
 ## 📚 Read on
 
@@ -196,10 +200,11 @@ The package has been tested for the following supervised models offered by [MLJ]
 keys(tested_atomic_models[:regression])
 ```
 
-    KeySet for a Dict{Symbol, Expr} with 4 entries. Keys:
-      :nearest_neighbor
+    KeySet for a Dict{Symbol, Expr} with 5 entries. Keys:
+      :ridge
+      :lasso
       :evo_tree
-      :light_gbm
+      :nearest_neighbor
       :linear
 
 **Classification**:
@@ -208,10 +213,9 @@ keys(tested_atomic_models[:regression])
 keys(tested_atomic_models[:classification])
 ```
 
-    KeySet for a Dict{Symbol, Expr} with 4 entries. Keys:
+    KeySet for a Dict{Symbol, Expr} with 3 entries. Keys:
       :nearest_neighbor
       :evo_tree
-      :light_gbm
       :logistic
 
 ### Implemented Evaluation Metrics

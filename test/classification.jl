@@ -9,13 +9,12 @@ data_specs = (
 )
 data_sets = Dict{String,Any}()
 for (k, v) in data_specs
-    X, y = MLJ.make_blobs(1000, v[1], centers = v[2])
+    X, y = MLJ.make_blobs(1000, v[1]; centers=v[2])
     X = MLJ.table(MLJ.matrix(X))
     train, test = partition(eachindex(y), 0.8)
     _set = Dict(:data => (X, y), :split => (train, test), :specs => v)
     data_sets[k] = _set
 end
-
 
 # Atomic and conformal models:
 models = tested_atomic_models[:classification]
@@ -23,9 +22,7 @@ conformal_models = merge(values(available_models[:classification])...)
 
 # Test workflow:
 @testset "Classification" begin
-
     for (model_name, import_call) in models
-
         @testset "$(model_name)" begin
 
             # Import and instantiate atomic model:
@@ -33,17 +30,15 @@ conformal_models = merge(values(available_models[:classification])...)
             model = Model()
 
             for _method in keys(conformal_models)
-
                 @testset "Method: $(_method)" begin
 
                     # Instantiate conformal models:
                     _cov = 0.85
-                    conf_model = conformal_model(model; method = _method, coverage = _cov)
+                    conf_model = conformal_model(model; method=_method, coverage=_cov)
                     conf_model = conformal_models[_method](model)
                     @test isnothing(conf_model.scores)
 
                     for (data_name, data_set) in data_sets
-
                         @testset "$(data_name)" begin
 
                             # Unpack
@@ -52,7 +47,7 @@ conformal_models = merge(values(available_models[:classification])...)
 
                             # Fit/Predict:
                             mach = machine(conf_model, X, y)
-                            fit!(mach, rows = train)
+                            fit!(mach; rows=train)
                             @test !isnothing(conf_model.scores)
                             predict(mach, selectrows(X, test))
 
@@ -60,17 +55,14 @@ conformal_models = merge(values(available_models[:classification])...)
                             @test isplot(bar(mach.model, mach.fitresult, X))
                             @test isplot(areaplot(mach.model, mach.fitresult, X, y))
                             @test isplot(
-                                areaplot(mach.model, mach.fitresult, X, y; input_var = 1),
+                                areaplot(mach.model, mach.fitresult, X, y; input_var=1)
                             )
                             @test isplot(
-                                areaplot(mach.model, mach.fitresult, X, y; input_var = :x1),
+                                areaplot(mach.model, mach.fitresult, X, y; input_var=:x1)
                             )
                             if data_set[:specs][1] != 2
                                 @test_throws AssertionError contourf(
-                                    mach.model,
-                                    mach.fitresult,
-                                    X,
-                                    y,
+                                    mach.model, mach.fitresult, X, y
                                 )
                             else
                                 @test isplot(contourf(mach.model, mach.fitresult, X, y))
@@ -80,12 +72,12 @@ conformal_models = merge(values(available_models[:classification])...)
                                         mach.fitresult,
                                         X,
                                         y;
-                                        zoom = -1,
-                                        plot_set_size = true,
+                                        zoom=-1,
+                                        plot_set_size=true,
                                     ),
                                 )
                                 @test isplot(
-                                    contourf(mach.model, mach.fitresult, X, y; target = 1),
+                                    contourf(mach.model, mach.fitresult, X, y; target=1)
                                 )
                             end
 
@@ -93,24 +85,16 @@ conformal_models = merge(values(available_models[:classification])...)
                             # Evaluation takes some time, so only testing for one method.
                             if _method == :simple_inductive && data_set[:specs][1] > 1
                                 # Empirical coverage:
-                                _eval =
-                                    evaluate!(mach; measure = emp_coverage, verbosity = 0)
+                                _eval = evaluate!(mach; measure=emp_coverage, verbosity=0)
                                 Δ = _eval.measurement[1] - _cov     # over-/under-coverage
                                 @test Δ >= -0.05                    # we don't undercover too much
                                 # Size-stratified coverage:
-                                _eval = evaluate!(mach; measure = ssc, verbosity = 0)
+                                _eval = evaluate!(mach; measure=ssc, verbosity=0)
                             end
-
                         end
-
                     end
-
                 end
-
             end
-
         end
-
     end
-
 end

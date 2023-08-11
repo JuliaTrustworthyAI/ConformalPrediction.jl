@@ -8,9 +8,9 @@ The goal is to make this package as compatible as possible with MLJ to tab into 
 %%| echo: false
 flowchart TB
     mmi[MLJModelInterface]
-    subgraph ConformalModel
+    subgraph ConformalModel 
         interval[ConformalInterval]
-        set[ConformalSet]
+        set[ConformalProbabilisticSet]
         prob[ConformalProbabilistic]
         struct1([NaiveRegressor])
         struct2([...])
@@ -22,13 +22,13 @@ flowchart TB
     end
     
     mmi --<:MMI.Interval--> interval
-    mmi --<:MMI.Supervised--> set
+    mmi --<:MMI.ProbabilisticSet--> set
     mmi --<:MMI.Probabilistic--> prob
 ```
 
 ## Abstract Subtypes
 
-Currently I intend to work with three different abstract subtypes: 
+Currently, I intend to work with three different abstract subtypes: 
 
 - [`ConformalPrediction.ConformalInterval`](@ref)
 - [`ConformalPrediction.ConformalProbabilisticSet`](@ref)
