@@ -166,7 +166,6 @@ function Plots.contourf(
             title=title,
             xlims=xlims,
             ylims=ylims,
-            clim=clim,
             c=cgrad(:blues),
             linewidth=0,
             kwargs...,
