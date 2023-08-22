@@ -58,6 +58,7 @@ include("transductive_classification.jl")
 
 # Training:
 include("ConformalTraining/ConformalTraining.jl")
+using .ConformalTraining
 
 # Type unions:
 const InductiveModel = Union{
