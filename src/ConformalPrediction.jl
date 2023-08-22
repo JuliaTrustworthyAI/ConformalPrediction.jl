@@ -10,7 +10,7 @@ export soft_assignment
 
 # Evaluation:
 include("evaluation/evaluation.jl")
-export emp_coverage, size_stratified_coverage, ssc
+export emp_coverage, size_stratified_coverage, ssc, ineff
 
 # Artifacts:
 include("artifacts/core.jl")
