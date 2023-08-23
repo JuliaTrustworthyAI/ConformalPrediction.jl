@@ -15,7 +15,7 @@ end
 function NaiveRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    heuristic::Function=absolute_error,
 )
     return NaiveRegressor(model, coverage, nothing, heuristic)
 end
@@ -83,7 +83,7 @@ end
 function JackknifeRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    heuristic::Function=absolute_error,
 )
     return JackknifeRegressor(model, coverage, nothing, heuristic)
 end
@@ -165,7 +165,7 @@ end
 function JackknifePlusRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    heuristic::Function=absolute_error,
 )
     return JackknifePlusRegressor(model, coverage, nothing, heuristic)
 end
@@ -256,7 +256,7 @@ end
 function JackknifeMinMaxRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    heuristic::Function=absolute_error,
 )
     return JackknifeMinMaxRegressor(model, coverage, nothing, heuristic)
 end
@@ -347,7 +347,7 @@ end
 function CVPlusRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    heuristic::Function=absolute_error,
     cv::MLJBase.CV=MLJBase.CV(),
 )
     return CVPlusRegressor(model, coverage, nothing, heuristic, cv)
@@ -452,7 +452,7 @@ end
 function CVMinMaxRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    heuristic::Function=absolute_error,
     cv::MLJBase.CV=MLJBase.CV(),
 )
     return CVMinMaxRegressor(model, coverage, nothing, heuristic, cv)
@@ -580,7 +580,7 @@ end
 function JackknifePlusAbRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    heuristic::Function=absolute_error,
     nsampling::Int=30,
     sample_size::AbstractFloat=0.5,
     replacement::Bool=true,
@@ -686,7 +686,7 @@ end
 function JackknifePlusAbMinMaxRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    heuristic::Function=absolute_error,
     nsampling::Int=30,
     sample_size::AbstractFloat=0.5,
     replacement::Bool=true,
@@ -789,7 +789,7 @@ end
 function TimeSeriesRegressorEnsembleBatch(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    heuristic::Function=absolute_error,
     nsampling::Int=50,
     sample_size::AbstractFloat=0.3,
     aggregate::Union{Symbol,String}="mean",

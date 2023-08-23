@@ -10,7 +10,7 @@ end
 function SimpleInductiveRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    heuristic::Function=absolute_error,
     train_ratio::AbstractFloat=0.5,
 )
     return SimpleInductiveRegressor(model, coverage, nothing, heuristic, train_ratio)

@@ -18,7 +18,7 @@ function ConformalPrediction.score(
 )
     X = permutedims(matrix(X))
     probas = permutedims(fitresult[1](X))
-    scores = @.(conf_model.heuristic(probas))
+    scores = @.(conf_model.heuristic(y, probas))
     if isnothing(y)
         return scores
     else
@@ -46,7 +46,7 @@ function ConformalPrediction.score(
         p ->
             mean(p; dims=ndims(p)) |>
             p -> MLUtils.unstack(p; dims=ndims(p))[1] |> p -> permutedims(p)
-    scores = @.(conf_model.heuristic(probas))
+    scores = @.(conf_model.heuristic(y, probas))
     if isnothing(y)
         return scores
     else
