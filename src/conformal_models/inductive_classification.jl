@@ -62,7 +62,7 @@ function score(
     p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, X))
     L = p̂.decoder.classes
     probas = pdf(p̂, L)
-    scores = @.(conf_model.heuristic(probas))
+    scores = @.(conf_model.heuristic(y, probas))
     if isnothing(y)
         return scores
     else
