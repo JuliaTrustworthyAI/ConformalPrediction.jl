@@ -13,9 +13,7 @@ mutable struct NaiveRegressor{Model<:Supervised} <: ConformalInterval
 end
 
 function NaiveRegressor(
-    model::Supervised;
-    coverage::AbstractFloat=0.95,
-    heuristic::Function=absolute_error,
+    model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=absolute_error
 )
     return NaiveRegressor(model, coverage, nothing, heuristic)
 end
@@ -81,9 +79,7 @@ mutable struct JackknifeRegressor{Model<:Supervised} <: ConformalInterval
 end
 
 function JackknifeRegressor(
-    model::Supervised;
-    coverage::AbstractFloat=0.95,
-    heuristic::Function=absolute_error,
+    model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=absolute_error
 )
     return JackknifeRegressor(model, coverage, nothing, heuristic)
 end
@@ -163,9 +159,7 @@ mutable struct JackknifePlusRegressor{Model<:Supervised} <: ConformalInterval
 end
 
 function JackknifePlusRegressor(
-    model::Supervised;
-    coverage::AbstractFloat=0.95,
-    heuristic::Function=absolute_error,
+    model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=absolute_error
 )
     return JackknifePlusRegressor(model, coverage, nothing, heuristic)
 end
@@ -254,9 +248,7 @@ mutable struct JackknifeMinMaxRegressor{Model<:Supervised} <: ConformalInterval
 end
 
 function JackknifeMinMaxRegressor(
-    model::Supervised;
-    coverage::AbstractFloat=0.95,
-    heuristic::Function=absolute_error,
+    model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=absolute_error
 )
     return JackknifeMinMaxRegressor(model, coverage, nothing, heuristic)
 end
