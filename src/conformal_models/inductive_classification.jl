@@ -41,7 +41,7 @@ end
 function SimpleInductiveClassifier(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=f(p̂) = 1.0 - p̂,
+    heuristic::Function=minus_softmax,
     train_ratio::AbstractFloat=0.5,
 )
     return SimpleInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
@@ -62,7 +62,7 @@ function score(
     p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, X))
     L = p̂.decoder.classes
     probas = pdf(p̂, L)
-    scores = @.(conf_model.heuristic(probas))
+    scores = @.(conf_model.heuristic(y, probas))
     if isnothing(y)
         return scores
     else
@@ -141,7 +141,7 @@ end
 function AdaptiveInductiveClassifier(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = 1.0 - ŷ,
+    heuristic::Function=minus_softmax,
     train_ratio::AbstractFloat=0.5,
 )
     return AdaptiveInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)

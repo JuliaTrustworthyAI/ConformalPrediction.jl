@@ -2,7 +2,7 @@
 
 ![](dev/logo/wide_logo.png)
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliatrustworthyai.github.io/ConformalPrediction.jl/stable/) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://juliatrustworthyai.github.io/ConformalPrediction.jl/dev/) [![Build Status](https://github.com/juliatrustworthyai/ConformalPrediction.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/juliatrustworthyai/ConformalPrediction.jl/actions/workflows/CI.yml?query=branch%3Amain) [![Coverage](https://codecov.io/gh/juliatrustworthyai/ConformalPrediction.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/juliatrustworthyai/ConformalPrediction.jl) [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle) [![ColPrac: Contributor’s Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet.png)](https://github.com/SciML/ColPrac) [![Twitter Badge](https://img.shields.io/twitter/url/https/twitter.com/paltmey.svg?style=social&label=Follow%20%40paltmey)](https://twitter.com/paltmey)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliatrustworthyai.github.io/ConformalPrediction.jl/stable/) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://juliatrustworthyai.github.io/ConformalPrediction.jl/dev/) [![Build Status](https://github.com/juliatrustworthyai/ConformalPrediction.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/juliatrustworthyai/ConformalPrediction.jl/actions/workflows/CI.yml?query=branch%3Amain) [![Coverage](https://codecov.io/gh/juliatrustworthyai/ConformalPrediction.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/juliatrustworthyai/ConformalPrediction.jl) [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle) [![License](https://img.shields.io/github/license/juliatrustworthyai/ConformalPrediction.jl)](LICENSE) [![Package Downloads](https://shields.io/endpoint?url=https://pkgs.genieframework.com/api/v1/badge/ConformalPrediction/.png)](https://pkgs.genieframework.com?packages=ConformalPrediction)
 
 `ConformalPrediction.jl` is a package for Predictive Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) (Blaom et al. 2020). Conformal Prediction is easy-to-understand, easy-to-use and model-agnostic and it works under minimal distributional assumptions.
 
@@ -71,7 +71,7 @@ X = reshape(X, :, 1)
 
 # Outputs:
 noise = 0.5
-fun(X) = X * sin(X)
+fun(X) = sin(X)
 ε = randn(N) .* noise
 y = @.(fun(X)) + ε
 y = vec(y)
@@ -111,11 +111,11 @@ ŷ[1:show_first]
 ```
 
     5-element Vector{Tuple{Float64, Float64}}:
-     (-0.40997718991694765, 1.449009293726001)
-     (0.8484810430118421, 2.7074675266547907)
-     (0.547852151594671, 2.4068386352376194)
-     (-0.022697652913589494, 1.8362888307293592)
-     (0.07435130847990101, 1.9333377921228496)
+     (0.0458889297242715, 1.9182762960257687)
+     (-1.9174452847238976, -0.04505791842240037)
+     (-1.2544275358451678, 0.6179598304563294)
+     (-0.2818835218505735, 1.5905038444509236)
+     (0.01299565032151917, 1.8853830166230163)
 
 For simple models like this one, we can call a custom `Plots` recipe on our instance, fit result and data to generate the chart below:
 
@@ -138,8 +138,6 @@ println("Empirical coverage: $(round(_eval.measurement[1], digits=3))")
 println("SSC: $(round(_eval.measurement[2], digits=3))")
 ```
 
-    Started!
-
     PerformanceEvaluation object with these fields:
       measure, operation, measurement, per_fold,
       per_observation, fitted_params_per_fold,
@@ -148,10 +146,13 @@ println("SSC: $(round(_eval.measurement[2], digits=3))")
     ┌──────────────────────────────────────────────┬───────────┬─────────────┬──────
     │ measure                                      │ operation │ measurement │ 1.9 ⋯
     ├──────────────────────────────────────────────┼───────────┼─────────────┼──────
-    │ ConformalPrediction.emp_coverage             │ predict   │ 0.945       │ 0.0 ⋯
-    │ ConformalPrediction.size_stratified_coverage │ predict   │ 0.945       │ 0.0 ⋯
+    │ ConformalPrediction.emp_coverage             │ predict   │ 0.948       │ 0.0 ⋯
+    │ ConformalPrediction.size_stratified_coverage │ predict   │ 0.948       │ 0.0 ⋯
     └──────────────────────────────────────────────┴───────────┴─────────────┴──────
                                                                    2 columns omitted
+
+    Empirical coverage: 0.948
+    SSC: 0.948
 
 ## 📚 Read on
 
@@ -231,7 +232,7 @@ There is also a simple `Plots.jl` recipe that can be used to inspect the set siz
 bar(mach.model, mach.fitresult, X)
 ```
 
-![](README_files/figure-commonmark/cell-11-output-1.svg)
+![](README_files/figure-commonmark/cell-12-output-1.svg)
 
 ## 🛠 Contribute
 

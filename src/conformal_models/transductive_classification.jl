@@ -8,7 +8,7 @@ mutable struct NaiveClassifier{Model<:Supervised} <: ConformalProbabilisticSet
 end
 
 function NaiveClassifier(
-    model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=f(y, ŷ) = 1.0 - ŷ
+    model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=minus_softmax
 )
     return NaiveClassifier(model, coverage, nothing, heuristic)
 end
