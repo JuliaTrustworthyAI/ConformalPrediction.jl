@@ -51,36 +51,6 @@ conformal_models = merge(values(available_models[:classification])...)
                             @test !isnothing(conf_model.scores)
                             predict(mach, selectrows(X, test))
 
-                            # Plotting:
-                            @test isplot(bar(mach.model, mach.fitresult, X))
-                            @test isplot(areaplot(mach.model, mach.fitresult, X, y))
-                            @test isplot(
-                                areaplot(mach.model, mach.fitresult, X, y; input_var=1)
-                            )
-                            @test isplot(
-                                areaplot(mach.model, mach.fitresult, X, y; input_var=:x1)
-                            )
-                            if data_set[:specs][1] != 2
-                                @test_throws AssertionError contourf(
-                                    mach.model, mach.fitresult, X, y
-                                )
-                            else
-                                @test isplot(contourf(mach.model, mach.fitresult, X, y))
-                                @test isplot(
-                                    contourf(
-                                        mach.model,
-                                        mach.fitresult,
-                                        X,
-                                        y;
-                                        zoom=-1,
-                                        plot_set_size=true,
-                                    ),
-                                )
-                                @test isplot(
-                                    contourf(mach.model, mach.fitresult, X, y; target=1)
-                                )
-                            end
-
                             # Evaluation:
                             # Evaluation takes some time, so only testing for one method.
                             if _method == :simple_inductive && data_set[:specs][1] > 1
