@@ -1,0 +1,172 @@
+# Regression
+
+```{julia}
+#| echo: false
+using Pkg; Pkg.activate("docs")
+using Plots
+theme(:wong)
+using Random
+Random.seed!(2022)
+```
+
+This tutorial presents and compares different approaches to Conformal Regression using a simple synthetic dataset. It is inspired by this MAPIE [tutorial](https://mapie.readthedocs.io/en/latest/examples_regression/4-tutorials/plot_main-tutorial-regression.html#).
+
+## Data
+
+We begin by generating some synthetic regression data below:
+
+```{julia}
+#| label: fig-data
+#| fig-cap: "Synthetic data."
+
+# Regression data:
+
+# Inputs:
+N = 600
+xmax = 5.0
+using Distributions
+d = Uniform(-xmax, xmax)
+X = rand(d, N)
+X = reshape(X, :, 1)
+
+# Outputs:
+noise = 0.5
+fun(X) = X * sin(X)
+ε = randn(N) .* noise
+y = @.(fun(X)) + ε
+y = vec(y)
+
+# Partition:
+using MLJ
+train, test = partition(eachindex(y), 0.4, 0.4, shuffle=true)
+
+using Plots
+scatter(X, y, label="Observed")
+xrange = range(-xmax,xmax,length=N)
+plot!(xrange, @.(fun(xrange)), lw=4, label="Ground truth", ls=:dash, colour=:black)
+```
+
+## Model
+
+To model this data we will use polynomial regression. There is currently no out-of-the-box support for polynomial feature transformations in `MLJ`, but it is easy enough to add a little helper function for this. Note how we define a linear pipeline `pipe` here. Since pipelines in `MLJ` are just models, we can use the generated object as an input to `conformal_model` below.
+
+```{julia}
+LinearRegressor = @load LinearRegressor pkg=MLJLinearModels
+degree_polynomial = 10
+polynomial_features(X, degree::Int) = reduce(hcat, map(i -> X.^i, 1:degree))
+pipe = (X -> MLJ.table(polynomial_features(MLJ.matrix(X), degree_polynomial))) |> LinearRegressor()
+```
+
+## Conformal Prediction
+
+Next, we conformalize our polynomial regressor using every available approach (except the Naive approach):
+
+```{julia}
+using ConformalPrediction
+conformal_models = merge(values(available_models[:regression])...)
+results = Dict()
+for _mod in keys(conformal_models) 
+    conf_model = conformal_model(pipe; method=_mod, coverage=0.95)
+    global mach = machine(conf_model, X, y)
+    MLJ.fit!(mach, rows=train)
+    results[_mod] = mach
+end
+```
+
+```{julia}
+#| echo: false
+#| output: true
+
+using Markdown
+n_charts = 4
+Markdown.parse("""
+Finally, let us look at the resulting conformal predictions in each case. The chart below shows the results: for the first $n_charts methods it displays the training data (dots) overlaid with the conformal prediction interval (shaded area). At first glance it is hard to spot any major differences between the different approaches. Next, we will look at how we can evaluate and benchmark these predictions.
+""")
+```
+
+```{julia}
+#| output: true
+#| label: fig-cp
+#| fig-cap: "Conformal prediction regions."
+
+using Plots
+zoom = -0.5
+xrange = range(-xmax+zoom,xmax-zoom,length=N)
+plt_list = []
+
+for (_mod, mach) in first(results, n_charts)
+    plt = plot(mach.model, mach.fitresult, X, y, zoom=zoom, title=_mod)
+    plot!(plt, xrange, @.(fun(xrange)), lw=1, ls=:dash, colour=:black, label="Ground truth")
+    push!(plt_list, plt)
+end
+
+plot(plt_list..., size=(800,500))
+```
+
+## Evaluation
+
+For evaluation of conformal predictors we follow @angelopoulos2021gentle (Section 3). As a first step towards adaptiveness (adaptivity), the authors recommend to inspect the set size of conformal predictions. The chart below shows the interval width for the different methods along with the ground truth interval width:
+
+```{julia}
+#| output: true
+#| label: fig-setsize
+#| fig-cap: "Prediction interval width."
+
+xrange = range(-xmax,xmax,length=N)
+plt = plot(xrange, ones(N) .* (1.96*2*noise), ls=:dash, colour=:black, label="Ground truth", lw=2)
+for (_mod, mach) in results
+    ŷ = predict(mach, reshape([x for x in xrange], :, 1))
+    y_size = set_size.(ŷ)
+    plot!(xrange, y_size, label=String(_mod))
+end
+plt
+```
+
+We can also use specific metrics like **empirical coverage** and **size-stratified coverage** to check for correctness and adaptiveness, respectively [@angelopoulus2021gentle]. To this end, the package provides custom measures that are compatible with `MLJ.jl`. In other words, we can evaluate model performance in true `MLJ.jl` fashion (see [here](https://alan-turing-institute.github.io/MLJ.jl/dev/evaluating_model_performance/)). 
+
+The code below runs the evaluation with respect to both metrics, `emp_coverage` and `ssc` for a single conformal machine: 
+
+```{julia}
+#| output: true
+
+_mod, mach = first(results)
+_eval = evaluate!(
+    mach,
+    operation=predict,
+    measure=[emp_coverage, ssc]
+)
+display(_eval)
+println("Empirical coverage for $(_mod): $(round(_eval.measurement[1], digits=3))")
+println("SSC for $(_mod): $(round(_eval.measurement[2], digits=3))")
+```
+
+Note that, in the regression case, stratified set sizes correspond to discretized interval widths. 
+
+To benchmark the different approaches, we evaluate them iteratively below. As expected, more conservative approaches like Jackknife-$\min\max$ and CV-$\min\max$ attain higher aggregate and conditional coverage. Note that size-stratified is not available for methods that produce constant intervals, like standard Jackknife.
+
+```{julia}
+#| output: true
+
+using DataFrames
+bmk = DataFrame()
+for (_mod, mach) in results
+    _eval = evaluate!(
+        mach,
+        resampling=CV(;nfolds=5),
+        operation=predict,
+        measure=[emp_coverage, ssc]
+    )
+    _bmk = DataFrame(
+        Dict(
+            :model => _mod,
+            :emp_coverage => _eval.measurement[1],
+            :ssc => _eval.measurement[2]
+        )
+    )
+    bmk = vcat(bmk, _bmk)
+end
+
+show(sort(select!(bmk, [2,1,3]), 2, rev=true))
+```
+
+## References
