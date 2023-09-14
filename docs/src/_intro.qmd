@@ -4,6 +4,7 @@
 #| echo: false
 using Pkg; Pkg.activate("docs")
 using Plots
+using TaijaPlotting
 theme(:wong)
 using Random
 Random.seed!(123)
@@ -14,9 +15,9 @@ using ConformalPrediction
 
 ## 🏃 Quick Tour
 
-> First time here? Take a quick interactive [tour](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl) to see what this package can do: [![Binder](https://mybinder.org/badge_logo.svg)](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl){target="_blank"}
+> First time here? Take a quick interactive [tour](https://juliahub.com/ui/Notebooks/juliahub/Tutorials/ConformalPrediction.jl) to see what this package can do right on [JuliaHub](https://juliahub.com/ui/Notebooks/juliahub/Tutorials/ConformalPrediction.jl){target="_blank"} (To run the notebook, hit login and then edit). 
 
-The button takes you to a [`Pluto.jl`](https://github.com/fonsp/Pluto.jl){target="_blank"} 🎈 notebook hosted on [binder](https://mybinder.org/){target="_blank"}. In my own experience, this may take some time to load, certainly long enough to get yourself a hot beverage ☕. Alternatively, you can run the notebook locally or skip the tour for now and read on below. 
+This [`Pluto.jl`](https://github.com/fonsp/Pluto.jl){target="_blank"} 🎈 notebook won the 2nd Price in the [JuliaCon 2023 Notebook Competition](https://info.juliahub.com/pluto-notebook-winner-23).
 
 ### Local Tour
 
