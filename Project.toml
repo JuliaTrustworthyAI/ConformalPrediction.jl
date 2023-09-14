@@ -1,7 +1,7 @@
 name = "ConformalPrediction"
 uuid = "98bfc277-1877-43dc-819b-a3e38c30242f"
 authors = ["Patrick Altmeyer"]
-version = "0.1.11"
+version = "0.1.12"
 
 [deps]
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
@@ -29,7 +29,7 @@ ComputationalResources = "0.3"
 Flux = "0.13.16, 0.14"
 MLJBase = "0.20, 0.21"
 MLJEnsembles = "0.3.3"
-MLJFlux = "0.2.10"
+MLJFlux = "0.2.10, 0.3"
 MLJModelInterface = "1"
 MLUtils = "0.4.2"
 NaturalSort = "1"

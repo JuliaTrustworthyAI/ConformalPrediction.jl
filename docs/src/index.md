@@ -12,9 +12,9 @@ Documentation for [ConformalPrediction.jl](https://github.com/juliatrustworthyai
 
 ## 🏃 Quick Tour
 
-> First time here? Take a quick interactive [tour](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl) to see what this package can do: [![Binder](https://mybinder.org/badge_logo.svg)](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl)
+> First time here? Take a quick interactive [tour](https://juliahub.com/ui/Notebooks/juliahub/Tutorials/ConformalPrediction.jl) to see what this package can do right on [JuliaHub](https://juliahub.com/ui/Notebooks/juliahub/Tutorials/ConformalPrediction.jl) (To run the notebook, hit login and then edit).
 
-The button takes you to a [`Pluto.jl`](https://github.com/fonsp/Pluto.jl) 🎈 notebook hosted on [binder](https://mybinder.org/). In my own experience, this may take some time to load, certainly long enough to get yourself a hot beverage ☕. Alternatively, you can run the notebook locally or skip the tour for now and read on below.
+This [`Pluto.jl`](https://github.com/fonsp/Pluto.jl) 🎈 notebook won the 2nd Price in the [JuliaCon 2023 Notebook Competition](https://info.juliahub.com/pluto-notebook-winner-23).
 
 ### Local Tour
 
@@ -75,7 +75,7 @@ X = reshape(X, :, 1)
 
 # Outputs:
 noise = 0.5
-fun(X) = X * sin(X)
+fun(X) = sin(X)
 ε = randn(N) .* noise
 y = @.(fun(X)) + ε
 y = vec(y)
@@ -115,11 +115,11 @@ ŷ[1:show_first]
 ```
 
     5-element Vector{Tuple{Float64, Float64}}:
-     (-0.40997718991694765, 1.449009293726001)
-     (0.8484810430118421, 2.7074675266547907)
-     (0.547852151594671, 2.4068386352376194)
-     (-0.022697652913589494, 1.8362888307293592)
-     (0.07435130847990101, 1.9333377921228496)
+     (-0.04087262272113379, 1.8635644669554758)
+     (0.04647464096907805, 1.9509117306456876)
+     (-0.24248802236397216, 1.6619490673126376)
+     (-0.07841928163933476, 1.8260178080372749)
+     (-0.02268628324126465, 1.881750806435345)
 
 For simple models like this one, we can call a custom `Plots` recipe on our instance, fit result and data to generate the chart below:
 
@@ -142,20 +142,21 @@ println("Empirical coverage: $(round(_eval.measurement[1], digits=3))")
 println("SSC: $(round(_eval.measurement[2], digits=3))")
 ```
 
-    Started!
-
     PerformanceEvaluation object with these fields:
-      measure, operation, measurement, per_fold,
+      model, measure, operation, measurement, per_fold,
       per_observation, fitted_params_per_fold,
-      report_per_fold, train_test_rows
+      report_per_fold, train_test_rows, resampling, repeats
     Extract:
     ┌──────────────────────────────────────────────┬───────────┬─────────────┬──────
     │ measure                                      │ operation │ measurement │ 1.9 ⋯
     ├──────────────────────────────────────────────┼───────────┼─────────────┼──────
-    │ ConformalPrediction.emp_coverage             │ predict   │ 0.945       │ 0.0 ⋯
-    │ ConformalPrediction.size_stratified_coverage │ predict   │ 0.945       │ 0.0 ⋯
+    │ ConformalPrediction.emp_coverage             │ predict   │ 0.953       │ 0.0 ⋯
+    │ ConformalPrediction.size_stratified_coverage │ predict   │ 0.953       │ 0.0 ⋯
     └──────────────────────────────────────────────┴───────────┴─────────────┴──────
                                                                    2 columns omitted
+
+    Empirical coverage: 0.953
+    SSC: 0.953
 
 ## 📚 Read on
 
@@ -235,7 +236,7 @@ There is also a simple `Plots.jl` recipe that can be used to inspect the set siz
 bar(mach.model, mach.fitresult, X)
 ```
 
-![](index_files/figure-commonmark/cell-11-output-1.svg)
+![](index_files/figure-commonmark/cell-12-output-1.svg)
 
 ## 🛠 Contribute
 

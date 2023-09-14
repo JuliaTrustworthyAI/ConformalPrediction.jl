@@ -47,7 +47,7 @@ conformal_models = merge(values(available_models[:classification])...)
 
                             # Fit/Predict:
                             mach = machine(conf_model, X, y)
-                            fit!(mach; rows=train)
+                            MLJ.fit!(mach; rows=train)
                             @test !isnothing(conf_model.scores)
                             predict(mach, selectrows(X, test))
 
