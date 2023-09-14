@@ -17,7 +17,6 @@ const ConformalModel = Union{
 
 include("utils.jl")
 include("heuristics.jl")
-include("plotting.jl")
 
 # Main API call to wrap model:
 """
