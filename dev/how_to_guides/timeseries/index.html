@@ -4,17 +4,25 @@ df = CSV.read(&quot;./dev/artifacts/electricity_demand.csv&quot;, DataFrame)</co
 df.Datetime = Dates.DateTime.(df.Datetime, &quot;yyyy-mm-dd HH:MM:SS&quot;)
 df.Weekofyear = Dates.week.(df.Datetime)
 df.Weekday = Dates.dayofweek.(df.Datetime)
-df.hour = Dates.hour.(df.Datetime) </code></pre><p>Additionally, to simulate sudden changes caused by unforeseen events, such as blackouts or lockdowns, we deliberately reduce the electricity demand by 2GW from February 22nd onward.</p><pre><code class="language-julia hljs">condition = df.Datetime .&gt;= Date(&quot;2014-02-22&quot;)
-df[condition, :Demand] .= df[condition, :Demand] .- 2</code></pre><h3 id="Lag-features"><a class="docs-heading-anchor" href="#Lag-features">Lag features</a><a id="Lag-features-1"></a><a class="docs-heading-anchor-permalink" href="#Lag-features" title="Permalink"></a></h3><pre><code class="language-julia hljs">using ShiftedArrays
+df.hour = Dates.hour.(df.Datetime) </code></pre><p>Additionally, to simulate sudden changes caused by unforeseen events, such as blackouts or lockdowns, we deliberately reduce the electricity demand by 2GW from February 22nd onward.</p><pre><code class="language-julia hljs">df.Demand_updated = copy(df.Demand)
+condition = df.Datetime .&gt;= Date(&quot;2014-02-22&quot;)
+df[condition, :Demand_updated] .= df[condition, :Demand_updated] .- 2</code></pre><p>That is how the data looks like after our manipulation</p><pre><code class="language-julia hljs">cutoff_point = 200
+plot(df[cutoff_point:split_index, [:Datetime]].Datetime, df[cutoff_point:split_index, :].Demand ,
+ label=&quot;training data&quot;, color=:green, xlabel = &quot;Date&quot; , ylabel=&quot;Electricity demand(GW)&quot;)
+plot!(df[split_index+1 : size(df,1), [:Datetime]].Datetime, df[split_index+1 : size(df,1), : ].Demand,
+ label=&quot;test data&quot;, color=:orange, xlabel = &quot;Date&quot; , ylabel=&quot;Electricity demand(GW)&quot;)
+plot!(df[split_index+1 : size(df,1), [:Datetime]].Datetime, df[split_index+1 : size(df,1), : ].Demand_updated, label=&quot;updated test data&quot;, color=:red, linewidth=1, framestyle=:box)
+plot!(legend=:outerbottom, legendcolumns=3)
+plot!(size=(850,400), left_margin = 5Plots.mm)</code></pre><h3 id="Lag-features"><a class="docs-heading-anchor" href="#Lag-features">Lag features</a><a id="Lag-features-1"></a><a class="docs-heading-anchor-permalink" href="#Lag-features" title="Permalink"></a></h3><pre><code class="language-julia hljs">using ShiftedArrays
 n_lags = 5
 for i = 1:n_lags
     DataFrames.transform!(df, &quot;Demand&quot; =&gt; (x -&gt; ShiftedArrays.lag(x, i)) =&gt; &quot;lag_hour_$i&quot;)
 end
 
 df_dropped_missing = dropmissing(df)
-df_dropped_missing</code></pre><h2 id="Train-test-split"><a class="docs-heading-anchor" href="#Train-test-split">Train-test split</a><a id="Train-test-split-1"></a><a class="docs-heading-anchor-permalink" href="#Train-test-split" title="Permalink"></a></h2><p>As usual, we split the data into train and test sets. We use the first 90% of the data for training and the remaining 10% for testing.</p><pre><code class="language-julia hljs">features_cols = DataFrames.select(df_dropped_missing, Not([:Datetime, :Demand]))
+df_dropped_missing</code></pre><h2 id="Train-test-split"><a class="docs-heading-anchor" href="#Train-test-split">Train-test split</a><a id="Train-test-split-1"></a><a class="docs-heading-anchor-permalink" href="#Train-test-split" title="Permalink"></a></h2><p>As usual, we split the data into train and test sets. We use the first 90% of the data for training and the remaining 10% for testing.</p><pre><code class="language-julia hljs">features_cols = DataFrames.select(df_dropped_missing, Not([:Datetime, :Demand, :Demand_updated]))
 X = Matrix(features_cols)
-y = Matrix(df_dropped_missing[:, [:Demand]])
+y = Matrix(df_dropped_missing[:, [:Demand_updated]])
 split_index = floor(Int, 0.9 * size(y , 1)) 
 println(split_index)
 X_train = X[1:split_index, :]
@@ -32,8 +40,21 @@ fit!(mach, rows=train)
 y_pred_interval = MLJ.predict(conf_model, mach.fitresult, X_test)
 lb = [ minimum(tuple_data) for tuple_data in y_pred_interval]
 ub = [ maximum(tuple_data) for tuple_data in y_pred_interval]
-y_pred = [mean(tuple_data) for tuple_data in y_pred_interval]</code></pre><p><img src="../timeseries_files/figure-commonmark/cell-10-output-1.svg" alt/></p><p>We can use <code>partial_fit</code> method in EnbPI implementation in ConformalPrediction in order to adjust prediction intervals to sudden change points on test sets that have not been seen by the model during training. In the below experiment, sample<em>size indicates the batch of new observations. You can decide if you want to update residuals by sample</em>size or update and remove first <em>n</em> residuals (shift_size = n). The latter will allow to remove early residuals that will not have a positive impact on the current observations.</p><p>The chart below compares the results to the previous experiment without updating residuals:</p><pre><code class="language-julia hljs">sample_size = 10
-shift_size = 10
+y_pred = [mean(tuple_data) for tuple_data in y_pred_interval]</code></pre><pre><code class="language-julia hljs">#| echo: false
+#| output: true
+cutoff_point = findfirst(df_dropped_missing.Datetime .== Date(&quot;2014-02-15&quot;))
+plot(df_dropped_missing[cutoff_point:split_index, [:Datetime]].Datetime, y_train[cutoff_point:split_index] ,
+ label=&quot;train&quot;, color=:green , xlabel = &quot;Date&quot; , ylabel=&quot;Electricity demand(GW)&quot;, linewidth=1)
+plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime,
+ y_test, label=&quot;test&quot;, color=:red)
+plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime ,
+ y_pred, label =&quot;prediction&quot;, color=:blue)
+plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime,
+ lb, fillrange = ub, fillalpha = 0.2, label = &quot;prediction interval w/o EnbPI&quot;,
+  color=:lake, linewidth=0, framestyle=:box)
+plot!(legend=:outerbottom, legendcolumns=4, legendfontsize=6)
+plot!(size=(850,400), left_margin = 5Plots.mm)</code></pre><p>We can use <code>partial_fit</code> method in EnbPI implementation in ConformalPrediction in order to adjust prediction intervals to sudden change points on test sets that have not been seen by the model during training. In the below experiment, sample<em>size indicates the batch of new observations. You can decide if you want to update residuals by sample</em>size or update and remove first <em>n</em> residuals (shift_size = n). The latter will allow to remove early residuals that will not have a positive impact on the current observations.</p><p>The chart below compares the results to the previous experiment without updating residuals:</p><pre><code class="language-julia hljs">sample_size = 30
+shift_size = 100
 last_index = size(X_test , 1)
 lb_updated , ub_updated = ([], [])
 for step in 1:sample_size:last_index
@@ -50,4 +71,16 @@ for step in 1:sample_size:last_index
     push!(ub_updated, ub_updatedᵢ)
 end
 lb_updated = reduce(vcat, lb_updated)
-ub_updated = reduce(vcat, ub_updated)</code></pre><p><img src="../timeseries_files/figure-commonmark/cell-12-output-1.svg" alt/></p><h2 id="Results"><a class="docs-heading-anchor" href="#Results">Results</a><a id="Results-1"></a><a class="docs-heading-anchor-permalink" href="#Results" title="Permalink"></a></h2><p>In time series problems, unexpected incidents can lead to sudden changes, and such scenarios are highly probable. As illustrated earlier, the model’s training data lacks information about these change points, making it unable to anticipate them. The top figure demonstrates that when residuals are not updated, the prediction intervals solely rely on the distribution of residuals from the training set. Consequently, these intervals fail to encompass the true observations after the change point, resulting in a sudden drop in coverage.</p><p>However, by partially updating the residuals, the method becomes adept at capturing the increasing uncertainties in model predictions. It is important to note that the changes in uncertainty occur approximately one day after the change point. This delay is attributed to the requirement of having a sufficient number of new residuals to alter the quantiles obtained from the residual distribution.</p><h2 id="References"><a class="docs-heading-anchor" href="#References">References</a><a id="References-1"></a><a class="docs-heading-anchor-permalink" href="#References" title="Permalink"></a></h2><p>Xu, Chen, and Yao Xie. 2021. “Conformal Prediction Interval for Dynamic Time-Series.” In, 11559–69. PMLR. <a href="https://proceedings.mlr.press/v139/xu21h.html">https://proceedings.mlr.press/v139/xu21h.html</a>.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../llm/">« How to Conformalize a Large Language Model</a><a class="docs-footer-nextpage" href="../../explanation/">Overview »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Thursday 14 September 2023 11:49">Thursday 14 September 2023</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ub_updated = reduce(vcat, ub_updated)</code></pre><pre><code class="language-julia hljs">#| echo: false
+#| output: true
+plot(df_dropped_missing[cutoff_point:split_index, [:Datetime]].Datetime, y_train[cutoff_point:split_index] ,
+ label=&quot;train&quot;, color=:green , xlabel = &quot;Date&quot; , ylabel=&quot;Electricity demand(GW)&quot;, linewidth=1)
+plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime, y_test,
+ label=&quot;test&quot;, color=:red)
+plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime ,
+                                 y_pred, label =&quot;prediction&quot;, color=:blue)
+plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime,
+ lb_updated, fillrange = ub_updated, fillalpha = 0.2, label = &quot;EnbPI&quot;,
+  color=:lake, linewidth=0, framestyle=:box)
+plot!(legend=:outerbottom, legendcolumns=4)
+plot!(size=(850,400), left_margin = 5Plots.mm)</code></pre><h2 id="Results"><a class="docs-heading-anchor" href="#Results">Results</a><a id="Results-1"></a><a class="docs-heading-anchor-permalink" href="#Results" title="Permalink"></a></h2><p>In time series problems, unexpected incidents can lead to sudden changes, and such scenarios are highly probable. As illustrated earlier, the model’s training data lacks information about these change points, making it unable to anticipate them. The top figure demonstrates that when residuals are not updated, the prediction intervals solely rely on the distribution of residuals from the training set. Consequently, these intervals fail to encompass the true observations after the change point, resulting in a sudden drop in coverage.</p><p>However, by partially updating the residuals, the method becomes adept at capturing the increasing uncertainties in model predictions. It is important to note that the changes in uncertainty occur approximately one day after the change point. This delay is attributed to the requirement of having a sufficient number of new residuals to alter the quantiles obtained from the residual distribution.</p><h2 id="References"><a class="docs-heading-anchor" href="#References">References</a><a id="References-1"></a><a class="docs-heading-anchor-permalink" href="#References" title="Permalink"></a></h2><p>Xu, Chen, and Yao Xie. 2021. “Conformal Prediction Interval for Dynamic Time-Series.” In, 11559–69. PMLR. <a href="https://proceedings.mlr.press/v139/xu21h.html">https://proceedings.mlr.press/v139/xu21h.html</a>.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../llm/">« How to Conformalize a Large Language Model</a><a class="docs-footer-nextpage" href="../../explanation/">Overview »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Friday 13 October 2023 16:05">Friday 13 October 2023</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
