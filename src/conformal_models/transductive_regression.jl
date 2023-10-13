@@ -858,6 +858,10 @@ function partial_fit(
     ŷₜ = _aggregate(ŷ, aggregate)
     push!(conf_model.scores, @.(conf_model.heuristic(y, ŷₜ))...)
     conf_model.scores = filter(!isnan, conf_model.scores)
+    if shift_size > length(conf_model.scores)
+        @warn "The shift size is bigger than the size of Non-conformity scores"
+        return conf_model.scores
+    end
     conf_model.scores = conf_model.scores[(shift_size + 1):length(conf_model.scores)]
     return conf_model.scores
 end
