@@ -36,6 +36,7 @@ df.Demand_updated = copy(df.Demand)
 condition = df.Datetime .>= Date("2014-02-22")
 df[condition, :Demand_updated] .= df[condition, :Demand_updated] .- 2
 ```
+
 That is how the data looks like after our manipulation
 
 ``` julia
@@ -48,7 +49,6 @@ plot!(df[split_index+1 : size(df,1), [:Datetime]].Datetime, df[split_index+1 : s
 plot!(legend=:outerbottom, legendcolumns=3)
 plot!(size=(850,400), left_margin = 5Plots.mm)
 ```
-![](timeseries_files/figure-commonmark/electricity_demand.svg)
 
 ### Lag features
 
@@ -71,7 +71,7 @@ As usual, we split the data into train and test sets. We use the first 90% of th
 features_cols = DataFrames.select(df_dropped_missing, Not([:Datetime, :Demand, :Demand_updated]))
 X = Matrix(features_cols)
 y = Matrix(df_dropped_missing[:, [:Demand_updated]])
-split_index = floor(Int, 0.8 * size(y , 1)) 
+split_index = floor(Int, 0.9 * size(y , 1)) 
 println(split_index)
 X_train = X[1:split_index, :]
 y_train = y[1:split_index, :]
@@ -108,6 +108,8 @@ y_pred = [mean(tuple_data) for tuple_data in y_pred_interval]
 ```
 
 ``` julia
+#| echo: false
+#| output: true
 cutoff_point = findfirst(df_dropped_missing.Datetime .== Date("2014-02-15"))
 plot(df_dropped_missing[cutoff_point:split_index, [:Datetime]].Datetime, y_train[cutoff_point:split_index] ,
  label="train", color=:green , xlabel = "Date" , ylabel="Electricity demand(GW)", linewidth=1)
@@ -122,11 +124,9 @@ plot!(legend=:outerbottom, legendcolumns=4, legendfontsize=6)
 plot!(size=(850,400), left_margin = 5Plots.mm)
 ```
 
-![](timeseries_files/figure-commonmark/electricity_demand_pred.svg)
-
 We can use `partial_fit` method in EnbPI implementation in ConformalPrediction in order to adjust prediction intervals to sudden change points on test sets that have not been seen by the model during training. In the below experiment, sample_size indicates the batch of new observations. You can decide if you want to update residuals by sample_size or update and remove first *n* residuals (shift_size = n). The latter will allow to remove early residuals that will not have a positive impact on the current observations.
 
-The figure below shows the new prediction intervals with updating residuals using EnbPI approach:
+The chart below compares the results to the previous experiment without updating residuals:
 
 ``` julia
 sample_size = 30
@@ -151,6 +151,8 @@ ub_updated = reduce(vcat, ub_updated)
 ```
 
 ``` julia
+#| echo: false
+#| output: true
 plot(df_dropped_missing[cutoff_point:split_index, [:Datetime]].Datetime, y_train[cutoff_point:split_index] ,
  label="train", color=:green , xlabel = "Date" , ylabel="Electricity demand(GW)", linewidth=1)
 plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime, y_test,
@@ -160,12 +162,9 @@ plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime ,
 plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime,
  lb_updated, fillrange = ub_updated, fillalpha = 0.2, label = "EnbPI",
   color=:lake, linewidth=0, framestyle=:box)
- plot!(legend=:outerbottom, legendcolumns=4)
- plot!(size=(850,400), left_margin = 5Plots.mm)
+plot!(legend=:outerbottom, legendcolumns=4)
+plot!(size=(850,400), left_margin = 5Plots.mm)
 ```
-
-
-![](timeseries_files/figure-commonmark/electricity_demand_pred_enbpi.svg)
 
 ## Results
 
