@@ -85,7 +85,6 @@ end
 function ConformalQuantileRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    # I think it must be the abs value
     heuristic::Function=f(y, ŷ_lb, ŷ_ub ) = reduce((x,y) -> max.(x,y), [ŷ_lb-y, y-ŷ_ub]),
     train_ratio::AbstractFloat=0.5,
 )
@@ -128,8 +127,6 @@ function MMI.fit(conf_model::ConformalQuantileRegressor, verbosity, X, y)
         ŷᵢ = reformat_mlj_prediction(MMI.predict(conf_model.model, μ̂ᵢ, Xcal))
         push!(y_pred, ŷᵢ)
     end
-    println("we are heree!")
-    println(y_pred)
     conf_model.scores = @.(conf_model.heuristic(ycal, y_pred[1], y_pred[2]))
     println(conf_model.scores)
     return (fitresult, cache, report)
@@ -152,7 +149,6 @@ function MMI.predict(conf_model::ConformalQuantileRegressor, fitresult, Xnew)
         MMI.predict(conf_model.model, μ̂ᵢ, MMI.reformat(conf_model.model, Xnew)...)
     ) for μ̂ᵢ in fitresult
     ]
-    println(size(ŷ))
     ŷ = reduce(hcat, ŷ)
     v = conf_model.scores
     q̂ = StatsBase.quantile(v, conf_model.coverage)
