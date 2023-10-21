@@ -73,7 +73,7 @@ end
 
 
 
-"The `ConfromalQuantileRegressor` is the simplest approach to Inductive Conformal Regression. Contrary to the [`NaiveRegressor`](@ref) it computes nonconformity scores using a designated calibration dataset."
+"Constructor for `ConformalQuantileRegressor`."
 mutable struct ConformalQuantileRegressor{Model<:Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
@@ -97,13 +97,19 @@ end
 For the [`ConfromalQuantileRegressor`](@ref) nonconformity scores are computed as follows:
 
 ``
-S_i^{\text{CAL}} = s(X_i, Y_i) = h(\hat\mu(X_i), Y_i), \ i \in \mathcal{D}_{\text{calibration}}
+S_i^{\text{CAL}} = s(X_i, Y_i) = h(\hat\mu_{\alpha_{lo}}(X_i), \hat\mu_{\alpha_{hi}}(X_i)  ,Y_i), \ i \in \mathcal{D}_{\text{calibration}}
 ``
 
-A typical choice for the heuristic function is ``h(\hat\mu(X_i),Y_i)=|Y_i-\hat\mu(X_i)|`` where ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``.
+A typical choice for the heuristic function is ``h(\hat\mu_{\alpha_{lo}}(X_i), \hat\mu_{\alpha_{hi}}(X_i)  ,Y_i)= max\{\hat\mu_{\alpha_{low}}(X_i)-Y_i, Y_i-\hat\mu_{\alpha_{hi}}(X_i)\} `` where ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}` and
+    ``\alpha_{lo}, \alpha_{hi}`` lower and higher percentile.
+
 """
 function MMI.fit(conf_model::ConformalQuantileRegressor, verbosity, X, y)
 
+    # limited to QuantileRegressor
+    if info(conf_model.model).name != "QuantileRegressor"
+        error("$(info(conf_model.model).name) is not supported yet.")
+    end
 
     # Data Splitting:
     train, calibration = partition(eachindex(y), conf_model.train_ratio)
@@ -116,6 +122,8 @@ function MMI.fit(conf_model::ConformalQuantileRegressor, verbosity, X, y)
 
     # Training:
     fitresult, cache, report, y_pred = ([], [], [],[])
+
+    # Training two Quantile regression models with different deltas
     quantile = conf_model.model.delta
     for qvalue in sort([quantile, 1-quantile])
         conf_model.model.delta = qvalue
@@ -128,7 +136,6 @@ function MMI.fit(conf_model::ConformalQuantileRegressor, verbosity, X, y)
         push!(y_pred, ŷᵢ)
     end
     conf_model.scores = @.(conf_model.heuristic(ycal, y_pred[1], y_pred[2]))
-    println(conf_model.scores)
     return (fitresult, cache, report)
 end
 
@@ -139,7 +146,7 @@ end
 For the [`ConfromalQuantileRegressor`](@ref) prediction intervals are computed as follows,
 
 ``
-\hat{C}_{n,\alpha}(X_{n+1}) = \hat\mu(X_{n+1}) \pm \hat{q}_{n, \alpha}^{+} \{S_i^{\text{CAL}} \}, \ i \in \mathcal{D}_{\text{calibration}}
+\hat{C}_{n,\alpha}(X_{n+1}) = [\hat\mu_{\alpha_{lo}}(X_{n+1}) - \hat{q}_{n, \alpha} \{S_i^{\text{CAL}} \}, \hat\mu_{\alpha_{hi}}(X_{n+1}) + \hat{q}_{n, \alpha} \{S_i^{\text{CAL}} \}], \ i \in \mathcal{D}_{\text{calibration}}
 ``
 
 where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
