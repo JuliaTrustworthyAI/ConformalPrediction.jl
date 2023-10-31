@@ -71,8 +71,6 @@ function MMI.predict(conf_model::SimpleInductiveRegressor, fitresult, Xnew)
     return ŷ
 end
 
-
-
 "Constructor for `ConformalQuantileRegressor`."
 mutable struct ConformalQuantileRegressor{Model<:Supervised} <: ConformalInterval
     model::Model
@@ -85,7 +83,9 @@ end
 function ConformalQuantileRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ_lb, ŷ_ub ) = reduce((x,y) -> max.(x,y), [ŷ_lb-y, y-ŷ_ub]),
+    heuristic::Function=function f(y, ŷ_lb, ŷ_ub)
+        return reduce((x, y) -> max.(x, y), [ŷ_lb - y, y - ŷ_ub])
+    end,
     train_ratio::AbstractFloat=0.5,
 )
     return ConformalQuantileRegressor(model, coverage, nothing, heuristic, train_ratio)
@@ -121,11 +121,11 @@ function MMI.fit(conf_model::ConformalQuantileRegressor, verbosity, X, y)
     Xcal, ycal = MMI.reformat(conf_model.model, Xcal, ycal)
 
     # Training:
-    fitresult, cache, report, y_pred = ([], [], [],[])
+    fitresult, cache, report, y_pred = ([], [], [], [])
 
     # Training two Quantile regression models with different deltas
     quantile = conf_model.model.delta
-    for qvalue in sort([quantile, 1-quantile])
+    for qvalue in sort([quantile, 1 - quantile])
         conf_model.model.delta = qvalue
         μ̂ᵢ, cacheᵢ, reportᵢ = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
         push!(fitresult, μ̂ᵢ)
@@ -152,9 +152,10 @@ For the [`ConfromalQuantileRegressor`](@ref) prediction intervals are computed a
 where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
 """
 function MMI.predict(conf_model::ConformalQuantileRegressor, fitresult, Xnew)
-    ŷ = [reformat_mlj_prediction(
-        MMI.predict(conf_model.model, μ̂ᵢ, MMI.reformat(conf_model.model, Xnew)...)
-    ) for μ̂ᵢ in fitresult
+    ŷ = [
+        reformat_mlj_prediction(
+            MMI.predict(conf_model.model, μ̂ᵢ, MMI.reformat(conf_model.model, Xnew)...)
+        ) for μ̂ᵢ in fitresult
     ]
     ŷ = reduce(hcat, ŷ)
     v = conf_model.scores
@@ -163,4 +164,3 @@ function MMI.predict(conf_model::ConformalQuantileRegressor, fitresult, Xnew)
     ŷ = reformat_interval(ŷ)
     return ŷ
 end
-

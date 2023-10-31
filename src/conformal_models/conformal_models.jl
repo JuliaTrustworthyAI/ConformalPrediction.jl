@@ -63,9 +63,9 @@ using .ConformalTraining
 # Type unions:
 const InductiveModel = Union{
     SimpleInductiveRegressor,
-    SimpleInductiveClassifier, 
-    AdaptiveInductiveClassifier, 
-    ConformalQuantileRegressor
+    SimpleInductiveClassifier,
+    AdaptiveInductiveClassifier,
+    ConformalQuantileRegressor,
 }
 
 const TransductiveModel = Union{
@@ -95,7 +95,10 @@ const available_models = Dict(
             :jackknife_plus_ab_minmax => JackknifePlusAbMinMaxRegressor,
             :time_series_ensemble_batch => TimeSeriesRegressorEnsembleBatch,
         ),
-        :inductive => Dict(:simple_inductive => SimpleInductiveRegressor, :quantile_regression => ConformalQuantileRegressor,),
+        :inductive => Dict(
+            :simple_inductive => SimpleInductiveRegressor,
+            :quantile_regression => ConformalQuantileRegressor,
+        ),
     ),
     :classification => Dict(
         :transductive => Dict(:naive => NaiveClassifier),
@@ -112,7 +115,7 @@ const tested_atomic_models = Dict(
         :linear => :(@load LinearRegressor pkg = MLJLinearModels),
         :ridge => :(@load RidgeRegressor pkg = MLJLinearModels),
         :lasso => :(@load LassoRegressor pkg = MLJLinearModels),
-        :quantile => :(@load QuantileRegressor pkd = MLJLinearModels)
+        :quantile => :(@load QuantileRegressor pkd = MLJLinearModels),
         #:evo_tree => :(@load EvoTreeRegressor pkg = EvoTrees),
         #:nearest_neighbor => :(@load KNNRegressor pkg = NearestNeighborModels),
         # :light_gbm => :(@load LGBMRegressor pkg = LightGBM),
