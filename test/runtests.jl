@@ -7,8 +7,6 @@ using Test
 # Doctests:
 doctest(ConformalPrediction)
 
-include("utils.jl")
-
 # Test suite:
 @testset "ConformalPrediction.jl" begin
     include("classification.jl")

@@ -1,23 +1,24 @@
+using CategoricalArrays
+using ConformalPrediction: SimpleInductiveClassifier, AdaptiveInductiveClassifier
 using MLJEnsembles: EitherEnsembleModel
 using MLJFlux: MLJFluxModel, reformat
 using MLUtils
 
 """
-    score(conf_model::InductiveModel, model::MLJFluxModel, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+    ConformalPrediction.score(conf_model::InductiveModel, model::MLJFluxModel, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
 
 Overloads the `score` function for the `MLJFluxModel` type.
 """
-function score(
+function ConformalPrediction.score(
     conf_model::SimpleInductiveClassifier,
     ::Type{<:MLJFluxModel},
     fitresult,
     X,
     y::Union{Nothing,AbstractArray}=nothing,
 )
-    X = reformat(X)
-    X = typeof(X) <: AbstractArray ? X : permutedims(matrix(X))
+    X = permutedims(matrix(X))
     probas = permutedims(fitresult[1](X))
-    scores = @.(conf_model.heuristic(probas))
+    scores = @.(conf_model.heuristic(y, probas))
     if isnothing(y)
         return scores
     else
@@ -27,26 +28,25 @@ function score(
 end
 
 """
-    score(conf_model::SimpleInductiveClassifier, ::Type{<:EitherEnsembleModel{<:MLJFluxModel}}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+    ConformalPrediction.score(conf_model::SimpleInductiveClassifier, ::Type{<:EitherEnsembleModel{<:MLJFluxModel}}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
 
 Overloads the `score` function for ensembles of `MLJFluxModel` types.
 """
-function score(
+function ConformalPrediction.score(
     conf_model::SimpleInductiveClassifier,
     ::Type{<:EitherEnsembleModel{<:MLJFluxModel}},
     fitresult,
     X,
     y::Union{Nothing,AbstractArray}=nothing,
 )
-    X = reformat(X)
-    X = typeof(X) <: AbstractArray ? X : permutedims(matrix(X))
+    X = permutedims(matrix(X))
     _chains = map(res -> res[1], fitresult.ensemble)
     probas =
         MLUtils.stack(map(chain -> chain(X), _chains)) |>
         p ->
             mean(p; dims=ndims(p)) |>
             p -> MLUtils.unstack(p; dims=ndims(p))[1] |> p -> permutedims(p)
-    scores = @.(conf_model.heuristic(probas))
+    scores = @.(conf_model.heuristic(y, probas))
     if isnothing(y)
         return scores
     else
@@ -56,7 +56,7 @@ function score(
 end
 
 """
-    score(conf_model::AdaptiveInductiveClassifier, ::Type{<:MLJFluxModel}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+    ConformalPrediction.score(conf_model::AdaptiveInductiveClassifier, ::Type{<:MLJFluxModel}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
 
 Overloads the `score` function for the `MLJFluxModel` type.
 """
@@ -87,7 +87,7 @@ function score(
 end
 
 """
-    score(conf_model::AdaptiveInductiveClassifier, ::Type{<:EitherEnsembleModel{<:MLJFluxModel}}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+    ConformalPrediction.score(conf_model::AdaptiveInductiveClassifier, ::Type{<:EitherEnsembleModel{<:MLJFluxModel}}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
 
 Overloads the `score` function for ensembles of `MLJFluxModel` types.
 """

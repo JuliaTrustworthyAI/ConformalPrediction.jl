@@ -38,3 +38,14 @@ function size_stratified_coverage(ŷ, y)
 
     return C̄
 end
+
+"""
+    ineff(ŷ)
+
+Computes the inefficiency (average set size) for conformal predictions `ŷ`.
+"""
+function ineff(ŷ, y=missing)
+    R = length(ŷ)
+    ineff = sum(set_size.(ŷ)) / R
+    return ineff
+end

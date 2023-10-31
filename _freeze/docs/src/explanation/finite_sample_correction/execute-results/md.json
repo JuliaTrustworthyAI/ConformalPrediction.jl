@@ -1,0 +1,10 @@
+{
+  "hash": "f6be6dff987885f970c8b1d4c7f00f62",
+  "result": {
+    "markdown": "---\ntitle: Finite-sample Correction\n---\n\n\n\n\n\n\nWe follow the convention used in @angelopoulos2021gentle and @barber2021predictive to correct for the finite-sample bias of the empirical quantile. Specifically, we use the following definition of the $(1-\\alpha)$ empirical quantile:\n\n```math\n\\hat{q}_{n,\\alpha}^{+}\\{v\\} = \\frac{\\lceil (n+1)(1-\\alpha)\\rceil}{n}\n```\n\n@barber2021predictive further define as the $\\alpha$ empirical quantile:\n\n```math\n\\hat{q}_{n,\\alpha}^{-}\\{v\\} = \\frac{\\lfloor (n+1)\\alpha \\rfloor}{n} = - \\hat{q}_{n,\\alpha}^{+}\\{-v\\}\n```\n\nBelow we test this equality numerically by generating a large number of random vectors and comparing the two quantiles. We then plot the density of the difference between the two quantiles. While the errors are small, they are not negligible for small $n$. In our computations, we use $\\hat{q}_{n,\\alpha}^{-}\\{v\\}$ exactly as it is defined above, rather than relying on $- \\hat{q}_{n,\\alpha}^{+}\\{-v\\}$.\n\n::: {.cell execution_count=2}\n``` {.julia .cell-code}\nusing ConformalPrediction: qplus, qminus\nnobs = [100, 1000, 10000]\nn = 1000\nalpha = 0.1\nplts = []\nΔ = Float32[]\nfor _nobs in nobs\n    for i in 1:n\n        v = rand(_nobs)\n        δ = qminus(v, alpha) - (-qplus(-v, 1-alpha))\n        push!(Δ, δ)\n    end\n    plt = density(Δ)\n    vline!([mean(Δ)], color=:red, label=\"mean\")\n    push!(plts, plt)\nend\nplot(plts..., layout=(1,3), size=(900, 300), legend=:topleft, title=[\"nobs = 100\" \"nobs = 1000\" \"nobs = 10000\"])\n```\n\n::: {.cell-output .cell-output-display execution_count=11}\n![](finite_sample_correction_files/figure-commonmark/cell-3-output-1.svg){}\n:::\n:::\n\n\nSee also this related [discussion](https://github.com/JuliaTrustworthyAI/ConformalPrediction.jl/discussions/17).\n\n## References\n\n",
+    "supporting": [
+      "finite_sample_correction_files"
+    ],
+    "filters": []
+  }
+}

@@ -32,8 +32,22 @@ df.hour = Dates.hour.(df.Datetime)
 Additionally, to simulate sudden changes caused by unforeseen events, such as blackouts or lockdowns, we deliberately reduce the electricity demand by 2GW from February 22nd onward.
 
 ``` julia
+df.Demand_updated = copy(df.Demand)
 condition = df.Datetime .>= Date("2014-02-22")
-df[condition, :Demand] .= df[condition, :Demand] .- 2
+df[condition, :Demand_updated] .= df[condition, :Demand_updated] .- 2
+```
+
+That is how the data looks like after our manipulation
+
+``` julia
+cutoff_point = 200
+plot(df[cutoff_point:split_index, [:Datetime]].Datetime, df[cutoff_point:split_index, :].Demand ,
+ label="training data", color=:green, xlabel = "Date" , ylabel="Electricity demand(GW)")
+plot!(df[split_index+1 : size(df,1), [:Datetime]].Datetime, df[split_index+1 : size(df,1), : ].Demand,
+ label="test data", color=:orange, xlabel = "Date" , ylabel="Electricity demand(GW)")
+plot!(df[split_index+1 : size(df,1), [:Datetime]].Datetime, df[split_index+1 : size(df,1), : ].Demand_updated, label="updated test data", color=:red, linewidth=1, framestyle=:box)
+plot!(legend=:outerbottom, legendcolumns=3)
+plot!(size=(850,400), left_margin = 5Plots.mm)
 ```
 
 ### Lag features
@@ -54,9 +68,9 @@ df_dropped_missing
 As usual, we split the data into train and test sets. We use the first 90% of the data for training and the remaining 10% for testing.
 
 ``` julia
-features_cols = DataFrames.select(df_dropped_missing, Not([:Datetime, :Demand]))
+features_cols = DataFrames.select(df_dropped_missing, Not([:Datetime, :Demand, :Demand_updated]))
 X = Matrix(features_cols)
-y = Matrix(df_dropped_missing[:, [:Demand]])
+y = Matrix(df_dropped_missing[:, [:Demand_updated]])
 split_index = floor(Int, 0.9 * size(y , 1)) 
 println(split_index)
 X_train = X[1:split_index, :]
@@ -93,15 +107,30 @@ ub = [ maximum(tuple_data) for tuple_data in y_pred_interval]
 y_pred = [mean(tuple_data) for tuple_data in y_pred_interval]
 ```
 
-![](timeseries_files/figure-commonmark/cell-10-output-1.svg)
+``` julia
+#| echo: false
+#| output: true
+cutoff_point = findfirst(df_dropped_missing.Datetime .== Date("2014-02-15"))
+plot(df_dropped_missing[cutoff_point:split_index, [:Datetime]].Datetime, y_train[cutoff_point:split_index] ,
+ label="train", color=:green , xlabel = "Date" , ylabel="Electricity demand(GW)", linewidth=1)
+plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime,
+ y_test, label="test", color=:red)
+plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime ,
+ y_pred, label ="prediction", color=:blue)
+plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime,
+ lb, fillrange = ub, fillalpha = 0.2, label = "prediction interval w/o EnbPI",
+  color=:lake, linewidth=0, framestyle=:box)
+plot!(legend=:outerbottom, legendcolumns=4, legendfontsize=6)
+plot!(size=(850,400), left_margin = 5Plots.mm)
+```
 
 We can use `partial_fit` method in EnbPI implementation in ConformalPrediction in order to adjust prediction intervals to sudden change points on test sets that have not been seen by the model during training. In the below experiment, sample_size indicates the batch of new observations. You can decide if you want to update residuals by sample_size or update and remove first *n* residuals (shift_size = n). The latter will allow to remove early residuals that will not have a positive impact on the current observations.
 
 The chart below compares the results to the previous experiment without updating residuals:
 
 ``` julia
-sample_size = 10
-shift_size = 10
+sample_size = 30
+shift_size = 100
 last_index = size(X_test , 1)
 lb_updated , ub_updated = ([], [])
 for step in 1:sample_size:last_index
@@ -121,7 +150,21 @@ lb_updated = reduce(vcat, lb_updated)
 ub_updated = reduce(vcat, ub_updated)
 ```
 
-![](timeseries_files/figure-commonmark/cell-12-output-1.svg)
+``` julia
+#| echo: false
+#| output: true
+plot(df_dropped_missing[cutoff_point:split_index, [:Datetime]].Datetime, y_train[cutoff_point:split_index] ,
+ label="train", color=:green , xlabel = "Date" , ylabel="Electricity demand(GW)", linewidth=1)
+plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime, y_test,
+ label="test", color=:red)
+plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime ,
+                                 y_pred, label ="prediction", color=:blue)
+plot!(df_dropped_missing[split_index+1 : size(y,1), [:Datetime]].Datetime,
+ lb_updated, fillrange = ub_updated, fillalpha = 0.2, label = "EnbPI",
+  color=:lake, linewidth=0, framestyle=:box)
+plot!(legend=:outerbottom, legendcolumns=4)
+plot!(size=(850,400), left_margin = 5Plots.mm)
+```
 
 ## Results
 

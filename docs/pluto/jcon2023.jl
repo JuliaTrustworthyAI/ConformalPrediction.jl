@@ -10,7 +10,7 @@ begin
     using Distributions
     using EvoTrees: EvoTreeRegressor
     using MLJBase
-	using MLJFlux: NeuralNetworkRegressor
+    using MLJFlux: NeuralNetworkRegressor
     using MLJLinearModels
     using MLJModels
     using NearestNeighborModels: KNNRegressor

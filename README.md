@@ -2,15 +2,15 @@
 
 ![](dev/logo/wide_logo.png)
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliatrustworthyai.github.io/ConformalPrediction.jl/stable/) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://juliatrustworthyai.github.io/ConformalPrediction.jl/dev/) [![Build Status](https://github.com/juliatrustworthyai/ConformalPrediction.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/juliatrustworthyai/ConformalPrediction.jl/actions/workflows/CI.yml?query=branch%3Amain) [![Coverage](https://codecov.io/gh/juliatrustworthyai/ConformalPrediction.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/juliatrustworthyai/ConformalPrediction.jl) [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle) [![ColPrac: Contributor’s Guide on Collaborative Practices for Community Packages](https://img.shields.io/badge/ColPrac-Contributor's%20Guide-blueviolet.png)](https://github.com/SciML/ColPrac) [![Twitter Badge](https://img.shields.io/twitter/url/https/twitter.com/paltmey.svg?style=social&label=Follow%20%40paltmey)](https://twitter.com/paltmey)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://juliatrustworthyai.github.io/ConformalPrediction.jl/stable/) [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://juliatrustworthyai.github.io/ConformalPrediction.jl/dev/) [![Build Status](https://github.com/juliatrustworthyai/ConformalPrediction.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/juliatrustworthyai/ConformalPrediction.jl/actions/workflows/CI.yml?query=branch%3Amain) [![Coverage](https://codecov.io/gh/juliatrustworthyai/ConformalPrediction.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/juliatrustworthyai/ConformalPrediction.jl) [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle) [![License](https://img.shields.io/github/license/juliatrustworthyai/ConformalPrediction.jl)](LICENSE) [![Package Downloads](https://shields.io/endpoint?url=https://pkgs.genieframework.com/api/v1/badge/ConformalPrediction/.png)](https://pkgs.genieframework.com?packages=ConformalPrediction)
 
 `ConformalPrediction.jl` is a package for Predictive Uncertainty Quantification (UQ) through Conformal Prediction (CP) in Julia. It is designed to work with supervised models trained in [MLJ](https://alan-turing-institute.github.io/MLJ.jl/dev/) (Blaom et al. 2020). Conformal Prediction is easy-to-understand, easy-to-use and model-agnostic and it works under minimal distributional assumptions.
 
 ## 🏃 Quick Tour
 
-> First time here? Take a quick interactive [tour](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl) to see what this package can do: [![Binder](https://mybinder.org/badge_logo.svg)](https://binder.plutojl.org/v0.19.12/open?url=https%253A%252F%252Fraw.githubusercontent.com%252Fpat-alt%252FConformalPrediction.jl%252Fmain%252Fdocs%252Fpluto%252Fintro.jl)
+> First time here? Take a quick interactive [tour](https://juliahub.com/ui/Notebooks/juliahub/Tutorials/ConformalPrediction.jl) to see what this package can do right on [JuliaHub](https://juliahub.com/ui/Notebooks/juliahub/Tutorials/ConformalPrediction.jl) (To run the notebook, hit login and then edit).
 
-The button takes you to a [`Pluto.jl`](https://github.com/fonsp/Pluto.jl) 🎈 notebook hosted on [binder](https://mybinder.org/). In my own experience, this may take some time to load, certainly long enough to get yourself a hot beverage ☕. Alternatively, you can run the notebook locally or skip the tour for now and read on below.
+This [`Pluto.jl`](https://github.com/fonsp/Pluto.jl) 🎈 notebook won the 2nd Price in the [JuliaCon 2023 Notebook Competition](https://info.juliahub.com/pluto-notebook-winner-23).
 
 ### Local Tour
 
@@ -71,7 +71,7 @@ X = reshape(X, :, 1)
 
 # Outputs:
 noise = 0.5
-fun(X) = X * sin(X)
+fun(X) = sin(X)
 ε = randn(N) .* noise
 y = @.(fun(X)) + ε
 y = vec(y)
@@ -111,11 +111,11 @@ ŷ[1:show_first]
 ```
 
     5-element Vector{Tuple{Float64, Float64}}:
-     (-0.40997718991694765, 1.449009293726001)
-     (0.8484810430118421, 2.7074675266547907)
-     (0.547852151594671, 2.4068386352376194)
-     (-0.022697652913589494, 1.8362888307293592)
-     (0.07435130847990101, 1.9333377921228496)
+     (-0.04087262272113379, 1.8635644669554758)
+     (0.04647464096907805, 1.9509117306456876)
+     (-0.24248802236397216, 1.6619490673126376)
+     (-0.07841928163933476, 1.8260178080372749)
+     (-0.02268628324126465, 1.881750806435345)
 
 For simple models like this one, we can call a custom `Plots` recipe on our instance, fit result and data to generate the chart below:
 
@@ -138,20 +138,21 @@ println("Empirical coverage: $(round(_eval.measurement[1], digits=3))")
 println("SSC: $(round(_eval.measurement[2], digits=3))")
 ```
 
-    Started!
-
     PerformanceEvaluation object with these fields:
-      measure, operation, measurement, per_fold,
+      model, measure, operation, measurement, per_fold,
       per_observation, fitted_params_per_fold,
-      report_per_fold, train_test_rows
+      report_per_fold, train_test_rows, resampling, repeats
     Extract:
     ┌──────────────────────────────────────────────┬───────────┬─────────────┬──────
     │ measure                                      │ operation │ measurement │ 1.9 ⋯
     ├──────────────────────────────────────────────┼───────────┼─────────────┼──────
-    │ ConformalPrediction.emp_coverage             │ predict   │ 0.945       │ 0.0 ⋯
-    │ ConformalPrediction.size_stratified_coverage │ predict   │ 0.945       │ 0.0 ⋯
+    │ ConformalPrediction.emp_coverage             │ predict   │ 0.953       │ 0.0 ⋯
+    │ ConformalPrediction.size_stratified_coverage │ predict   │ 0.953       │ 0.0 ⋯
     └──────────────────────────────────────────────┴───────────┴─────────────┴──────
                                                                    2 columns omitted
+
+    Empirical coverage: 0.953
+    SSC: 0.953
 
 ## 📚 Read on
 
@@ -231,7 +232,7 @@ There is also a simple `Plots.jl` recipe that can be used to inspect the set siz
 bar(mach.model, mach.fitresult, X)
 ```
 
-![](README_files/figure-commonmark/cell-11-output-1.svg)
+![](README_files/figure-commonmark/cell-12-output-1.svg)
 
 ## 🛠 Contribute
 
@@ -239,14 +240,14 @@ Contributions are welcome! A good place to start is the [list](https://github.co
 
 ## 🙏 Thanks
 
-To build this package I have read and re-read both Angelopoulos and Bates (2021) and Barber et al. (2021). The Awesome Conformal Prediction [repository](https://github.com/valeman/awesome-conformal-prediction) (Manokhin, n.d.) has also been a fantastic place to get started. Thanks also to [@aangelopoulos](https://github.com/aangelopoulos), [@valeman](https://github.com/valeman) and others for actively contributing to discussions on here. Quite a few people have also recently started using and contributing to the package for which I am very grateful. Finally, many thanks to Anthony Blaom ([@ablaom](https://github.com/ablaom)) for many helpful discussions about how to interface this package to `MLJ.jl`.
+To build this package I have read and re-read both Angelopoulos and Bates (2021) and Barber et al. (2021). The Awesome Conformal Prediction [repository](https://github.com/valeman/awesome-conformal-prediction) (Manokhin 2022) has also been a fantastic place to get started. Thanks also to [@aangelopoulos](https://github.com/aangelopoulos), [@valeman](https://github.com/valeman) and others for actively contributing to discussions on here. Quite a few people have also recently started using and contributing to the package for which I am very grateful. Finally, many thanks to Anthony Blaom ([@ablaom](https://github.com/ablaom)) for many helpful discussions about how to interface this package to `MLJ.jl`.
 
 ## 🎓 References
 
-Angelopoulos, Anastasios N., and Stephen Bates. 2021. “A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification.” <https://arxiv.org/abs/2107.07511>.
+Angelopoulos, Anastasios N, and Stephen Bates. 2021. “A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification.” *arXiv Preprint arXiv:2107.07511*.
 
 Barber, Rina Foygel, Emmanuel J. Candès, Aaditya Ramdas, and Ryan J. Tibshirani. 2021. “Predictive Inference with the Jackknife+.” *The Annals of Statistics* 49 (1): 486–507. <https://doi.org/10.1214/20-AOS1965>.
 
 Blaom, Anthony D., Franz Kiraly, Thibaut Lienart, Yiannis Simillides, Diego Arenas, and Sebastian J. Vollmer. 2020. “MLJ: A Julia Package for Composable Machine Learning.” *Journal of Open Source Software* 5 (55): 2704. <https://doi.org/10.21105/joss.02704>.
 
-Manokhin, Valery. n.d. “Awesome Conformal Prediction.”
+Manokhin, Valery. 2022. “Awesome Conformal Prediction.” Zenodo. <https://doi.org/10.5281/zenodo.6467205>.

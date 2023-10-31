@@ -1,5 +1,5 @@
 using MLJBase: CV
-using StatsBase: sample, trim
+using StatsBase: sample, trim, mean, median
 
 # Naive
 """
@@ -13,9 +13,7 @@ mutable struct NaiveRegressor{Model<:Supervised} <: ConformalInterval
 end
 
 function NaiveRegressor(
-    model::Supervised;
-    coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=absolute_error
 )
     return NaiveRegressor(model, coverage, nothing, heuristic)
 end
@@ -65,7 +63,7 @@ function MMI.predict(conf_model::NaiveRegressor, fitresult, Xnew)
         MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     )
     v = conf_model.scores
-    q̂ = StatsBase.quantile(v, conf_model.coverage)
+    q̂ = qplus(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
     return ŷ
@@ -81,9 +79,7 @@ mutable struct JackknifeRegressor{Model<:Supervised} <: ConformalInterval
 end
 
 function JackknifeRegressor(
-    model::Supervised;
-    coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=absolute_error
 )
     return JackknifeRegressor(model, coverage, nothing, heuristic)
 end
@@ -147,7 +143,7 @@ function MMI.predict(conf_model::JackknifeRegressor, fitresult, Xnew)
         MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     )
     v = conf_model.scores
-    q̂ = StatsBase.quantile(v, conf_model.coverage)
+    q̂ = qplus(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
     return ŷ
@@ -163,9 +159,7 @@ mutable struct JackknifePlusRegressor{Model<:Supervised} <: ConformalInterval
 end
 
 function JackknifePlusRegressor(
-    model::Supervised;
-    coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=absolute_error
 )
     return JackknifePlusRegressor(model, coverage, nothing, heuristic)
 end
@@ -236,8 +230,8 @@ function MMI.predict(conf_model::JackknifePlusRegressor, fitresult, Xnew)
     ŷ = reduce(hcat, ŷ)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
     ŷ = map(eachrow(ŷ)) do yᵢ
-        lb = -StatsBase.quantile(.-yᵢ .+ conf_model.scores, conf_model.coverage)
-        ub = StatsBase.quantile(yᵢ .+ conf_model.scores, conf_model.coverage)
+        lb = qminus(yᵢ .+ conf_model.scores, conf_model.coverage)
+        ub = qplus(yᵢ .+ conf_model.scores, conf_model.coverage)
         return (lb, ub)
     end
     ŷ = reformat_interval(ŷ)
@@ -254,9 +248,7 @@ mutable struct JackknifeMinMaxRegressor{Model<:Supervised} <: ConformalInterval
 end
 
 function JackknifeMinMaxRegressor(
-    model::Supervised;
-    coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=absolute_error
 )
     return JackknifeMinMaxRegressor(model, coverage, nothing, heuristic)
 end
@@ -327,7 +319,7 @@ function MMI.predict(conf_model::JackknifeMinMaxRegressor, fitresult, Xnew)
     ŷ = reduce(hcat, ŷ)
     # Get all LOO residuals:
     v = conf_model.scores
-    q̂ = StatsBase.quantile(v, conf_model.coverage)
+    q̂ = qplus(v, conf_model.coverage)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
     ŷ = map(yᵢ -> (minimum(yᵢ .- q̂), maximum(yᵢ .+ q̂)), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
@@ -347,7 +339,7 @@ end
 function CVPlusRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    heuristic::Function=absolute_error,
     cv::MLJBase.CV=MLJBase.CV(),
 )
     return CVPlusRegressor(model, coverage, nothing, heuristic, cv)
@@ -431,8 +423,8 @@ function MMI.predict(conf_model::CVPlusRegressor, fitresult, Xnew)
     ŷ = reduce(hcat, ŷ)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
     ŷ = map(eachrow(ŷ)) do yᵢ
-        lb = -StatsBase.quantile(.-yᵢ .+ conf_model.scores, conf_model.coverage)
-        ub = StatsBase.quantile(yᵢ .+ conf_model.scores, conf_model.coverage)
+        lb = qminus(yᵢ .+ conf_model.scores, conf_model.coverage)
+        ub = qplus(yᵢ .+ conf_model.scores, conf_model.coverage)
         return (lb, ub)
     end
     ŷ = reformat_interval(ŷ)
@@ -452,7 +444,7 @@ end
 function CVMinMaxRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    heuristic::Function=absolute_error,
     cv::MLJBase.CV=MLJBase.CV(),
 )
     return CVMinMaxRegressor(model, coverage, nothing, heuristic, cv)
@@ -534,7 +526,7 @@ function MMI.predict(conf_model::CVMinMaxRegressor, fitresult, Xnew)
     ŷ = reduce(hcat, ŷ)
     # Get all LOO residuals:
     v = conf_model.scores
-    q̂ = StatsBase.quantile(v, conf_model.coverage)
+    q̂ = qplus(v, conf_model.coverage)
     # For each Xnew compute ( q̂⁻(μ̂₋ᵢ(xnew)-Rᵢᴸᴼᴼ) , q̂⁺(μ̂₋ᵢ(xnew)+Rᵢᴸᴼᴼ) ):
     ŷ = map(yᵢ -> (minimum(yᵢ .- q̂), maximum(yᵢ .+ q̂)), eachrow(ŷ))
     return ŷ
@@ -549,9 +541,9 @@ function _aggregate(y, aggregate::Union{Symbol,String})
     # Setup:
     aggregate = Symbol(aggregate)
     valid_methods = Dict(
-        :mean => x -> StatsBase.mean(x),
-        :median => x -> StatsBase.median(x),
-        :trimmedmean => x -> StatsBase.mean(trim(x; prop=0.1)),
+        :mean => x -> mean(x),
+        :median => x -> median(x),
+        :trimmedmean => x -> mean(trim(x; prop=0.1)),
     )
     @assert aggregate ∈ keys(valid_methods) "`aggregate`=$aggregate is not a valid aggregation method. Should be one of: $valid_methods"
     # Aggregate:
@@ -580,7 +572,7 @@ end
 function JackknifePlusAbRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    heuristic::Function=absolute_error,
     nsampling::Int=30,
     sample_size::AbstractFloat=0.5,
     replacement::Bool=true,
@@ -664,7 +656,7 @@ function MMI.predict(conf_model::JackknifePlusAbRegressor, fitresult, Xnew)
     aggregate = conf_model.aggregate
     ŷ = _aggregate(ŷ, aggregate)
     v = conf_model.scores
-    q̂ = StatsBase.quantile(v, conf_model.coverage)
+    q̂ = qplus(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
     return ŷ
@@ -686,7 +678,7 @@ end
 function JackknifePlusAbMinMaxRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    heuristic::Function=absolute_error,
     nsampling::Int=30,
     sample_size::AbstractFloat=0.5,
     replacement::Bool=true,
@@ -768,7 +760,7 @@ function MMI.predict(conf_model::JackknifePlusAbMinMaxRegressor, fitresult, Xnew
     ]
     ŷ = reduce(hcat, ŷ)
     v = conf_model.scores
-    q̂ = StatsBase.quantile(v, conf_model.coverage)
+    q̂ = qplus(v, conf_model.coverage)
     ŷ = map(yᵢ -> (minimum(yᵢ .- q̂), maximum(yᵢ .+ q̂)), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
     return ŷ
@@ -789,7 +781,7 @@ end
 function TimeSeriesRegressorEnsembleBatch(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=f(y, ŷ) = abs(y - ŷ),
+    heuristic::Function=absolute_error,
     nsampling::Int=50,
     sample_size::AbstractFloat=0.3,
     aggregate::Union{Symbol,String}="mean",
@@ -866,6 +858,10 @@ function partial_fit(
     ŷₜ = _aggregate(ŷ, aggregate)
     push!(conf_model.scores, @.(conf_model.heuristic(y, ŷₜ))...)
     conf_model.scores = filter(!isnan, conf_model.scores)
+    if shift_size > length(conf_model.scores)
+        @warn "The shift size is bigger than the size of Non-conformity scores"
+        return conf_model.scores
+    end
     conf_model.scores = conf_model.scores[(shift_size + 1):length(conf_model.scores)]
     return conf_model.scores
 end
@@ -894,7 +890,7 @@ function MMI.predict(conf_model::TimeSeriesRegressorEnsembleBatch, fitresult, Xn
     aggregate = conf_model.aggregate
     ŷ = _aggregate(ŷ, aggregate)
     v = conf_model.scores
-    q̂ = StatsBase.quantile(v, conf_model.coverage)
+    q̂ = qplus(v, conf_model.coverage)
     ŷ = map(x -> (x .- q̂, x .+ q̂), eachrow(ŷ))
     ŷ = reformat_interval(ŷ)
     return ŷ

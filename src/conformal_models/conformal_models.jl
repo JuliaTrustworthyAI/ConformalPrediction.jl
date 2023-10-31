@@ -1,7 +1,6 @@
 using MLJBase
 import MLJModelInterface as MMI
 import MLJModelInterface: predict, fit, save, restore
-using StatsBase: StatsBase
 
 "An abstract base type for conformal models that produce interval-valued predictions. This includes most conformal regression models."
 abstract type ConformalInterval <: MMI.Interval end
@@ -17,7 +16,7 @@ const ConformalModel = Union{
 }
 
 include("utils.jl")
-include("plotting.jl")
+include("heuristics.jl")
 
 # Main API call to wrap model:
 """
@@ -58,7 +57,8 @@ include("inductive_classification.jl")
 include("transductive_classification.jl")
 
 # Training:
-include("training/training.jl")
+include("ConformalTraining/ConformalTraining.jl")
+using .ConformalTraining
 
 # Type unions:
 const InductiveModel = Union{

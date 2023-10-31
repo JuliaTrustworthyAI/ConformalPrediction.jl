@@ -8,7 +8,7 @@ mutable struct NaiveClassifier{Model<:Supervised} <: ConformalProbabilisticSet
 end
 
 function NaiveClassifier(
-    model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=f(y, ŷ) = 1.0 - ŷ
+    model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=minus_softmax
 )
     return NaiveClassifier(model, coverage, nothing, heuristic)
 end
@@ -61,7 +61,7 @@ function MMI.predict(conf_model::NaiveClassifier, fitresult, Xnew)
         MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
     )
     v = conf_model.scores
-    q̂ = StatsBase.quantile(v, conf_model.coverage)
+    q̂ = qplus(v, conf_model.coverage)
     p̂ = map(p̂) do pp
         L = p̂.decoder.classes
         probas = pdf.(pp, L)
