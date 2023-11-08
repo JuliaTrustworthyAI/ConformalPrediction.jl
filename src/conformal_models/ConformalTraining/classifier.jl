@@ -19,6 +19,8 @@ mutable struct ConformalNNClassifier{B,F,O,L} <: MLJFlux.MLJFluxProbabilistic
     rng::Union{AbstractRNG,Int64}
     optimiser_changes_trigger_retraining::Bool
     acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
+    reg_strength_size::Float64  # regularization strength for size loss
+    epsilon::Float64        # epsilon for soft sorting
 end
 
 function ConformalNNClassifier(;
@@ -33,6 +35,8 @@ function ConformalNNClassifier(;
     rng::Union{AbstractRNG,Int64}=Random.GLOBAL_RNG,
     optimiser_changes_trigger_retraining::Bool=false,
     acceleration::AbstractResource=CPU1(),
+    reg_strength_size::Float64=5.0,
+    epsilon::Float64=0.1,
 ) where {B,F,O,L}
 
     # Initialise the MLJFlux wrapper:
@@ -48,6 +52,8 @@ function ConformalNNClassifier(;
         rng,
         optimiser_changes_trigger_retraining,
         acceleration,
+        reg_strength_size,
+        epsilon,
     )
 
     return mod

@@ -6,12 +6,8 @@ CurrentModule = ConformalPrediction
 
 ```{julia}
 #| echo: false
-using Pkg; Pkg.activate("docs")
-using Plots
-theme(:wong)
-using Random
-Random.seed!(2022)
-www_path = "docs/src/www"   # output path for files don't get automatically saved in auto-generated path (e.g. GIFs)
+include("$(pwd())/docs/setup_docs.jl")
+eval(setup_docs)
 ```
 
 
@@ -21,7 +17,7 @@ using Random
 Random.seed!(123)
 
 # Data:
-X, y = make_blobs(500, centers=4, cluster_std=1.0)
+X, y = make_blobs(1000, centers=2, cluster_std=1.0)
 X = MLJ.table(Float32.(MLJ.matrix(X)))
 train, test = partition(eachindex(y), 0.8, shuffle=true)
 ```
@@ -34,9 +30,10 @@ using ConformalPrediction
 using ConformalPrediction.ConformalTraining: ConformalNNClassifier
 
 # Model:
-builder = MLJFlux.MLP(hidden=(32, 32, 32,), σ=Flux.relu)
-# clf = ConformalNNClassifier(epochs=250, builder=builder, batch_size=50)
-clf = NeuralNetworkClassifier(epochs=250, builder=builder, batch_size=50)
+hidden_dim = 32
+builder = MLJFlux.MLP(hidden=ntuple(x -> hidden_dim, 3), σ=Flux.relu)
+clf = ConformalNNClassifier(epochs=25, builder=builder, batch_size=10, reg_strength_size=0.5, epsilon=0.1)
+# clf = NeuralNetworkClassifier(epochs=250, builder=builder, batch_size=50)
 ```
 
 
@@ -45,7 +42,7 @@ using ConformalPrediction
 
 conf_model = conformal_model(clf; method=:simple_inductive)
 mach = machine(conf_model, X, y)
-fit!(mach, rows=train)
+fit!(mach, rows=train, verbosity=0)
 ```
 
 ```{julia}
@@ -55,7 +52,9 @@ using Plots
 p_proba = contourf(mach.model, mach.fitresult, X, y)
 p_set_size = contourf(mach.model, mach.fitresult, X, y; plot_set_size=true)
 p_smooth = contourf(mach.model, mach.fitresult, X, y; plot_set_loss=true)
-plot(p_proba, p_set_size, p_smooth, layout=(1,3), size=(1200,250))
+plt = plot(p_proba, p_set_size, p_smooth, layout=(1,3), size=(1200,250))
+display(plt)
+ineff(MLJBase.predict(mach))
 ```
 
 ```{julia}
@@ -63,7 +62,7 @@ plot(p_proba, p_set_size, p_smooth, layout=(1,3), size=(1200,250))
 
 _eval = evaluate!(
     mach,
-    operation=predict,
+    operation=MLJBase.predict,
     measure=[emp_coverage, ssc, ineff]
 )
 

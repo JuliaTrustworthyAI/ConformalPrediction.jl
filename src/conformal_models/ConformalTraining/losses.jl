@@ -1,5 +1,6 @@
 using ConformalPrediction: ConformalProbabilisticSet
 using Flux
+using InferOpt: soft_sort_kl
 using LinearAlgebra
 using MLJBase
 using StatsBase
@@ -10,10 +11,11 @@ using StatsBase
 Computes soft assignment scores for each label and sample. That is, the probability of label `k` being included in the confidence set. This implementation follows Stutz et al. (2022): https://openreview.net/pdf?id=t8O-4LKFVx. Contrary to the paper, we use non-conformity scores instead of conformity scores, hence the sign swap. 
 """
 function soft_assignment(
-    conf_model::ConformalProbabilisticSet; temp::Union{Nothing,Real}=nothing
+    conf_model::ConformalProbabilisticSet; temp::Union{Nothing,Real}=nothing, ε::Real=1e-6
 )
     temp = isnothing(temp) ? 0.5 : temp
-    v = sort(conf_model.scores[:calibration])
+    ε = hasfield(typeof(conf_model.model), :epsilon) ? conf_model.model.epsilon : ε
+    v = soft_sort_kl(conf_model.scores[:calibration]; ε=ε,)
     q̂ = qplus(v, conf_model.coverage; sorted=true)
     scores = conf_model.scores[:all]
     return @.(σ((q̂ - scores) / temp))
@@ -25,10 +27,15 @@ end
 This function can be used to compute soft assigment probabilities for new data `X` as in [`soft_assignment(conf_model::ConformalProbabilisticSet; temp::Real=0.5)`](@ref). When a fitted model $\mu$ (`fitresult`) and new samples `X` are supplied, non-conformity scores are first computed for the new data points. Then the existing threshold/quantile `q̂` is used to compute the final soft assignments. 
 """
 function soft_assignment(
-    conf_model::ConformalProbabilisticSet, fitresult, X; temp::Union{Nothing,Real}=nothing
+    conf_model::ConformalProbabilisticSet,
+    fitresult,
+    X;
+    temp::Union{Nothing,Real}=nothing,
+    ε::Real=1e-6,
 )
     temp = isnothing(temp) ? 0.5 : temp
-    v = sort(conf_model.scores[:calibration])
+    ε = hasfield(typeof(conf_model.model), :epsilon) ? conf_model.model.epsilon : ε
+    v = soft_sort_kl(conf_model.scores[:calibration]; ε=ε)
     q̂ = StatsBase.quantile(v, conf_model.coverage; sorted=true)
     scores = ConformalPrediction.score(conf_model, fitresult, X)
     return @.(σ((q̂ - scores) / temp))
