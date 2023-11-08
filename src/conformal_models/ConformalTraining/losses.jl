@@ -15,7 +15,7 @@ function soft_assignment(
 )
     temp = isnothing(temp) ? 0.5 : temp
     ε = hasfield(typeof(conf_model.model), :epsilon) ? conf_model.model.epsilon : ε
-    v = soft_sort_kl(conf_model.scores[:calibration]; ε=ε,)
+    v = soft_sort_kl(conf_model.scores[:calibration]; ε=ε)
     q̂ = qplus(v, conf_model.coverage; sorted=true)
     scores = conf_model.scores[:all]
     return @.(σ((q̂ - scores) / temp))
