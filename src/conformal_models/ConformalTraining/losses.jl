@@ -26,11 +26,7 @@ end
 This function can be used to compute soft assigment probabilities for new data `X` as in [`soft_assignment(conf_model::ConformalProbabilisticSet; temp::Real=0.1)`](@ref). When a fitted model $\mu$ (`fitresult`) and new samples `X` are supplied, non-conformity scores are first computed for the new data points. Then the existing threshold/quantile `q̂` is used to compute the final soft assignments. 
 """
 function soft_assignment(
-    conf_model::ConformalProbabilisticSet,
-    fitresult,
-    X;
-    temp::Real=0.1,
-    ε::Real=1e-6,
+    conf_model::ConformalProbabilisticSet, fitresult, X; temp::Real=0.1, ε::Real=1e-6
 )
     ε = hasfield(typeof(conf_model.model), :epsilon) ? conf_model.model.epsilon : ε
     v = soft_sort_kl(conf_model.scores[:calibration]; ε=ε)
@@ -54,13 +50,8 @@ Computes the smooth (differentiable) size loss following Stutz et al. (2022): ht
 where $\tau$ is just the quantile `q̂` and $\kappa$ is the target set size (defaults to $1$). For empty sets, the loss is computed as $K - \kappa$, that is the maximum set size minus the target set size.
 """
 function smooth_size_loss(
-    conf_model::ConformalProbabilisticSet,
-    fitresult,
-    X;
-    temp::Real=0.1,
-    κ::Real=1.0,
+    conf_model::ConformalProbabilisticSet, fitresult, X; temp::Real=0.1, κ::Real=1.0
 )
-
     C = soft_assignment(conf_model, fitresult, X; temp=temp)
     is_empty_set = all(
         x -> x .== 0, soft_assignment(conf_model, fitresult, X; temp=0.0); dims=2
