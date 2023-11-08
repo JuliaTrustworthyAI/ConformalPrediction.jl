@@ -6,14 +6,13 @@ using MLJBase
 using StatsBase
 
 """
-    soft_assignment(conf_model::ConformalProbabilisticSet; temp::Real=0.5)
+    soft_assignment(conf_model::ConformalProbabilisticSet; temp::Real=0.1)
 
 Computes soft assignment scores for each label and sample. That is, the probability of label `k` being included in the confidence set. This implementation follows Stutz et al. (2022): https://openreview.net/pdf?id=t8O-4LKFVx. Contrary to the paper, we use non-conformity scores instead of conformity scores, hence the sign swap. 
 """
 function soft_assignment(
-    conf_model::ConformalProbabilisticSet; temp::Union{Nothing,Real}=nothing, ε::Real=1e-6
+    conf_model::ConformalProbabilisticSet; temp::Real=0.1, ε::Real=1e-6
 )
-    temp = isnothing(temp) ? 0.5 : temp
     ε = hasfield(typeof(conf_model.model), :epsilon) ? conf_model.model.epsilon : ε
     v = soft_sort_kl(conf_model.scores[:calibration]; ε=ε)
     q̂ = qplus(v, conf_model.coverage; sorted=true)
@@ -22,18 +21,17 @@ function soft_assignment(
 end
 
 @doc raw"""
-    soft_assignment(conf_model::ConformalProbabilisticSet, fitresult, X; temp::Real=0.5)
+    soft_assignment(conf_model::ConformalProbabilisticSet, fitresult, X; temp::Real=0.1)
 
-This function can be used to compute soft assigment probabilities for new data `X` as in [`soft_assignment(conf_model::ConformalProbabilisticSet; temp::Real=0.5)`](@ref). When a fitted model $\mu$ (`fitresult`) and new samples `X` are supplied, non-conformity scores are first computed for the new data points. Then the existing threshold/quantile `q̂` is used to compute the final soft assignments. 
+This function can be used to compute soft assigment probabilities for new data `X` as in [`soft_assignment(conf_model::ConformalProbabilisticSet; temp::Real=0.1)`](@ref). When a fitted model $\mu$ (`fitresult`) and new samples `X` are supplied, non-conformity scores are first computed for the new data points. Then the existing threshold/quantile `q̂` is used to compute the final soft assignments. 
 """
 function soft_assignment(
     conf_model::ConformalProbabilisticSet,
     fitresult,
     X;
-    temp::Union{Nothing,Real}=nothing,
+    temp::Real=0.1,
     ε::Real=1e-6,
 )
-    temp = isnothing(temp) ? 0.5 : temp
     ε = hasfield(typeof(conf_model.model), :epsilon) ? conf_model.model.epsilon : ε
     v = soft_sort_kl(conf_model.scores[:calibration]; ε=ε)
     q̂ = StatsBase.quantile(v, conf_model.coverage; sorted=true)
@@ -44,7 +42,7 @@ end
 @doc raw"""
     function smooth_size_loss(
         conf_model::ConformalProbabilisticSet, fitresult, X;
-        temp::Real=0.5, κ::Real=1.0
+        temp::Real=0.1, κ::Real=1.0
     )
 
 Computes the smooth (differentiable) size loss following Stutz et al. (2022): https://openreview.net/pdf?id=t8O-4LKFVx. First, soft assignment probabilities are computed for new data `X`. Then (following the notation in the paper) the loss is computed as, 
@@ -59,10 +57,10 @@ function smooth_size_loss(
     conf_model::ConformalProbabilisticSet,
     fitresult,
     X;
-    temp::Union{Nothing,Real}=nothing,
+    temp::Real=0.1,
     κ::Real=1.0,
 )
-    temp = isnothing(temp) ? 0.1 : temp
+
     C = soft_assignment(conf_model, fitresult, X; temp=temp)
     is_empty_set = all(
         x -> x .== 0, soft_assignment(conf_model, fitresult, X; temp=0.0); dims=2
@@ -86,7 +84,7 @@ end
     classification_loss(
         conf_model::ConformalProbabilisticSet, fitresult, X, y;
         loss_matrix::Union{AbstractMatrix,UniformScaling}=UniformScaling(1.0),
-        temp::Real=0.5
+        temp::Real=0.1
     )
 
 Computes the calibration loss following Stutz et al. (2022): https://openreview.net/pdf?id=t8O-4LKFVx. Following the notation in the paper, the loss is computed as,
@@ -103,10 +101,9 @@ function classification_loss(
     X,
     y;
     loss_matrix::Union{AbstractMatrix,UniformScaling}=UniformScaling(1.0),
-    temp::Union{Nothing,Real}=nothing,
+    temp::Real=0.1,
 )
     # Setup:
-    temp = isnothing(temp) ? 0.5 : temp
     if typeof(y) <: CategoricalArray
         L = levels(y)
         yenc = permutedims(Flux.onehotbatch(levelcode.(y), L))

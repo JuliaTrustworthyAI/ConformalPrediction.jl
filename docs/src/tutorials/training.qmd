@@ -17,7 +17,7 @@ using Random
 Random.seed!(123)
 
 # Data:
-X, y = make_blobs(1000, centers=2, cluster_std=1.0)
+X, y = make_blobs(100, centers=10, cluster_std=1.0)
 X = MLJ.table(Float32.(MLJ.matrix(X)))
 train, test = partition(eachindex(y), 0.8, shuffle=true)
 ```
@@ -32,7 +32,7 @@ using ConformalPrediction.ConformalTraining: ConformalNNClassifier
 # Model:
 hidden_dim = 32
 builder = MLJFlux.MLP(hidden=ntuple(x -> hidden_dim, 3), σ=Flux.relu)
-clf = ConformalNNClassifier(epochs=25, builder=builder, batch_size=10, reg_strength_size=0.5, epsilon=0.1)
+clf = ConformalNNClassifier(epochs=25, builder=builder, batch_size=10, reg_strength_size=1.0, epsilon=0.1)
 # clf = NeuralNetworkClassifier(epochs=250, builder=builder, batch_size=50)
 ```
 
