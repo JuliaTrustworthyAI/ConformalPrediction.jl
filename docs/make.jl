@@ -36,7 +36,6 @@ makedocs(;
             "Overview" => "tutorials/index.md",
             "Classification" => "tutorials/classification.md",
             "Regression" => "tutorials/regression.md",
-            "Visualizations" => "tutorials/plotting.md",
         ],
         "🫡 How-To Guides" => [
             "Overview" => "how_to_guides/index.md",

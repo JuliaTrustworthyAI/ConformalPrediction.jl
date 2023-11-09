@@ -1,4 +1,5 @@
-```@meta
+
+``` @meta
 CurrentModule = ConformalPrediction
 ```
 
@@ -8,35 +9,37 @@ In this reference you will find a detailed overview of the package API.
 
 > Reference guides are technical descriptions of the machinery and how to operate it. Reference material is information-oriented.
 >
-> --- [Diátaxis](https://diataxis.fr/reference/)
+> — [Diátaxis](https://diataxis.fr/reference/)
 
 In other words, you come here because you want to take a very close look at the code 🧐
 
 ## Content
 
-```@contents
+``` @contents
 Pages = ["_reference.md"]
 ```
 
 ## Index
 
-```@index
+``` @index
 ```
 
 ## Public Interface
 
-```@autodocs
+``` @autodocs
 Modules = [
-    ConformalPrediction
+    ConformalPrediction,
+    ConformalPrediction.ConformalTraining,
 ]
 Private = false
 ```
 
 ## Internal functions
 
-```@autodocs
+``` @autodocs
 Modules = [
-    ConformalPrediction
+    ConformalPrediction,
+    ConformalPrediction.ConformalTraining,
 ]
 Public = false
 ```
