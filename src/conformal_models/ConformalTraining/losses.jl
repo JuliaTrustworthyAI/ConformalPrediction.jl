@@ -1,6 +1,5 @@
 using ConformalPrediction: ConformalProbabilisticSet
 using Flux
-using InferOpt: soft_sort_kl
 using LinearAlgebra
 using MLJBase
 using StatsBase
@@ -14,8 +13,8 @@ function soft_assignment(
     conf_model::ConformalProbabilisticSet; temp::Real=0.1, ε::Real=1e-6
 )
     ε = hasfield(typeof(conf_model.model), :epsilon) ? conf_model.model.epsilon : ε
-    v = soft_sort_kl(conf_model.scores[:calibration]; ε=ε)
-    q̂ = qplus(v, conf_model.coverage; sorted=true)
+    v = conf_model.scores[:calibration]
+    q̂ = qplus_smooth(v, conf_model.coverage; ε=ε)
     scores = conf_model.scores[:all]
     return @.(σ((q̂ - scores) / temp))
 end
@@ -29,8 +28,8 @@ function soft_assignment(
     conf_model::ConformalProbabilisticSet, fitresult, X; temp::Real=0.1, ε::Real=1e-6
 )
     ε = hasfield(typeof(conf_model.model), :epsilon) ? conf_model.model.epsilon : ε
-    v = soft_sort_kl(conf_model.scores[:calibration]; ε=ε)
-    q̂ = StatsBase.quantile(v, conf_model.coverage; sorted=true)
+    v = conf_model.scores[:calibration]
+    q̂ = qplus_smooth(v, conf_model.coverage; ε=ε)
     scores = ConformalPrediction.score(conf_model, fitresult, X)
     return @.(σ((q̂ - scores) / temp))
 end
