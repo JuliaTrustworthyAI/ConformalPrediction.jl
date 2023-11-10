@@ -663,7 +663,7 @@ function MMI.predict(conf_model::JackknifePlusAbRegressor, fitresult, Xnew)
 end
 
 # Jackknife_plus_after_bootstrapping_minmax
-"Constructor for `JackknifePlusAbPlusMinMaxRegressor`."
+"Constructor for `JackknifePlusAbMinMaxRegressor`."
 mutable struct JackknifePlusAbMinMaxRegressor{Model<:Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
@@ -692,7 +692,7 @@ end
 @doc raw"""
     MMI.fit(conf_model::JackknifePlusMinMaxAbRegressor, verbosity, X, y)
 
-For the [`JackknifePlusABMinMaxRegressor`](@ref) nonconformity scores are as,
+For the [`JackknifePlusAbMinMaxRegressor`](@ref) nonconformity scores are as,
 
 ``
 S_i^{\text{J+MinMax}} = s(X_i, Y_i) = h(agg(\hat\mu_{B_{K(-i)}}(X_i)), Y_i), \ i \in \mathcal{D}_{\text{train}}
@@ -767,7 +767,7 @@ function MMI.predict(conf_model::JackknifePlusAbMinMaxRegressor, fitresult, Xnew
 end
 
 # TimeSeries_Regressor_Ensemble_Batch_Prediction_Interval
-"Constructor for `TimeSeriesRegressorEnsemble`."
+"Constructor for `TimeSeriesRegressorEnsembleBatch`."
 mutable struct TimeSeriesRegressorEnsembleBatch{Model<:Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
@@ -868,9 +868,9 @@ end
 
 # Prediction
 @doc raw"""
-    MMI.predict(conf_model::TimeSeriesRegressorEnsemble, fitresult, Xnew)
+    MMI.predict(conf_model::TimeSeriesRegressorEnsembleBatch, fitresult, Xnew)
 
-For the [`TimeSeriesRegressorEnsemble`](@ref) prediction intervals are computed as follows,
+For the [`TimeSeriesRegressorEnsembleBatch`](@ref) prediction intervals are computed as follows,
 
 ``
 \hat{C}_{n,\alpha, B}^{J+ab}(X_{n+1}) = \left[ \hat{q}_{n, \alpha}^{-} \{\hat\mu_{agg(-i)}(X_{n+1}) - S_i^{\text{J+ab}} \}, \hat{q}_{n, \alpha}^{+} \{\hat\mu_{agg(-i)}(X_{n+1}) + S_i^{\text{J+ab}}\} \right] , i \in \mathcal{D}_{\text{train}}

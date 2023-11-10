@@ -13,6 +13,7 @@ function MLJFlux.train!(model::ConformalNN, penalty, chain, optimiser, X, y)
     training_loss = zero(Float32)
     size_loss = zero(Float32)
     fitresult = (chain, nothing)
+    λ = model.reg_strength_size
 
     # Training loop:
     for i in 1:n_batches
@@ -42,8 +43,9 @@ function MLJFlux.train!(model::ConformalNN, penalty, chain, optimiser, X, y)
         gs = Flux.gradient(parameters) do
             Ω = smooth_size_loss(conf_model, fitresult, Xpred')
             yhat = chain(X_batch)
-            batch_loss = loss(yhat, y_batch) + penalty(parameters) / n_batches
-            batch_loss += 0.5 * sum(Ω) / length(Ω)                            # add size loss
+            batch_loss =
+                (loss(yhat, y_batch) + penalty(parameters) + λ * sum(Ω) / length(Ω)) /
+                n_batches
             training_loss += batch_loss
             size_loss += sum(Ω) / length(Ω)
             return batch_loss
