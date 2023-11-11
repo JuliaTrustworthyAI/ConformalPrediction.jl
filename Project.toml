@@ -39,6 +39,7 @@ NaturalSort = "1"
 ProgressMeter = "1"
 StatsBase = "0.33, 0.34.0"
 Tables = "1"
+cuDNN = "1"
 julia = "1.6, 1.7, 1.8, 1.9"
 
 [extras]
