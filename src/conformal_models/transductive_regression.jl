@@ -34,13 +34,12 @@ function MMI.fit(conf_model::NaiveRegressor, verbosity, X, y)
     # Setup:
     Xtrain = selectrows(X, :)
     ytrain = y[:]
-    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
 
     # Training: 
-    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
+    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...)
 
     # Nonconformity Scores:
-    ŷ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, Xtrain))
+    ŷ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xtrain)...))
     conf_model.scores = @.(conf_model.heuristic(ytrain, ŷ))
 
     return (fitresult, cache, report)
@@ -101,10 +100,9 @@ function MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
     # Setup:
     Xtrain = selectrows(X, :)
     ytrain = y[:]
-    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
 
-    # Training: 
-    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
+    # Training:
+    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model,Xtrain, ytrain)...)
 
     # Nonconformity Scores:
     T = size(y, 1)
@@ -177,7 +175,7 @@ where ``\hat\mu_{-i}(X_i)`` denotes the leave-one-out prediction for ``X_i``. In
 """
 function MMI.fit(conf_model::JackknifePlusRegressor, verbosity, X, y)
 
-    # Training: 
+    # Training:
     fitresult, cache, report = ([], [], [])
 
     # Nonconformity Scores:
@@ -266,7 +264,7 @@ where ``\hat\mu_{-i}(X_i)`` denotes the leave-one-out prediction for ``X_i``. In
 """
 function MMI.fit(conf_model::JackknifeMinMaxRegressor, verbosity, X, y)
 
-    # Pre-allocate: 
+    # Pre-allocate:
     fitresult, cache, report = ([], [], [])
 
     # Training and Nonconformity Scores:
@@ -370,7 +368,7 @@ function MMI.fit(conf_model::CVPlusRegressor, verbosity, X, y)
         Dict(:fitresult => μ̂ₖ, :test => test, :cache => cache, :report => report)
     end
 
-    # Pre-allocate: 
+    # Pre-allocate:
     fitresult, cache, report = ([], [], [])
 
     # Nonconformity Scores:
@@ -405,10 +403,10 @@ end
 For the [`CVPlusRegressor`](@ref) prediction intervals are computed in much same way as for the [`JackknifePlusRegressor`](@ref). Specifically, we have,
 
 ``
-\hat{C}_{n,\alpha}(X_{n+1}) = \left[ \hat{q}_{n, \alpha}^{-} \{\hat\mu_{-\mathcal{D}_{k(i)}}(X_{n+1}) - S_i^{\text{CV}} \}, \hat{q}_{n, \alpha}^{+} \{\hat\mu_{-\mathcal{D}_{k(i)}}(X_{n+1}) + S_i^{\text{CV}}\} \right] , \ i \in \mathcal{D}_{\text{train}} 
+\hat{C}_{n,\alpha}(X_{n+1}) = \left[ \hat{q}_{n, \alpha}^{-} \{\hat\mu_{-\mathcal{D}_{k(i)}}(X_{n+1}) - S_i^{\text{CV}} \}, \hat{q}_{n, \alpha}^{+} \{\hat\mu_{-\mathcal{D}_{k(i)}}(X_{n+1}) + S_i^{\text{CV}}\} \right] , \ i \in \mathcal{D}_{\text{train}}
 ``
 
-where ``\hat\mu_{-\mathcal{D}_{k(i)}}`` denotes the model fitted on training data with fold ``\mathcal{D}_{k(i)}`` that contains the ``i`` th point removed. 
+where ``\hat\mu_{-\mathcal{D}_{k(i)}}`` denotes the model fitted on training data with fold ``\mathcal{D}_{k(i)}`` that contains the ``i`` th point removed.
 
 The [`JackknifePlusRegressor`](@ref) is a special case of the [`CVPlusRegressor`](@ref) for which ``K=n``.
 """
@@ -475,7 +473,7 @@ function MMI.fit(conf_model::CVMinMaxRegressor, verbosity, X, y)
         Dict(:fitresult => μ̂ₖ, :test => test, :cache => cache, :report => report)
     end
 
-    # Pre-allocate: 
+    # Pre-allocate:
     fitresult, cache, report = ([], [], [])
 
     # Nonconformity Scores:
