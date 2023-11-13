@@ -22,22 +22,27 @@ For the [`NaiveClassifier`](@ref) nonconformity scores are computed in-sample as
 S_i^{\text{IS}} = s(X_i, Y_i) = h(\hat\mu(X_i), Y_i), \ i \in \mathcal{D}_{\text{calibration}}
 ``
 
-A typical choice for the heuristic function is ``h(\hat\mu(X_i), Y_i)=1-\hat\mu(X_i)_{Y_i}`` where ``\hat\mu(X_i)_{Y_i}`` denotes the softmax output of the true class and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``. 
+A typical choice for the heuristic function is ``h(\hat\mu(X_i), Y_i)=1-\hat\mu(X_i)_{Y_i}`` where ``\hat\mu(X_i)_{Y_i}`` denotes the softmax output of the true class and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``.
 """
 function MMI.fit(conf_model::NaiveClassifier, verbosity, X, y)
 
     # Setup:
     Xtrain = selectrows(X, :)
     ytrain = y[:]
-    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
 
-    # Training: 
-    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
+    # Training:
+    fitresult, cache, report = MMI.fit(
+        conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...
+    )
 
     # Nonconformity Scores:
     ŷ =
         pdf.(
-            reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, Xtrain)),
+            reformat_mlj_prediction(
+                MMI.predict(
+                    conf_model.model, fitresult, MMI.reformat(conf_model.model, Xtrain)...
+                ),
+            ),
             ytrain,
         )
     conf_model.scores = @.(conf_model.heuristic(y, ŷ))

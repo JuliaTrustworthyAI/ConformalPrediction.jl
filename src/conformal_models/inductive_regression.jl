@@ -33,16 +33,18 @@ function MMI.fit(conf_model::SimpleInductiveRegressor, verbosity, X, y)
     train, calibration = partition(eachindex(y), conf_model.train_ratio)
     Xtrain = selectrows(X, train)
     ytrain = y[train]
-    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
     Xcal = selectrows(X, calibration)
     ycal = y[calibration]
-    Xcal, ycal = MMI.reformat(conf_model.model, Xcal, ycal)
 
-    # Training: 
-    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
+    # Training:
+    fitresult, cache, report = MMI.fit(
+        conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...
+    )
 
     # Nonconformity Scores:
-    ŷ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, Xcal))
+    ŷ = reformat_mlj_prediction(
+        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xcal)...)
+    )
     conf_model.scores = @.(conf_model.heuristic(ycal, ŷ))
 
     return (fitresult, cache, report)
