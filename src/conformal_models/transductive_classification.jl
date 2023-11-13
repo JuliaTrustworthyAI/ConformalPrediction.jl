@@ -31,12 +31,18 @@ function MMI.fit(conf_model::NaiveClassifier, verbosity, X, y)
     ytrain = y[:]
 
     # Training:
-    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...)
+    fitresult, cache, report = MMI.fit(
+        conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...
+    )
 
     # Nonconformity Scores:
     ŷ =
         pdf.(
-            reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xtrain)...)),
+            reformat_mlj_prediction(
+                MMI.predict(
+                    conf_model.model, fitresult, MMI.reformat(conf_model.model, Xtrain)...
+                ),
+            ),
             ytrain,
         )
     conf_model.scores = @.(conf_model.heuristic(y, ŷ))

@@ -58,7 +58,9 @@ function score(
     X,
     y::Union{Nothing,AbstractArray}=nothing,
 )
-    p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, X)...))
+    p̂ = reformat_mlj_prediction(
+        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, X)...)
+    )
     L = p̂.decoder.classes
     probas = pdf(p̂, L)
     scores = @.(conf_model.heuristic(y, probas))
@@ -87,7 +89,9 @@ function MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
     Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
 
     # Training:
-    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...)
+    fitresult, cache, report = MMI.fit(
+        conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...
+    )
 
     # Nonconformity Scores:
     cal_scores, scores = score(conf_model, fitresult, Xcal, ycal)
@@ -161,7 +165,9 @@ function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
     Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
 
     # Training:
-    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...)
+    fitresult, cache, report = MMI.fit(
+        conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...
+    )
 
     # Nonconformity Scores:
     cal_scores, scores = score(conf_model, fitresult, Xcal, ycal)
@@ -182,7 +188,9 @@ function score(
     X,
     y::Union{Nothing,AbstractArray}=nothing,
 )
-    p̂ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, X)...))
+    p̂ = reformat_mlj_prediction(
+        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, X)...)
+    )
     L = p̂.decoder.classes
     probas = pdf(p̂, L)                                              # compute probabilities for all classes
     scores = map(Base.Iterators.product(eachrow(probas), L)) do Z

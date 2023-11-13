@@ -36,10 +36,14 @@ function MMI.fit(conf_model::NaiveRegressor, verbosity, X, y)
     ytrain = y[:]
 
     # Training: 
-    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...)
+    fitresult, cache, report = MMI.fit(
+        conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...
+    )
 
     # Nonconformity Scores:
-    ŷ = reformat_mlj_prediction(MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xtrain)...))
+    ŷ = reformat_mlj_prediction(
+        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xtrain)...)
+    )
     conf_model.scores = @.(conf_model.heuristic(ytrain, ŷ))
 
     return (fitresult, cache, report)
@@ -102,7 +106,9 @@ function MMI.fit(conf_model::JackknifeRegressor, verbosity, X, y)
     ytrain = y[:]
 
     # Training:
-    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model,Xtrain, ytrain)...)
+    fitresult, cache, report = MMI.fit(
+        conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...
+    )
 
     # Nonconformity Scores:
     T = size(y, 1)
