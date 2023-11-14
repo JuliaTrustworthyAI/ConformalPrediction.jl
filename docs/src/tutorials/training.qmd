@@ -12,14 +12,32 @@ eval(setup_docs)
 
 
 ```{julia}
-using MLJ
 using Random
 Random.seed!(123)
 
 # Data:
-X, y = make_blobs(100, centers=10, cluster_std=1.0)
-X = MLJ.table(Float32.(MLJ.matrix(X)))
-train, test = partition(eachindex(y), 0.8, shuffle=true)
+using MLDatasets
+N = 60000
+Xraw, yraw = MNIST(split=:train)[:]
+Xraw = Xraw[:,:,1:N]
+yraw = yraw[1:N]
+```
+
+```{julia}
+#| output: true
+#| label: fig-samples
+#| fig-cap: Random samples from the MNIST dataset.
+
+using MLJ
+using Images
+Ximg = map(x -> convert2image(MNIST, x), eachslice(Xraw, dims=3))
+X = hcat(map(x -> vec(x), eachslice(Xraw, dims=3))...) |> 
+    permutedims |>
+    table
+y = coerce(yraw, Multiclass)
+
+n_samples = 10
+mosaic(rand(Ximg, n_samples)..., ncol=n_samples)
 ```
 
 
@@ -29,32 +47,34 @@ using MLJFlux
 using ConformalPrediction
 using ConformalPrediction.ConformalTraining: ConformalNNClassifier
 
-# Model:
-hidden_dim = 32
-builder = MLJFlux.MLP(hidden=ntuple(x -> hidden_dim, 3), σ=Flux.relu)
-clf = ConformalNNClassifier(epochs=25, builder=builder, batch_size=10, reg_strength_size=1.0, epsilon=0.1)
-# clf = NeuralNetworkClassifier(epochs=250, builder=builder, batch_size=50)
+builder = MLJFlux.@builder Chain(
+    Dense(prod(n_in), n_out)
+)
+
+bs = 500
+epochs = 50
+opt = Adam(0.05)
+clf = ConformalNNClassifier(epochs=epochs, builder=builder, batch_size=bs, reg_strength_size=0.01, epsilon=0.1)
+# clf = NeuralNetworkClassifier(epochs=epochs, builder=builder, batch_size=10)
 ```
 
 
 ```{julia}
-using ConformalPrediction
-
 conf_model = conformal_model(clf; method=:simple_inductive)
 mach = machine(conf_model, X, y)
+train, test = partition(eachindex(y), 0.8, shuffle=true)
 fit!(mach, rows=train, verbosity=0)
+ineff(MLJBase.predict(mach))
 ```
 
 ```{julia}
-#| output: true
-
-using Plots
-p_proba = contourf(mach.model, mach.fitresult, X, y)
-p_set_size = contourf(mach.model, mach.fitresult, X, y; plot_set_size=true)
-p_smooth = contourf(mach.model, mach.fitresult, X, y; plot_set_loss=true)
-plt = plot(p_proba, p_set_size, p_smooth, layout=(1,3), size=(1200,250))
-display(plt)
-ineff(MLJBase.predict(mach))
+println(ineff(MLJBase.predict(mach)))
+evaluate!(
+    mach,
+    resampling=Holdout(rng=123, fraction_train=0.8),
+    operation=predict_mode,
+    measure=[accuracy]
+)
 ```
 
 ```{julia}
