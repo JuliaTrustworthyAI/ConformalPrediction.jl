@@ -1,3 +1,5 @@
+using MLJLinearModels
+
 "The `SimpleInductiveRegressor` is the simplest approach to Inductive Conformal Regression. Contrary to the [`NaiveRegressor`](@ref) it computes nonconformity scores using a designated calibration dataset."
 mutable struct SimpleInductiveRegressor{Model<:Supervised} <: ConformalInterval
     model::Model
@@ -71,8 +73,11 @@ function MMI.predict(conf_model::SimpleInductiveRegressor, fitresult, Xnew)
     return ŷ
 end
 
+"Union type for quantile models."
+const QuantileModel = Union{MLJLinearModels.QuantileRegressor}
+
 "Constructor for `ConformalQuantileRegressor`."
-mutable struct ConformalQuantileRegressor{Model<:Supervised} <: ConformalInterval
+mutable struct ConformalQuantileRegressor{Model<:QuantileModel} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
@@ -105,11 +110,6 @@ A typical choice for the heuristic function is ``h(\hat\mu_{\alpha_{lo}}(X_i), \
 
 """
 function MMI.fit(conf_model::ConformalQuantileRegressor, verbosity, X, y)
-
-    # limited to QuantileRegressor
-    if info(conf_model.model).name != "QuantileRegressor"
-        error("$(info(conf_model.model).name) is not supported yet.")
-    end
 
     # Data Splitting:
     train, calibration = partition(eachindex(y), conf_model.train_ratio)
