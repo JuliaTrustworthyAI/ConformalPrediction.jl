@@ -78,7 +78,7 @@ conformal_models = merge(values(available_models[:regression])...)
                         if isa(error, MethodError)
                             @warn "This test is skipped as the method is not suitable for Quantile Regression"
                         else
-                            @error "This test is failed"
+                            @error "$(error)"
                         end
                     end
                 end
