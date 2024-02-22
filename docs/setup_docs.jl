@@ -19,6 +19,7 @@ setup_docs = quote
     using SharedArrays
     using StatsBase
     using StatsPlots
+    using TaijaPlotting
     using Transformers
     using Transformers.TextEncoders
     using Transformers.HuggingFace
