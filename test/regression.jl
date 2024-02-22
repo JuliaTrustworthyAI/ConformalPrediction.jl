@@ -45,18 +45,21 @@ conformal_models = merge(values(available_models[:regression])...)
                                 predict(mach, selectrows(X, test))
 
                                 # Plotting:
-                                @test plot(mach.model, mach.fitresult, X, y)
-                                @test plot(
-                                    mach.model,
-                                    mach.fitresult,
-                                    X,
-                                    y;
-                                    input_var=1,
-                                    xlims=(-1, 1),
-                                    ylims=(-1, 1),
-                                )
-                                @test plot(mach.model, mach.fitresult, X, y; input_var=:x1)
-                                @test bar(mach.model, mach.fitresult, X)
+                                @testset "Plotting" begin
+                                    plot(mach.model, mach.fitresult, X, y)
+                                    plot(
+                                        mach.model,
+                                        mach.fitresult,
+                                        X,
+                                        y;
+                                        input_var=1,
+                                        xlims=(-1, 1),
+                                        ylims=(-1, 1),
+                                    )
+                                    plot(mach.model, mach.fitresult, X, y; input_var=:x1)
+                                    bar(mach.model, mach.fitresult, X)
+                                    @test true
+                                end
 
                                 # Evaluation:
                                 # Evaluation takes some time, so only testing for one method.
