@@ -43,7 +43,7 @@ conformal_models = merge(values(available_models[:regression])...)
                                 fit!(mach; rows=train)
                                 @test !isnothing(conf_model.scores)
                                 predict(mach, selectrows(X, test))
-    
+
                                 # Plotting:
                                 @test isplot(plot(mach.model, mach.fitresult, X, y))
                                 @test isplot(
@@ -61,18 +61,20 @@ conformal_models = merge(values(available_models[:regression])...)
                                     plot(mach.model, mach.fitresult, X, y; input_var=:x1)
                                 )
                                 @test isplot(bar(mach.model, mach.fitresult, X))
-    
+
                                 # Evaluation:
                                 # Evaluation takes some time, so only testing for one method.
                                 if _method == :simple_inductive
                                     # Empirical coverage:
-                                    _eval = evaluate!(mach; measure=emp_coverage, verbosity=0)
+                                    _eval = evaluate!(
+                                        mach; measure=emp_coverage, verbosity=0
+                                    )
                                     Δ = _eval.measurement[1] - _cov     # over-/under-coverage
                                     @test Δ >= -0.05                    # we don't undercover too much
                                     # Size-stratified coverage:
                                     _eval = evaluate!(mach; measure=ssc, verbosity=0)
                                 end
-                            end 
+                            end
                         end
                     catch error
                         if isa(error, MethodError)
