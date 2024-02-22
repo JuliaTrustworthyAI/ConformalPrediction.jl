@@ -1,4 +1,4 @@
-import MLJLinearModels
+using MLJLinearModels: MLJLinearModels
 
 "The `SimpleInductiveRegressor` is the simplest approach to Inductive Conformal Regression. Contrary to the [`NaiveRegressor`](@ref) it computes nonconformity scores using a designated calibration dataset."
 mutable struct SimpleInductiveRegressor{Model<:Supervised} <: ConformalInterval
