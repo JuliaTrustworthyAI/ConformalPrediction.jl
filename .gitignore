@@ -26,3 +26,5 @@ docs/site/
 Manifest.toml
 
 /.quarto/
+
+.vscode
