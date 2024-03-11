@@ -99,9 +99,9 @@ function ConformalQuantileRegressor(
 end
 
 @doc raw"""
-    MMI.fit(conf_model::ConfromalQuantileRegressor, verbosity, X, y)
+    MMI.fit(conf_model::ConformalQuantileRegressor, verbosity, X, y)
 
-For the [`ConfromalQuantileRegressor`](@ref) nonconformity scores are computed as follows:
+For the [`ConformalQuantileRegressor`](@ref) nonconformity scores are computed as follows:
 
 ``
 S_i^{\text{CAL}} = s(X_i, Y_i) = h(\hat\mu_{\alpha_{lo}}(X_i), \hat\mu_{\alpha_{hi}}(X_i)  ,Y_i), \ i \in \mathcal{D}_{\text{calibration}}
@@ -143,9 +143,9 @@ end
 
 # Prediction
 @doc raw"""
-    MMI.predict(conf_model::ConfromalQuantileRegressor, fitresult, Xnew)
+    MMI.predict(conf_model::ConformalQuantileRegressor, fitresult, Xnew)
 
-For the [`ConfromalQuantileRegressor`](@ref) prediction intervals are computed as follows,
+For the [`ConformalQuantileRegressor`](@ref) prediction intervals are computed as follows,
 
 ``
 \hat{C}_{n,\alpha}(X_{n+1}) = [\hat\mu_{\alpha_{lo}}(X_{n+1}) - \hat{q}_{n, \alpha} \{S_i^{\text{CAL}} \}, \hat\mu_{\alpha_{hi}}(X_{n+1}) + \hat{q}_{n, \alpha} \{S_i^{\text{CAL}} \}], \ i \in \mathcal{D}_{\text{calibration}}
