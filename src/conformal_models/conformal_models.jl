@@ -1,6 +1,8 @@
 using MLJBase
 import MLJModelInterface as MMI
 import MLJModelInterface: predict, fit, save, restore
+using StatsBase: StatsBase
+using MLJLinearModels: MLJLinearModels
 
 "An abstract base type for conformal models that produce interval-valued predictions. This includes most conformal regression models."
 abstract type ConformalInterval <: MMI.Interval end
@@ -62,7 +64,10 @@ using .ConformalTraining
 
 # Type unions:
 const InductiveModel = Union{
-    SimpleInductiveRegressor,SimpleInductiveClassifier,AdaptiveInductiveClassifier
+    SimpleInductiveRegressor,
+    SimpleInductiveClassifier,
+    AdaptiveInductiveClassifier,
+    ConformalQuantileRegressor,
 }
 
 const TransductiveModel = Union{
@@ -92,7 +97,10 @@ const available_models = Dict(
             :jackknife_plus_ab_minmax => JackknifePlusAbMinMaxRegressor,
             :time_series_ensemble_batch => TimeSeriesRegressorEnsembleBatch,
         ),
-        :inductive => Dict(:simple_inductive => SimpleInductiveRegressor),
+        :inductive => Dict(
+            :simple_inductive => SimpleInductiveRegressor,
+            :quantile_regression => ConformalQuantileRegressor,
+        ),
     ),
     :classification => Dict(
         :transductive => Dict(:naive => NaiveClassifier),
@@ -109,6 +117,7 @@ const tested_atomic_models = Dict(
         :linear => :(@load LinearRegressor pkg = MLJLinearModels),
         :ridge => :(@load RidgeRegressor pkg = MLJLinearModels),
         :lasso => :(@load LassoRegressor pkg = MLJLinearModels),
+        :quantile => :(@load QuantileRegressor pkg = MLJLinearModels),
         :evo_tree => :(@load EvoTreeRegressor pkg = EvoTrees),
         :nearest_neighbor => :(@load KNNRegressor pkg = NearestNeighborModels),
         :decision_tree_regressor => :(@load DecisionTreeRegressor pkg = DecisionTree),

@@ -1,7 +1,6 @@
-import CompatHelperLocal as CHL
-CHL.@check()
 using ConformalPrediction
 using Documenter
+using TaijaPlotting
 using Test
 
 # Doctests:
