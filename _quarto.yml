@@ -14,5 +14,5 @@ execute:
   echo: true
   output: false
 
-jupyter: julia-1.9
+jupyter: julia-1.10
 

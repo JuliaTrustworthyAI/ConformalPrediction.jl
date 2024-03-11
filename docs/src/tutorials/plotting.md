@@ -1,21 +1,22 @@
-# Visualization using `TaijaPlotting.jl` 
+# Visualization using `TaijaPlotting.jl`
+
 
 ``` @meta
 CurrentModule = ConformalPrediction
 ```
 
-This tutorial demonstrates how various custom `Plots.jl` method extensions in `TaijaPlotting.jl` can be used to visually analyze conformal predictors.
+This tutorial demonstrates how various custom plotting methods can be used to visually analyze conformal predictors.
 
 ``` julia
 using ConformalPrediction
-using TaijaPlotting
+using Plots, TaijaPlotting
 ```
 
 ## Regression
 
 ### Visualizing Prediction Intervals
 
-For conformal regressors, the [`TaijaPlotting.plot(conf_model::ConformalPrediction.ConformalInterval, fitresult, X, y; kwrgs...)`](@ref) can be used to visualize the prediction intervals for given data points.
+For conformal regressors, the `TaijaPlotting.plot` can be used to visualize the prediction intervals for given data points.
 
 #### Univariate Input
 
@@ -69,7 +70,7 @@ plot(plt_list..., layout=(1,nvars), size=(nvars*200, 200))
 
 ### Visualizing Set Size
 
-To visualize the set size distribution, the [`TaijaPlotting.bar(conf_model::ConformalPrediction.ConformalModel, fitresult, X; label="", xtickfontsize=6, kwrgs...)`](@ref) can be used. For regression models the prediction interval widths are stratified into discrete bins.a
+To visualize the set size distribution, the `TaijaPlotting.bar` can be used. For regression models, the prediction interval widths are stratified into discrete bins.
 
 ``` julia
 bar(mach.model, mach.fitresult, X)
@@ -102,7 +103,7 @@ model = KNNClassifier(;K=3)
 
 #### Stacked Area Charts
 
-Stacked area charts can be used to visualize prediction sets for any conformal classifier.a
+Stacked area charts can be used to visualize prediction sets for any conformal classifier.
 
 ``` julia
 using MLJ
@@ -129,7 +130,7 @@ plot(plt_list..., size=(220*n_input,200), layout=(1, n_input))
 
 #### Contour Plots for Two-Dimensional Inputs
 
-For conformal classifiers with exactly two input variables, the [`TaijaPlotting.contourf(conf_model::ConformalPrediction.ConformalProbabilisticSet, fitresult, X, y; kwrgs...)`](@ref) method can be used to visualize conformal predictions in the two-dimensional feature space.a
+For conformal classifiers with exactly two input variables, the `TaijaPlotting.contourf` method can be used to visualize conformal predictions in the two-dimensional feature space.
 
 ``` julia
 using MLJ
@@ -152,7 +153,7 @@ plot(p1, p2, size=(700,300))
 
 ### Visualizing Set Size
 
-To visualize the set size distribution, the [`TaijaPlotting.bar(conf_model::ConformalPrediction.ConformalModel, fitresult, X; label="", xtickfontsize=6, kwrgs...)`](@ref) can be used. Recall that for more adaptive predictors the distribution of set sizes is typically spread out more widely, which reflects that “the procedure is effectively distinguishing between easy and hard inputs” (Angelopoulos and Bates 2021). This is desirable: when for a given sample it is difficult to make predictions, this should be reflected in the set size (or interval width in the regression case). Since ‘difficult’ lies on some spectrum that ranges from ‘very easy’ to ‘very difficult’ the set size should very across the spectrum of ‘empty set’ to ‘all labels included’.
+To visualize the set size distribution, the `TaijaPlotting.bar` can be used. Recall that for more adaptive predictors the distribution of set sizes is typically spread out more widely, which reflects that “the procedure is effectively distinguishing between easy and hard inputs” (Angelopoulos and Bates 2021). This is desirable: when for a given sample it is difficult to make predictions, this should be reflected in the set size (or interval width in the regression case). Since ‘difficult’ lies on some spectrum that ranges from ‘very easy’ to ‘very difficult’ the set size should vary across the spectrum of ‘empty set’ to ‘all labels included’.
 
 ``` julia
 X, y = make_moons(500; noise=0.15)
