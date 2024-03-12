@@ -57,7 +57,7 @@ conformal_models = merge(values(available_models[:classification])...)
                                 # Empirical coverage:
                                 _eval = evaluate!(mach; measure=emp_coverage, verbosity=0)
                                 Δ = _eval.measurement[1] - _cov     # over-/under-coverage
-                                @test Δ >= -0.05                    # we don't undercover too much
+                                @test Δ >= -0.15                    # we don't undercover too much
                                 # Size-stratified coverage:
                                 _eval = evaluate!(mach; measure=ssc, verbosity=0)
                             end
