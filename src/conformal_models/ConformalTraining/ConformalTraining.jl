@@ -1,5 +1,7 @@
 module ConformalTraining
 
+export soft_assignment
+
 using ConformalPrediction
 using Flux
 using MLJFlux

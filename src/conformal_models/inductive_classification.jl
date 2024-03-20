@@ -1,15 +1,10 @@
 """
-    score(conf_model::ConformalProbabilisticSet, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+    score(conf_model::ConformalProbabilisticSet, fitresult, X, y=nothing)
 
 Generic score method for the [`ConformalProbabilisticSet`](@ref). It computes nonconformity scores using the heuristic function `h` and the softmax probabilities of the true class. Method is dispatched for different Conformal Probabilistic Sets and atomic models.
 """
-function score(
-    conf_model::ConformalProbabilisticSet,
-    fitresult,
-    X,
-    y::Union{Nothing,AbstractArray}=nothing,
-)
-    return score(conf_model, typeof(conf_model.model), fitresult, X, y)
+function score(conf_model::ConformalProbabilisticSet, fitresult, X, y=nothing)
+    return score(conf_model, conf_model.model, fitresult, X, y)
 end
 
 """
@@ -52,15 +47,9 @@ end
 Score method for the [`SimpleInductiveClassifier`](@ref) dispatched for any `<:Supervised` model.
 """
 function score(
-    conf_model::SimpleInductiveClassifier,
-    ::Type{<:Supervised},
-    fitresult,
-    X,
-    y::Union{Nothing,AbstractArray}=nothing,
+    conf_model::SimpleInductiveClassifier, atomic::Supervised, fitresult, X, y=nothing
 )
-    p̂ = reformat_mlj_prediction(
-        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, X)...)
-    )
+    p̂ = reformat_mlj_prediction(MMI.predict(atomic, fitresult, MMI.reformat(atomic, X)...))
     L = p̂.decoder.classes
     probas = pdf(p̂, L)
     scores = @.(conf_model.heuristic(y, probas))
@@ -182,15 +171,9 @@ end
 Score method for the [`AdaptiveInductiveClassifier`](@ref) dispatched for any `<:Supervised` model.
 """
 function score(
-    conf_model::AdaptiveInductiveClassifier,
-    ::Type{<:Supervised},
-    fitresult,
-    X,
-    y::Union{Nothing,AbstractArray}=nothing,
+    conf_model::AdaptiveInductiveClassifier, atomic::Supervised, fitresult, X, y=nothing
 )
-    p̂ = reformat_mlj_prediction(
-        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, X)...)
-    )
+    p̂ = reformat_mlj_prediction(MMI.predict(atomic, fitresult, MMI.reformat(atomic, X)...))
     L = p̂.decoder.classes
     probas = pdf(p̂, L)                                              # compute probabilities for all classes
     scores = map(Base.Iterators.product(eachrow(probas), L)) do Z
