@@ -11,7 +11,7 @@ Overloads the `score` function for the `MLJFluxModel` type.
 """
 function ConformalPrediction.score(
     conf_model::SimpleInductiveClassifier,
-    ::Type{<:MLJFluxModel},
+    atomic::MLJFluxModel,
     fitresult,
     X,
     y::Union{Nothing,AbstractArray}=nothing,
@@ -34,7 +34,7 @@ Overloads the `score` function for ensembles of `MLJFluxModel` types.
 """
 function ConformalPrediction.score(
     conf_model::SimpleInductiveClassifier,
-    ::Type{<:EitherEnsembleModel{<:MLJFluxModel}},
+    atomic::EitherEnsembleModel{<:MLJFluxModel},
     fitresult,
     X,
     y::Union{Nothing,AbstractArray}=nothing,
@@ -61,11 +61,7 @@ end
 Overloads the `score` function for the `MLJFluxModel` type.
 """
 function score(
-    conf_model::AdaptiveInductiveClassifier,
-    ::Type{<:MLJFluxModel},
-    fitresult,
-    X,
-    y::Union{Nothing,AbstractArray}=nothing,
+    conf_model::AdaptiveInductiveClassifier, atomic::MLJFluxModel, fitresult, X, y=nothing
 )
     L = levels(fitresult[2])
     X = reformat(X)
@@ -93,10 +89,10 @@ Overloads the `score` function for ensembles of `MLJFluxModel` types.
 """
 function score(
     conf_model::AdaptiveInductiveClassifier,
-    ::Type{<:EitherEnsembleModel{<:MLJFluxModel}},
+    atomic::EitherEnsembleModel{<:MLJFluxModel},
     fitresult,
     X,
-    y::Union{Nothing,AbstractArray}=nothing,
+    y=nothing,
 )
     L = levels(fitresult.ensemble[1][2])
     X = reformat(X)
