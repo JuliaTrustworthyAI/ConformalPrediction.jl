@@ -40,7 +40,9 @@ function SimpleInductiveClassifier(
     parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
     train_ratio::AbstractFloat=0.5,
 )
-    return SimpleInductiveClassifier(model, coverage, nothing, heuristic, parallelizer, train_ratio)
+    return SimpleInductiveClassifier(
+        model, coverage, nothing, heuristic, parallelizer, train_ratio
+    )
 end
 
 """
@@ -140,7 +142,9 @@ function AdaptiveInductiveClassifier(
     parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
     train_ratio::AbstractFloat=0.5,
 )
-    return AdaptiveInductiveClassifier(model, coverage, nothing, heuristic, parallelizer, train_ratio)
+    return AdaptiveInductiveClassifier(
+        model, coverage, nothing, heuristic, parallelizer, train_ratio
+    )
 end
 
 @doc raw"""

@@ -605,7 +605,15 @@ function JackknifePlusAbRegressor(
     aggregate::Union{Symbol,String}="mean",
 )
     return JackknifePlusAbRegressor(
-        model, coverage, nothing, heuristic, parallelizer, nsampling, sample_size, replacement, aggregate
+        model,
+        coverage,
+        nothing,
+        heuristic,
+        parallelizer,
+        nsampling,
+        sample_size,
+        replacement,
+        aggregate,
     )
 end
 
@@ -713,7 +721,15 @@ function JackknifePlusAbMinMaxRegressor(
     aggregate::Union{Symbol,String}="mean",
 )
     return JackknifePlusAbMinMaxRegressor(
-        model, coverage, nothing, heuristic, parallelizer, nsampling, sample_size, replacement, aggregate
+        model,
+        coverage,
+        nothing,
+        heuristic,
+        parallelizer,
+        nsampling,
+        sample_size,
+        replacement,
+        aggregate,
     )
 end
 

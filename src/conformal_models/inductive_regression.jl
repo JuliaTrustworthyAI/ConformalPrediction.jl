@@ -17,7 +17,9 @@ function SimpleInductiveRegressor(
     parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
     train_ratio::AbstractFloat=0.5,
 )
-    return SimpleInductiveRegressor(model, coverage, nothing, heuristic, parallelizer, train_ratio)
+    return SimpleInductiveRegressor(
+        model, coverage, nothing, heuristic, parallelizer, train_ratio
+    )
 end
 
 @doc raw"""
@@ -99,7 +101,9 @@ function ConformalQuantileRegressor(
     parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
     train_ratio::AbstractFloat=0.5,
 )
-    return ConformalQuantileRegressor(model, coverage, nothing, heuristic, parallelizer, train_ratio)
+    return ConformalQuantileRegressor(
+        model, coverage, nothing, heuristic, parallelizer, train_ratio
+    )
 end
 
 @doc raw"""
