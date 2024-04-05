@@ -18,10 +18,8 @@ function split_data(conf_model::InductiveModel, X, y)
     train, calibration = partition(eachindex(y), conf_model.train_ratio)
     Xtrain = selectrows(X, train)
     ytrain = y[train]
-    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
     Xcal = selectrows(X, calibration)
     ycal = y[calibration]
-    Xcal, ycal = MMI.reformat(conf_model.model, Xcal, ycal)
 
     return Xtrain, ytrain, Xcal, ycal
 end
