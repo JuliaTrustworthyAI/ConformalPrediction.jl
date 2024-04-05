@@ -22,7 +22,6 @@ function SimpleInductiveRegressor(
     )
 end
 
-
 @doc raw"""
     score(conf_model::SimpleInductiveRegressor, atomic::Supervised, fitresult, X, y=nothing)
 
@@ -37,9 +36,7 @@ A typical choice for the heuristic function is ``h(\hat\mu(X_i),Y_i)=|Y_i-\hat\m
 function score(
     conf_model::SimpleInductiveRegressor, atomic::Supervised, fitresult, X, y=nothing
 )
-    ŷ = reformat_mlj_prediction(
-        MMI.predict(atomic, fitresult, MMI.reformat(atomic, X)...)
-    )
+    ŷ = reformat_mlj_prediction(MMI.predict(atomic, fitresult, MMI.reformat(atomic, X)...))
     scores = @.(conf_model.heuristic(y, ŷ))
     if isnothing(y)
         return scores
