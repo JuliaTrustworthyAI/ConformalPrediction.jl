@@ -29,6 +29,7 @@ mutable struct SimpleInductiveClassifier{Model<:Supervised} <: ConformalProbabil
     coverage::AbstractFloat
     scores::Union{Nothing,Dict{Any,Any}}
     heuristic::Function
+    parallelizer::Union{Nothing,AbstractParallelizer}
     train_ratio::AbstractFloat
 end
 
@@ -36,9 +37,10 @@ function SimpleInductiveClassifier(
     model::Supervised;
     coverage::AbstractFloat=0.95,
     heuristic::Function=minus_softmax,
+    parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
     train_ratio::AbstractFloat=0.5,
 )
-    return SimpleInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
+    return SimpleInductiveClassifier(model, coverage, nothing, heuristic, parallelizer, train_ratio)
 end
 
 """
@@ -127,6 +129,7 @@ mutable struct AdaptiveInductiveClassifier{Model<:Supervised} <: ConformalProbab
     coverage::AbstractFloat
     scores::Union{Nothing,Dict{Any,Any}}
     heuristic::Function
+    parallelizer::Union{Nothing,AbstractParallelizer}
     train_ratio::AbstractFloat
 end
 
@@ -134,9 +137,10 @@ function AdaptiveInductiveClassifier(
     model::Supervised;
     coverage::AbstractFloat=0.95,
     heuristic::Function=minus_softmax,
+    parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
     train_ratio::AbstractFloat=0.5,
 )
-    return AdaptiveInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
+    return AdaptiveInductiveClassifier(model, coverage, nothing, heuristic, parallelizer, train_ratio)
 end
 
 @doc raw"""

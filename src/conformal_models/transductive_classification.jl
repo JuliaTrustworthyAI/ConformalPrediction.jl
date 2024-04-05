@@ -5,12 +5,16 @@ mutable struct NaiveClassifier{Model<:Supervised} <: ConformalProbabilisticSet
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
     heuristic::Function
+    parallelizer::Union{Nothing,AbstractParallelizer}
 end
 
 function NaiveClassifier(
-    model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=minus_softmax
+    model::Supervised;
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=minus_softmax,
+    parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
 )
-    return NaiveClassifier(model, coverage, nothing, heuristic)
+    return NaiveClassifier(model, coverage, nothing, heuristic, parallelizer)
 end
 
 @doc raw"""

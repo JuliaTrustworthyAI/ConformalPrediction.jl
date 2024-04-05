@@ -1,5 +1,7 @@
 module ConformalPrediction
 
+using TaijaBase
+
 # Conformal Models:
 include("conformal_models/conformal_models.jl")
 export ConformalModel

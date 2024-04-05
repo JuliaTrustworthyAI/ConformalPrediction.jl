@@ -10,12 +10,16 @@ mutable struct NaiveRegressor{Model<:Supervised} <: ConformalInterval
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
     heuristic::Function
+    parallelizer::Union{Nothing,AbstractParallelizer}
 end
 
 function NaiveRegressor(
-    model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=absolute_error
+    model::Supervised;
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=absolute_error,
+    parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
 )
-    return NaiveRegressor(model, coverage, nothing, heuristic)
+    return NaiveRegressor(model, coverage, nothing, heuristic, parallelizer)
 end
 
 @doc raw"""
@@ -79,12 +83,16 @@ mutable struct JackknifeRegressor{Model<:Supervised} <: ConformalInterval
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
     heuristic::Function
+    parallelizer::Union{Nothing,AbstractParallelizer}
 end
 
 function JackknifeRegressor(
-    model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=absolute_error
+    model::Supervised;
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=absolute_error,
+    parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
 )
-    return JackknifeRegressor(model, coverage, nothing, heuristic)
+    return JackknifeRegressor(model, coverage, nothing, heuristic, parallelizer)
 end
 
 @doc raw"""
@@ -160,12 +168,16 @@ mutable struct JackknifePlusRegressor{Model<:Supervised} <: ConformalInterval
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
     heuristic::Function
+    parallelizer::Union{Nothing,AbstractParallelizer}
 end
 
 function JackknifePlusRegressor(
-    model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=absolute_error
+    model::Supervised;
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=absolute_error,
+    parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
 )
-    return JackknifePlusRegressor(model, coverage, nothing, heuristic)
+    return JackknifePlusRegressor(model, coverage, nothing, heuristic, parallelizer)
 end
 
 @doc raw"""
@@ -249,12 +261,16 @@ mutable struct JackknifeMinMaxRegressor{Model<:Supervised} <: ConformalInterval
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
     heuristic::Function
+    parallelizer::Union{Nothing,AbstractParallelizer}
 end
 
 function JackknifeMinMaxRegressor(
-    model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=absolute_error
+    model::Supervised;
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=absolute_error,
+    parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
 )
-    return JackknifeMinMaxRegressor(model, coverage, nothing, heuristic)
+    return JackknifeMinMaxRegressor(model, coverage, nothing, heuristic, parallelizer)
 end
 
 @doc raw"""
@@ -337,6 +353,7 @@ mutable struct CVPlusRegressor{Model<:Supervised} <: ConformalInterval
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
     heuristic::Function
+    parallelizer::Union{Nothing,AbstractParallelizer}
     cv::MLJBase.CV
 end
 
@@ -344,9 +361,10 @@ function CVPlusRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
     heuristic::Function=absolute_error,
+    parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
     cv::MLJBase.CV=MLJBase.CV(),
 )
-    return CVPlusRegressor(model, coverage, nothing, heuristic, cv)
+    return CVPlusRegressor(model, coverage, nothing, heuristic, parallelizer, cv)
 end
 
 @doc raw"""
@@ -442,6 +460,7 @@ mutable struct CVMinMaxRegressor{Model<:Supervised} <: ConformalInterval
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
     heuristic::Function
+    parallelizer::Union{Nothing,AbstractParallelizer}
     cv::MLJBase.CV
 end
 
@@ -449,9 +468,10 @@ function CVMinMaxRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
     heuristic::Function=absolute_error,
+    parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
     cv::MLJBase.CV=MLJBase.CV(),
 )
-    return CVMinMaxRegressor(model, coverage, nothing, heuristic, cv)
+    return CVMinMaxRegressor(model, coverage, nothing, heuristic, parallelizer, cv)
 end
 
 @doc raw"""
@@ -567,6 +587,7 @@ mutable struct JackknifePlusAbRegressor{Model<:Supervised} <: ConformalInterval
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
     heuristic::Function
+    parallelizer::Union{Nothing,AbstractParallelizer}
     nsampling::Int
     sample_size::AbstractFloat
     replacement::Bool
@@ -577,13 +598,14 @@ function JackknifePlusAbRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
     heuristic::Function=absolute_error,
+    parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
     nsampling::Int=30,
     sample_size::AbstractFloat=0.5,
     replacement::Bool=true,
     aggregate::Union{Symbol,String}="mean",
 )
     return JackknifePlusAbRegressor(
-        model, coverage, nothing, heuristic, nsampling, sample_size, replacement, aggregate
+        model, coverage, nothing, heuristic, parallelizer, nsampling, sample_size, replacement, aggregate
     )
 end
 
@@ -673,6 +695,7 @@ mutable struct JackknifePlusAbMinMaxRegressor{Model<:Supervised} <: ConformalInt
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
     heuristic::Function
+    parallelizer::Union{Nothing,AbstractParallelizer}
     nsampling::Int
     sample_size::AbstractFloat
     replacement::Bool
@@ -683,13 +706,14 @@ function JackknifePlusAbMinMaxRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
     heuristic::Function=absolute_error,
+    parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
     nsampling::Int=30,
     sample_size::AbstractFloat=0.5,
     replacement::Bool=true,
     aggregate::Union{Symbol,String}="mean",
 )
     return JackknifePlusAbMinMaxRegressor(
-        model, coverage, nothing, heuristic, nsampling, sample_size, replacement, aggregate
+        model, coverage, nothing, heuristic, parallelizer, nsampling, sample_size, replacement, aggregate
     )
 end
 
@@ -777,6 +801,7 @@ mutable struct TimeSeriesRegressorEnsembleBatch{Model<:Supervised} <: ConformalI
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
     heuristic::Function
+    parallelizer::Union{Nothing,AbstractParallelizer}
     nsampling::Int
     sample_size::AbstractFloat
     aggregate::Union{Symbol,String}
@@ -786,12 +811,13 @@ function TimeSeriesRegressorEnsembleBatch(
     model::Supervised;
     coverage::AbstractFloat=0.95,
     heuristic::Function=absolute_error,
+    parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
     nsampling::Int=50,
     sample_size::AbstractFloat=0.3,
     aggregate::Union{Symbol,String}="mean",
 )
     return TimeSeriesRegressorEnsembleBatch(
-        model, coverage, nothing, heuristic, nsampling, sample_size, aggregate
+        model, coverage, nothing, heuristic, parallelizer, nsampling, sample_size, aggregate
     )
 end
 

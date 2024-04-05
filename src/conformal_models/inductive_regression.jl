@@ -6,6 +6,7 @@ mutable struct SimpleInductiveRegressor{Model<:Supervised} <: ConformalInterval
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
     heuristic::Function
+    parallelizer::Union{Nothing,AbstractParallelizer}
     train_ratio::AbstractFloat
 end
 
@@ -13,9 +14,10 @@ function SimpleInductiveRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
     heuristic::Function=absolute_error,
+    parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
     train_ratio::AbstractFloat=0.5,
 )
-    return SimpleInductiveRegressor(model, coverage, nothing, heuristic, train_ratio)
+    return SimpleInductiveRegressor(model, coverage, nothing, heuristic, parallelizer, train_ratio)
 end
 
 @doc raw"""
@@ -84,6 +86,7 @@ mutable struct ConformalQuantileRegressor{Model<:QuantileModel} <: ConformalInte
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
     heuristic::Function
+    parallelizer::Union{Nothing,AbstractParallelizer}
     train_ratio::AbstractFloat
 end
 
@@ -93,9 +96,10 @@ function ConformalQuantileRegressor(
     heuristic::Function=function f(y, ŷ_lb, ŷ_ub)
         return reduce((x, y) -> max.(x, y), [ŷ_lb - y, y - ŷ_ub])
     end,
+    parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
     train_ratio::AbstractFloat=0.5,
 )
-    return ConformalQuantileRegressor(model, coverage, nothing, heuristic, train_ratio)
+    return ConformalQuantileRegressor(model, coverage, nothing, heuristic, parallelizer, train_ratio)
 end
 
 @doc raw"""
