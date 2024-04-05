@@ -22,8 +22,9 @@ function SimpleInductiveRegressor(
     )
 end
 
+
 @doc raw"""
-    MMI.fit(conf_model::SimpleInductiveRegressor, verbosity, X, y)
+    score(conf_model::SimpleInductiveRegressor, atomic::Supervised, fitresult, X, y=nothing)
 
 For the [`SimpleInductiveRegressor`](@ref) nonconformity scores are computed as follows:
 
@@ -33,23 +34,19 @@ S_i^{\text{CAL}} = s(X_i, Y_i) = h(\hat\mu(X_i), Y_i), \ i \in \mathcal{D}_{\tex
 
 A typical choice for the heuristic function is ``h(\hat\mu(X_i),Y_i)=|Y_i-\hat\mu(X_i)|`` where ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``.
 """
-function MMI.fit(conf_model::SimpleInductiveRegressor, verbosity, X, y)
-
-    # Data Splitting:
-    Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
-
-    # Training:
-    fitresult, cache, report = MMI.fit(
-        conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...
-    )
-
-    # Nonconformity Scores:
+function score(
+    conf_model::SimpleInductiveRegressor, atomic::Supervised, fitresult, X, y=nothing
+)
     ŷ = reformat_mlj_prediction(
-        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xcal)...)
+        MMI.predict(atomic, fitresult, MMI.reformat(atomic, X)...)
     )
-    conf_model.scores = @.(conf_model.heuristic(ycal, ŷ))
-
-    return (fitresult, cache, report)
+    scores = @.(conf_model.heuristic(y, ŷ))
+    if isnothing(y)
+        return scores
+    else
+        cal_scores = getindex.(Ref(scores), 1:size(scores, 1), y)
+        return cal_scores, scores
+    end
 end
 
 # Prediction

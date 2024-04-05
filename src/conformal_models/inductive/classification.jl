@@ -1,34 +1,3 @@
-"""
-    score(conf_model::ConformalProbabilisticSet, fitresult, X, y=nothing)
-
-Generic score method for the [`ConformalProbabilisticSet`](@ref). It computes nonconformity scores using the heuristic function `h` and the softmax probabilities of the true class. Method is dispatched for different Conformal Probabilistic Sets and atomic models.
-"""
-function score(conf_model::ConformalProbabilisticSet, fitresult, X, y=nothing)
-    return score(conf_model, conf_model.model, fitresult, X, y)
-end
-
-@doc raw"""
-    MMI.fit(conf_model::ConformalProbabilisticSet, verbosity, X, y)
-
-Fits the [`ConformalProbabilisticSet`](@ref) model. 
-"""
-function MMI.fit(conf_model::ConformalProbabilisticSet, verbosity, X, y)
-
-    # Data Splitting:
-    Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
-
-    # Training:
-    fitresult, cache, report = MMI.fit(
-        conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...
-    )
-
-    # Nonconformity Scores:
-    cal_scores, scores = score(conf_model, fitresult, Xcal, ycal)
-    conf_model.scores = Dict(:calibration => cal_scores, :all => scores)
-
-    return (fitresult, cache, report)
-end
-
 # Simple
 "The `SimpleInductiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset."
 mutable struct SimpleInductiveClassifier{Model<:Supervised} <: ConformalProbabilisticSet
@@ -130,32 +99,6 @@ function AdaptiveInductiveClassifier(
     return AdaptiveInductiveClassifier(
         model, coverage, nothing, heuristic, parallelizer, train_ratio
     )
-end
-
-@doc raw"""
-    MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
-
-For the [`AdaptiveInductiveClassifier`](@ref) nonconformity scores are computed by cumulatively summing the ranked scores of each label in descending order until reaching the true label ``Y_i``:
-
-``
-S_i^{\text{CAL}} = s(X_i,Y_i) = \sum_{j=1}^k  \hat\mu(X_i)_{\pi_j} \ \text{where } \ Y_i=\pi_k,  i \in \mathcal{D}_{\text{calibration}}
-``
-"""
-function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
-
-    # Data Splitting:
-    Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
-
-    # Training:
-    fitresult, cache, report = MMI.fit(
-        conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...
-    )
-
-    # Nonconformity Scores:
-    cal_scores, scores = score(conf_model, fitresult, Xcal, ycal)
-    conf_model.scores = Dict(:calibration => cal_scores, :all => scores)
-
-    return (fitresult, cache, report)
 end
 
 """
