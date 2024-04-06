@@ -33,6 +33,16 @@ function score(conf_model::InductiveModel, fitresult, X, y=nothing)
     return score(conf_model, conf_model.model, fitresult, X, y)
 end
 
+"""
+    fit_atomic(conf_model::InductiveModel, verbosity, X, y)
+
+Fits the atomic model for the [`InductiveModel`](@ref). In the case of inductive models, the atomic model is fit once on the proper training data.
+"""
+function fit_atomic(conf_model::InductiveModel, verbosity, X, y)
+    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, X, y)...)
+    return fitresult, cache, report
+end
+
 @doc raw"""
     MMI.fit(conf_model::InductiveModel, verbosity, X, y)
 
@@ -44,9 +54,7 @@ function MMI.fit(conf_model::InductiveModel, verbosity, X, y)
     Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
 
     # Training:
-    fitresult, cache, report = MMI.fit(
-        conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...
-    )
+    fitresult, cache, report = fit_atomic(conf_model, verbosity, Xtrain, ytrain)
 
     # Nonconformity Scores:
     cal_scores, scores = score(conf_model, fitresult, Xcal, ycal)

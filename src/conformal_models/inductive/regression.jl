@@ -4,7 +4,7 @@ using MLJLinearModels: MLJLinearModels
 mutable struct SimpleInductiveRegressor{Model<:Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
-    scores::Union{Nothing,AbstractArray}
+    scores::Union{Nothing,Dict{Any,Any}}
     heuristic::Function
     parallelizer::Union{Nothing,AbstractParallelizer}
     train_ratio::AbstractFloat
@@ -38,7 +38,11 @@ function score(
 )
     ŷ = reformat_mlj_prediction(MMI.predict(atomic, fitresult, MMI.reformat(atomic, X)...))
     scores = @.(conf_model.heuristic(y, ŷ))
-    return scores, scores
+    if isnothing(y)
+        return scores
+    else
+        return scores, scores
+    end
 end
 
 # Prediction
@@ -90,6 +94,11 @@ function ConformalQuantileRegressor(
         model, coverage, nothing, heuristic, parallelizer, train_ratio
     )
 end
+
+# function fit_atomic(conf_model::ConformalQuantileRegressor, verbosity, X, y)
+#     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, X, y)...)
+#     return fitresult, cache, report
+# end
 
 @doc raw"""
     MMI.fit(conf_model::ConformalQuantileRegressor, verbosity, X, y)
