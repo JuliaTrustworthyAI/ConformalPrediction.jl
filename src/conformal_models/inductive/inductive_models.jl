@@ -39,7 +39,9 @@ end
 Fits the atomic model for the [`InductiveModel`](@ref). In the case of inductive models, the atomic model is fit once on the proper training data.
 """
 function fit_atomic(conf_model::InductiveModel, verbosity, X, y)
-    fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, X, y)...)
+    fitresult, cache, report = MMI.fit(
+        conf_model.model, verbosity, MMI.reformat(conf_model.model, X, y)...
+    )
     return fitresult, cache, report
 end
 
