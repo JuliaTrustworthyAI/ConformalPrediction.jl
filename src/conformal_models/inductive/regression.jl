@@ -38,12 +38,7 @@ function score(
 )
     ŷ = reformat_mlj_prediction(MMI.predict(atomic, fitresult, MMI.reformat(atomic, X)...))
     scores = @.(conf_model.heuristic(y, ŷ))
-    if isnothing(y)
-        return scores
-    else
-        cal_scores = getindex.(Ref(scores), 1:size(scores, 1), y)
-        return cal_scores, scores
-    end
+    return scores, scores
 end
 
 # Prediction

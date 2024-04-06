@@ -12,9 +12,10 @@ const InductiveModel = Union{
 """
     split_data(conf_model::InductiveModel, indices::Base.OneTo{Int})
 
-Splits the data into a proper training and calibration set.
+Splits the data into a proper training and calibration set for inductive models.
 """
 function split_data(conf_model::InductiveModel, X, y)
+    
     train, calibration = partition(eachindex(y), conf_model.train_ratio)
     Xtrain = selectrows(X, train)
     ytrain = y[train]
