@@ -1,27 +1,3 @@
-"""
-    score(conf_model::ConformalProbabilisticSet, fitresult, X, y=nothing)
-
-Generic score method for the [`ConformalProbabilisticSet`](@ref). It computes nonconformity scores using the heuristic function `h` and the softmax probabilities of the true class. Method is dispatched for different Conformal Probabilistic Sets and atomic models.
-"""
-function score(conf_model::ConformalProbabilisticSet, fitresult, X, y=nothing)
-    return score(conf_model, conf_model.model, fitresult, X, y)
-end
-
-"""
-    split_data(conf_model::ConformalProbabilisticSet, indices::Base.OneTo{Int})
-
-Splits the data into a proper training and calibration set.
-"""
-function split_data(conf_model::ConformalProbabilisticSet, X, y)
-    train, calibration = partition(eachindex(y), conf_model.train_ratio)
-    Xtrain = selectrows(X, train)
-    ytrain = y[train]
-    Xcal = selectrows(X, calibration)
-    ycal = y[calibration]
-
-    return Xtrain, ytrain, Xcal, ycal
-end
-
 # Simple
 "The `SimpleInductiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset."
 mutable struct SimpleInductiveClassifier{Model<:Supervised} <: ConformalProbabilisticSet
@@ -29,6 +5,7 @@ mutable struct SimpleInductiveClassifier{Model<:Supervised} <: ConformalProbabil
     coverage::AbstractFloat
     scores::Union{Nothing,Dict{Any,Any}}
     heuristic::Function
+    parallelizer::Union{Nothing,AbstractParallelizer}
     train_ratio::AbstractFloat
 end
 
@@ -36,15 +13,24 @@ function SimpleInductiveClassifier(
     model::Supervised;
     coverage::AbstractFloat=0.95,
     heuristic::Function=minus_softmax,
+    parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
     train_ratio::AbstractFloat=0.5,
 )
-    return SimpleInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
+    return SimpleInductiveClassifier(
+        model, coverage, nothing, heuristic, parallelizer, train_ratio
+    )
 end
 
-"""
+@doc raw"""
     score(conf_model::SimpleInductiveClassifier, ::Type{<:Supervised}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
 
-Score method for the [`SimpleInductiveClassifier`](@ref) dispatched for any `<:Supervised` model.
+Score method for the [`SimpleInductiveClassifier`](@ref) dispatched for any `<:Supervised` model. For the [`SimpleInductiveClassifier`](@ref) nonconformity scores are computed as follows:
+
+``
+S_i^{\text{CAL}} = s(X_i, Y_i) = h(\hat\mu(X_i), Y_i), \ i \in \mathcal{D}_{\text{calibration}}
+``
+
+A typical choice for the heuristic function is ``h(\hat\mu(X_i), Y_i)=1-\hat\mu(X_i)_{Y_i}`` where ``\hat\mu(X_i)_{Y_i}`` denotes the softmax output of the true class and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``. The simple approach only takes the softmax probability of the true label into account.
 """
 function score(
     conf_model::SimpleInductiveClassifier, atomic::Supervised, fitresult, X, y=nothing
@@ -59,34 +45,6 @@ function score(
         cal_scores = getindex.(Ref(scores), 1:size(scores, 1), levelcode.(y))
         return cal_scores, scores
     end
-end
-
-@doc raw"""
-    MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
-
-For the [`SimpleInductiveClassifier`](@ref) nonconformity scores are computed as follows:
-
-``
-S_i^{\text{CAL}} = s(X_i, Y_i) = h(\hat\mu(X_i), Y_i), \ i \in \mathcal{D}_{\text{calibration}}
-``
-
-A typical choice for the heuristic function is ``h(\hat\mu(X_i), Y_i)=1-\hat\mu(X_i)_{Y_i}`` where ``\hat\mu(X_i)_{Y_i}`` denotes the softmax output of the true class and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``. The simple approach only takes the softmax probability of the true label into account.
-"""
-function MMI.fit(conf_model::SimpleInductiveClassifier, verbosity, X, y)
-
-    # Data Splitting:
-    Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
-
-    # Training:
-    fitresult, cache, report = MMI.fit(
-        conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...
-    )
-
-    # Nonconformity Scores:
-    cal_scores, scores = score(conf_model, fitresult, Xcal, ycal)
-    conf_model.scores = Dict(:calibration => cal_scores, :all => scores)
-
-    return (fitresult, cache, report)
 end
 
 @doc raw"""
@@ -127,6 +85,7 @@ mutable struct AdaptiveInductiveClassifier{Model<:Supervised} <: ConformalProbab
     coverage::AbstractFloat
     scores::Union{Nothing,Dict{Any,Any}}
     heuristic::Function
+    parallelizer::Union{Nothing,AbstractParallelizer}
     train_ratio::AbstractFloat
 end
 
@@ -134,35 +93,12 @@ function AdaptiveInductiveClassifier(
     model::Supervised;
     coverage::AbstractFloat=0.95,
     heuristic::Function=minus_softmax,
+    parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
     train_ratio::AbstractFloat=0.5,
 )
-    return AdaptiveInductiveClassifier(model, coverage, nothing, heuristic, train_ratio)
-end
-
-@doc raw"""
-    MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
-
-For the [`AdaptiveInductiveClassifier`](@ref) nonconformity scores are computed by cumulatively summing the ranked scores of each label in descending order until reaching the true label ``Y_i``:
-
-``
-S_i^{\text{CAL}} = s(X_i,Y_i) = \sum_{j=1}^k  \hat\mu(X_i)_{\pi_j} \ \text{where } \ Y_i=\pi_k,  i \in \mathcal{D}_{\text{calibration}}
-``
-"""
-function MMI.fit(conf_model::AdaptiveInductiveClassifier, verbosity, X, y)
-
-    # Data Splitting:
-    Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
-
-    # Training:
-    fitresult, cache, report = MMI.fit(
-        conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...
+    return AdaptiveInductiveClassifier(
+        model, coverage, nothing, heuristic, parallelizer, train_ratio
     )
-
-    # Nonconformity Scores:
-    cal_scores, scores = score(conf_model, fitresult, Xcal, ycal)
-    conf_model.scores = Dict(:calibration => cal_scores, :all => scores)
-
-    return (fitresult, cache, report)
 end
 
 """
