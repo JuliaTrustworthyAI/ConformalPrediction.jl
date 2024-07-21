@@ -32,8 +32,10 @@
      fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
      # Nonconformity Scores:
-     ŷ = pdf.(MMI.predict(conf_model.model, fitresult, Xcal), ycal)      # predict returns a vector of distributions
-     conf_model.scores = @.(conf_model.heuristic(ycal, ŷ))
+     #is_classifier= is_classifier(conf_model.model) #forse inutile
+ 
+    ŷ = pdf.(MMI.predict(conf_model.model, fitresult, Xcal), ycal)      # predict returns a vector of distributions
+    conf_model.scores = @.(conf_model.heuristic(ycal, ŷ))
 
      return (fitresult, cache, report)
  end
@@ -53,16 +55,25 @@
      p̂ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
      v = conf_model.scores
      q̂ = qplus(v, conf_model.coverage)
-     p̂ = map(p̂) do pp
-         L = p̂.decoder.classes
-         probas = pdf.(pp, L)
-         is_in_set = 1.0 .- probas .<= q̂
-         if !all(is_in_set .== false)
-             pp = UnivariateFinite(L[is_in_set], probas[is_in_set])
-         else
-             pp = missing
-         end
-         return pp
-     end
+     is_classifier= is_classifier(conf_model.model)
+
+     if is_classifier
+        p̂ = map(p̂) do pp
+            L = p̂.decoder.classes
+            probas = pdf.(pp, L)
+            is_in_set = 1.0 .- probas .<= q̂
+            if !all(is_in_set .== false)
+                pp = UnivariateFinite(L[is_in_set], probas[is_in_set])
+            else
+                pp = missing
+            end
+            return pp
+        end
+    else
+        println("not yet implemented")
+        
+    end
+
+
      return p̂
  end

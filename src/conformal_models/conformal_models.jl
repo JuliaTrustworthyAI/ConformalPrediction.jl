@@ -29,7 +29,7 @@ A simple wrapper function that turns a `model::Supervised` into a conformal mode
 function conformal_model(
     model::Supervised; method::Union{Nothing,Symbol}=nothing, kwargs...
 )
-    is_classifier = target_scitype(model) <: AbstractVector{<:Finite}
+    is_classifier = is_classifier(model)
 
     if isnothing(method)
         _method = is_classifier ? SimpleInductiveClassifier : SimpleInductiveRegressor
