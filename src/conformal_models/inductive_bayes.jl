@@ -26,13 +26,7 @@
  function MMI.fit(conf_model::SimpleInductiveBayes, verbosity, X, y)
     
      # Data Splitting:
-     train, calibration = partition(eachindex(y), conf_model.train_ratio)
-     Xtrain = selectrows(X, train)
-     ytrain = y[train]
-     Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
-     Xcal = selectrows(X, calibration)
-     ycal = y[calibration]
-     Xcal, ycal = MMI.reformat(conf_model.model, Xcal, ycal)
+     Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
 
      # Training: 
      fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)

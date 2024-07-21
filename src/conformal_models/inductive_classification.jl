@@ -7,20 +7,6 @@ function score(conf_model::ConformalProbabilisticSet, fitresult, X, y=nothing)
     return score(conf_model, conf_model.model, fitresult, X, y)
 end
 
-"""
-    split_data(conf_model::ConformalProbabilisticSet, indices::Base.OneTo{Int})
-
-Splits the data into a proper training and calibration set.
-"""
-function split_data(conf_model::ConformalProbabilisticSet, X, y)
-    train, calibration = partition(eachindex(y), conf_model.train_ratio)
-    Xtrain = selectrows(X, train)
-    ytrain = y[train]
-    Xcal = selectrows(X, calibration)
-    ycal = y[calibration]
-
-    return Xtrain, ytrain, Xcal, ycal
-end
 
 # Simple
 "The `SimpleInductiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset."

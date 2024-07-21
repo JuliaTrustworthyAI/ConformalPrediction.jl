@@ -32,12 +32,7 @@ A typical choice for the heuristic function is ``h(\hat\mu(X_i),Y_i)=|Y_i-\hat\m
 function MMI.fit(conf_model::SimpleInductiveRegressor, verbosity, X, y)
 
     # Data Splitting:
-    train, calibration = partition(eachindex(y), conf_model.train_ratio)
-    Xtrain = selectrows(X, train)
-    ytrain = y[train]
-    Xcal = selectrows(X, calibration)
-    ycal = y[calibration]
-
+    Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
     # Training:
     fitresult, cache, report = MMI.fit(
         conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...

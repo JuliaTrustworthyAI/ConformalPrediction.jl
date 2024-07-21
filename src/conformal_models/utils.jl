@@ -142,3 +142,17 @@ function blockbootstrap(time_series, block_size)
     bootstrap_sample = time_series[rand_block:(rand_block + block_size - 1), :]
     return vec(bootstrap_sample)
 end
+"""
+    split_data(conf_model::ConformalProbabilisticSet, indices::Base.OneTo{Int})
+
+Splits the data into a proper training and calibration set.
+"""
+function split_data(conf_model::ConformalModel, X, y)
+    train, calibration = partition(eachindex(y), conf_model.train_ratio)
+    Xtrain = selectrows(X, train)
+    ytrain = y[train]
+    Xcal = selectrows(X, calibration)
+    ycal = y[calibration]
+
+    return Xtrain, ytrain, Xcal, ycal
+end
