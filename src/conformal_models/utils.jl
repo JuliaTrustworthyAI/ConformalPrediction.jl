@@ -179,3 +179,15 @@ function is_distribution(input)
     return typeof(input)<: Distribution
 
 end
+
+
+"""
+    extract_probabilities(distribution<:Distribution)
+
+Extract probabilities 
+"""
+function extract_probabilities(distribution<:Distribution)
+
+    println("not yet implemented")
+
+end
