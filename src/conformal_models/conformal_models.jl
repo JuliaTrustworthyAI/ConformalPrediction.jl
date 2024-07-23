@@ -50,25 +50,18 @@ function conformal_model(
     return conf_model
 end
 
+# Inductive Models:
+include("inductive/inductive_models.jl")
+
 # Regression Models:
-include("inductive_regression.jl")
 include("transductive_regression.jl")
 
 # Classification Models
-include("inductive_classification.jl")
 include("transductive_classification.jl")
 
 # Training:
 include("ConformalTraining/ConformalTraining.jl")
 using .ConformalTraining
-
-# Type unions:
-const InductiveModel = Union{
-    SimpleInductiveRegressor,
-    SimpleInductiveClassifier,
-    AdaptiveInductiveClassifier,
-    ConformalQuantileRegressor,
-}
 
 const TransductiveModel = Union{
     NaiveRegressor,
