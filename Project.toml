@@ -1,7 +1,7 @@
 name = "ConformalPrediction"
 uuid = "98bfc277-1877-43dc-819b-a3e38c30242f"
-authors = ["Patrick Altmeyer"]
-version = "0.1.12"
+authors = ["Patrick Altmeyer and contributors"]
+version = "0.1.13"
 
 [deps]
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
@@ -31,7 +31,7 @@ InferOpt = "0.6.1"
 LinearAlgebra = "1.7, 1.8, 1.9, 1.10"
 MLJBase = "0.20, 0.21, 1"
 MLJEnsembles = "0.3.3, 0.4"
-MLJFlux = "0.2.10, 0.3, 0.4"
+MLJFlux = "0.2.10, 0.3, 0.4, 0.5"
 MLJLinearModels = "0.10.0"
 MLJModelInterface = "1"
 MLUtils = "0.4.2"
