@@ -1,0 +1,72 @@
+# ConformalTraining
+
+```@meta
+CurrentModule = ConformalPrediction
+```
+
+```{julia}
+#| echo: false
+include("$(pwd())/docs/setup_docs.jl")
+eval(setup_docs)
+```
+
+
+```{julia}
+using MLJ
+using Random
+Random.seed!(123)
+
+# Data:
+X, y = make_blobs(100, centers=10, cluster_std=1.0)
+X = MLJ.table(Float32.(MLJ.matrix(X)))
+train, test = partition(eachindex(y), 0.8, shuffle=true)
+```
+
+
+```{julia}
+using Flux
+using MLJFlux
+using ConformalPrediction
+using ConformalPrediction.ConformalTraining: ConformalNNClassifier
+
+# Model:
+hidden_dim = 32
+builder = MLJFlux.MLP(hidden=ntuple(x -> hidden_dim, 3), σ=Flux.relu)
+clf = ConformalNNClassifier(epochs=25, builder=builder, batch_size=10, reg_strength_size=1.0, epsilon=0.1)
+# clf = NeuralNetworkClassifier(epochs=250, builder=builder, batch_size=50)
+```
+
+
+```{julia}
+using ConformalPrediction
+
+conf_model = conformal_model(clf; method=:simple_inductive)
+mach = machine(conf_model, X, y)
+fit!(mach, rows=train, verbosity=0)
+```
+
+```{julia}
+#| output: true
+
+using Plots
+p_proba = contourf(mach.model, mach.fitresult, X, y)
+p_set_size = contourf(mach.model, mach.fitresult, X, y; plot_set_size=true)
+p_smooth = contourf(mach.model, mach.fitresult, X, y; plot_set_loss=true)
+plt = plot(p_proba, p_set_size, p_smooth, layout=(1,3), size=(1200,250))
+display(plt)
+ineff(MLJBase.predict(mach))
+```
+
+```{julia}
+#| output: true
+
+_eval = evaluate!(
+    mach,
+    operation=MLJBase.predict,
+    measure=[emp_coverage, ssc, ineff]
+)
+
+println("Empirical coverage: $(round(_eval.measurement[1], digits=3))")
+println("SSC: $(round(_eval.measurement[2], digits=3))")
+println("Inefficiency: $(round(_eval.measurement[3], digits=3))")
+```
