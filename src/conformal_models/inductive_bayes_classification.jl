@@ -1,6 +1,6 @@
  # Simple
- "The `SimpleInductiveBayes` is the simplest approach to Inductive Conformalized Bayes."
- mutable struct SimpleInductiveBayes{Model <: Supervised} <: ConformalModel
+ "The `BayesClassifier` is the simplest approach to Inductive Conformalized Bayes."
+ mutable struct BayesClassifier{Model <: Supervised} <: ConformalModel
      model::Model
      coverage::AbstractFloat
      scores::Union{Nothing,AbstractArray}
@@ -8,14 +8,14 @@
      train_ratio::AbstractFloat
  end
 
- function SimpleInductiveBayes(model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=f(y, ŷ)=-ŷ, train_ratio::AbstractFloat=0.5)
-     return SimpleInductiveBayes(model, coverage, nothing, heuristic, train_ratio)
+ function BayesClassifier(model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=f(y, ŷ)=-ŷ, train_ratio::AbstractFloat=0.5)
+     return BayesClassifier(model, coverage, nothing, heuristic, train_ratio)
  end
 
  @doc raw"""
-     MMI.fit(conf_model::SimpleInductiveBayes, verbosity, X, y)
+     MMI.fit(conf_model::BayesClassifier, verbosity, X, y)
 
- For the [`SimpleInductiveBayes`](@ref) nonconformity scores are computed as follows:
+ For the [`BayesClassifier`](@ref) nonconformity scores are computed as follows:
 
  ``
  S_i^{\text{CAL}} = s(X_i, Y_i) = h(\hat\mu(X_i), Y_i), \ i \in \mathcal{D}_{\text{calibration}}
@@ -23,7 +23,7 @@
 
  A typical choice for the heuristic function is ``h(\hat\mu(X_i), Y_i)=1-\hat\mu(X_i)_{Y_i}`` where ``\hat\mu(X_i)_{Y_i}`` denotes the softmax output of the true class and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``. The simple approach only takes the softmax probability of the true label into account.
  """
- function MMI.fit(conf_model::SimpleInductiveBayes, verbosity, X, y)
+ function MMI.fit(conf_model::BayesClassifier, verbosity, X, y)
     
      # Data Splitting:
      Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
@@ -41,9 +41,9 @@
  end
 
  @doc raw"""
-     MMI.predict(conf_model::SimpleInductiveBayes, fitresult, Xnew)
+     MMI.predict(conf_model::BayesClassifier, fitresult, Xnew)
 
- For the [`SimpleInductiveBayes`](@ref) prediction sets are computed as follows,
+ For the [`BayesClassifier`](@ref) prediction sets are computed as follows,
 
  ``
  \hat{C}_{n,\alpha}(X_{n+1}) = \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{S_i^{\text{CAL}}\} \right\}, \ i \in \mathcal{D}_{\text{calibration}}
@@ -51,7 +51,7 @@
 
  where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
  """
- function MMI.predict(conf_model::SimpleInductiveBayes, fitresult, Xnew)
+ function MMI.predict(conf_model::BayesClassifier, fitresult, Xnew)
      p̂ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
      v = conf_model.scores
      q̂ = qplus(v, conf_model.coverage)
