@@ -9,6 +9,7 @@
  end
 
  function BayesRegressor(model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=f(y, ŷ)=-ŷ, train_ratio::AbstractFloat=0.5)
+    @assert model.likelihood in [:regression] "Invalid likelihood specified."
      return BayesRegressor(model, coverage, nothing, heuristic, train_ratio)
  end
 
@@ -55,25 +56,11 @@
      p̂ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
      v = conf_model.scores
      q̂ = qplus(v, conf_model.coverage)
-     is_classifier = is_classifier(conf_model.model)
-     is_distribution = is_distribution(p̂)
-     if is_classifier
-        p̂ = map(p̂) do pp
-        L = p̂.decoder.classes
-        probas = pdf.(pp, L)
-        is_in_set = 1.0 .- probas .<= q̂
-        if !all(is_in_set .== false)
-            pp = UnivariateFinite(L[is_in_set], probas[is_in_set])
-        else
-            pp = missing
-        end
-        return pp
-        end
 
-    else
-        println("not yet implemented")
+
+
+    println("not yet implemented")
         
-    end
 
 
      return p̂
