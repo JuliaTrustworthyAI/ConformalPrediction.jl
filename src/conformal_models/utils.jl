@@ -1,6 +1,6 @@
 using CategoricalArrays
 using StatsBase: quantile
-using Distributions
+#using Distributions
 
 @doc raw"""
     qplus(v::AbstractArray, coverage::AbstractFloat=0.9)
