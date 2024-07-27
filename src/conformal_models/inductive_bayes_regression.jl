@@ -1,6 +1,6 @@
  # Simple
  "The `BayesRegressor` is the simplest approach to Inductive Conformalized Bayes."
- mutable struct BayesRegressor{Model <: Supervised} <: ConformalModel
+ mutable struct BayesRegressor{Model <: Supervised}  <: ConformalInterval
      model::Model
      coverage::AbstractFloat
      scores::Union{Nothing,AbstractArray}
@@ -9,7 +9,6 @@
  end
 
  function BayesRegressor(model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=f(y, ŷ)=-ŷ, train_ratio::AbstractFloat=0.5)
-    @assert model.likelihood in [:regression] "Invalid likelihood specified."
      return BayesRegressor(model, coverage, nothing, heuristic, train_ratio)
  end
 
@@ -26,17 +25,15 @@
  """
  function MMI.fit(conf_model::BayesRegressor, verbosity, X, y)
     
-     # Data Splitting:
-     Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
+    # Data Splitting:
+    Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
 
      # Training: 
-     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
+     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, Xcal)...)
 
      # Nonconformity Scores:
-     #is_classifier= is_classifier(conf_model.model) #forse inutile
- 
-    ŷ = pdf.(MMI.predict(conf_model.model, fitresult, Xcal), ycal)      # predict returns a vector of distributions
-    conf_model.scores = @.(conf_model.heuristic(ycal, ŷ))
+     ŷ = pdf.(MMI.predict(conf_model.model, fitresult, Xcal), ycal)      # predict returns a vector of distributions
+     conf_model.scores = @.(conf_model.heuristic(ycal, ŷ))
 
      return (fitresult, cache, report)
  end
@@ -56,24 +53,5 @@
      p̂ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
      v = conf_model.scores
      q̂ = qplus(v, conf_model.coverage)
-
-
-
-    println("not yet implemented")
-        
-
-
      return p̂
  end
-
- #p̂ = map(p̂) do pp
-    #L = p̂.decoder.classes
-    #probas = pdf.(pp, L)
-    #is_in_set = 1.0 .- probas .<= q̂
-    #if !all(is_in_set .== false)
-        #pp = UnivariateFinite(L[is_in_set], probas[is_in_set])
-    #else
-        #pp = missing
-    #end
-    #return pp
-#end

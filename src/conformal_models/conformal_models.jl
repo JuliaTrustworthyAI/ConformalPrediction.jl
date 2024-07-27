@@ -54,9 +54,10 @@ end
 # Regression Models:
 include("inductive_regression.jl")
 include("transductive_regression.jl")
-
+include("inductive_bayes_regression.jl")
 # Classification Models
 include("inductive_classification.jl")
+include("inductive_bayes_classification.jl")
 include("transductive_classification.jl")
 
 # Training:
@@ -69,6 +70,8 @@ const InductiveModel = Union{
     SimpleInductiveClassifier,
     AdaptiveInductiveClassifier,
     ConformalQuantileRegressor,
+    BayesRegressor,
+    BayesClassifier,
 }
 
 const TransductiveModel = Union{
@@ -101,6 +104,7 @@ const available_models = Dict(
         :inductive => Dict(
             :simple_inductive => SimpleInductiveRegressor,
             :quantile_regression => ConformalQuantileRegressor,
+            :inductive_Bayes_regression => BayesRegressor,
         ),
     ),
     :classification => Dict(
@@ -108,6 +112,7 @@ const available_models = Dict(
         :inductive => Dict(
             :simple_inductive => SimpleInductiveClassifier,
             :adaptive_inductive => AdaptiveInductiveClassifier,
+            :inductive_Bayes_classifier => BayesClassifier,
         ),
     ),
 )

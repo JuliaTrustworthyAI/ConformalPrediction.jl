@@ -1,6 +1,6 @@
  # Simple
  "The `BayesClassifier` is the simplest approach to Inductive Conformalized Bayes."
- mutable struct BayesClassifier{Model <: Supervised} <: ConformalModel
+ mutable struct BayesClassifier{Model <: Supervised} <: ConformalProbabilisticSet
      model::Model
      coverage::AbstractFloat
      scores::Union{Nothing,AbstractArray}
@@ -25,17 +25,15 @@
  """
  function MMI.fit(conf_model::BayesClassifier, verbosity, X, y)
     
-     # Data Splitting:
-     Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
+    # Data Splitting:
+    Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
 
      # Training: 
      fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
      # Nonconformity Scores:
-     #is_classifier= is_classifier(conf_model.model) #forse inutile
- 
-    ŷ = pdf.(MMI.predict(conf_model.model, fitresult, Xcal), ycal)      # predict returns a vector of distributions
-    conf_model.scores = @.(conf_model.heuristic(ycal, ŷ))
+     ŷ = pdf.(MMI.predict(conf_model.model, fitresult, Xcal), ycal)      # predict returns a vector of distributions
+     conf_model.scores = @.(conf_model.heuristic(ycal, ŷ))
 
      return (fitresult, cache, report)
  end
@@ -55,38 +53,16 @@
      p̂ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
      v = conf_model.scores
      q̂ = qplus(v, conf_model.coverage)
-     is_classifier = is_classifier(conf_model.model)
-     is_distribution = is_distribution(p̂)
-     if is_classifier
-        p̂ = map(p̂) do pp
+     p̂ = map(p̂) do pp
         L = p̂.decoder.classes
-        probas = pdf.(pp, L)
-        is_in_set = 1.0 .- probas .<= q̂
-        if !all(is_in_set .== false)
-            pp = UnivariateFinite(L[is_in_set], probas[is_in_set])
-        else
-            pp = missing
-        end
-        return pp
-        end
-
-    else
-        println("not yet implemented")
-        
-    end
-
-
+         probas = pdf.(pp, L)
+         is_in_set = 1.0 .- probas .<= q̂
+         if !all(is_in_set .== false)
+             pp = UnivariateFinite(L[is_in_set], probas[is_in_set])
+         else
+             pp = missing
+         end
+         return pp
+     end
      return p̂
  end
-
- #p̂ = map(p̂) do pp
-    #L = p̂.decoder.classes
-    #probas = pdf.(pp, L)
-    #is_in_set = 1.0 .- probas .<= q̂
-    #if !all(is_in_set .== false)
-        #pp = UnivariateFinite(L[is_in_set], probas[is_in_set])
-    #else
-        #pp = missing
-    #end
-    #return pp
-#end
