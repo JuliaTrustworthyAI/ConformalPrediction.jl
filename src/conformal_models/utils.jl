@@ -1,6 +1,6 @@
 using CategoricalArrays
 using StatsBase: quantile
-using Distribution
+using Distributions
 
 @doc raw"""
     qplus(v::AbstractArray, coverage::AbstractFloat=0.9)
@@ -166,29 +166,5 @@ Check if the model is a classification model or a regression model
 function is_classifier(model::Supervised)
 
     return target_scitype(model) <: AbstractVector{<:Finite}
-
-end
-
-
-"""
-    is_distribution(input)
-
-Check if the input is of type Distribution.
-"""
-function is_distribution(input)
-
-    return typeof(input)<: Distribution
-
-end
-
-
-"""
-    extract_probabilities(distribution<:Distribution)
-
-Extract probabilities 
-"""
-function extract_probabilities(distribution<:Distribution)
-
-    println("not yet implemented")
 
 end

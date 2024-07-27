@@ -18,6 +18,7 @@ const ConformalModel = Union{
 }
 
 include("utils.jl")
+export split_data, is_classifier
 include("heuristics.jl")
 
 # Main API call to wrap model:
@@ -29,12 +30,12 @@ A simple wrapper function that turns a `model::Supervised` into a conformal mode
 function conformal_model(
     model::Supervised; method::Union{Nothing,Symbol}=nothing, kwargs...
 )
-    is_classifier = is_classifier(model)
+    classifier = is_classifier(model)
 
     if isnothing(method)
-        _method = is_classifier ? SimpleInductiveClassifier : SimpleInductiveRegressor
+        _method = classifier ? SimpleInductiveClassifier : SimpleInductiveRegressor
     else
-        if is_classifier
+        if classifier
             classification_methods = merge(values(available_models[:classification])...)
             @assert method in keys(classification_methods) "$(method) is not a valid method for classifiers."
             _method = classification_methods[method]
