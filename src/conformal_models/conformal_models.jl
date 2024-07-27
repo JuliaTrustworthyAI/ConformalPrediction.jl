@@ -18,6 +18,7 @@ const ConformalModel = Union{
 }
 
 include("utils.jl")
+export split_data
 include("heuristics.jl")
 
 # Main API call to wrap model:
