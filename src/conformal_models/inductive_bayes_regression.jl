@@ -9,6 +9,7 @@
  end
 
  function BayesRegressor(model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=f(y, ŷ)=-ŷ, train_ratio::AbstractFloat=0.5)
+    @assert typeof(model) == :Laplace "Model must be of type Laplace"
      return BayesRegressor(model, coverage, nothing, heuristic, train_ratio)
  end
 
