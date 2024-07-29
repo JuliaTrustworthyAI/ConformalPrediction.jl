@@ -12,8 +12,9 @@ Overloads the `score` function for the `MLJFluxModel` type.
 function ConformalPrediction.score(
     conf_model::BayesRegressor, ::Type{<:MLJFluxModel}, fitresult, X, y
 )
-    X = permutedims(matrix(X))
-    ŷ = permutedims(fitresult[1](X))
+    X = matrix(X)
+    fμ, fvar = fitresult[1](X)
+
     scores = @.(conf_model.heuristic(y, ŷ))
     return scores
 end

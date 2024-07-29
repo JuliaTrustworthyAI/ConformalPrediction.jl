@@ -8,8 +8,20 @@
      train_ratio::AbstractFloat
  end
 
- function BayesRegressor(model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=f(y, ŷ)=-ŷ, train_ratio::AbstractFloat=0.5)
-    @assert typeof(model) == :Laplace "Model must be of type Laplace"
+ function ConformalBayes(y, fμ, fvar)
+        # Ensure σ is positive
+    if fvar <= 0
+        throw(ArgumentError("variance must be positive"))
+    end
+    std= sqrt.(fvar)
+    # Compute the probability density
+    coeff = 1 ./ (std .* sqrt(2 * π))
+    exponent = -((y .- fμ).^2) ./ (2 .* std.^2)
+    return -coeff .* exp.(exponent)
+ end
+
+ function BayesRegressor(model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=ConformalBayes(y, fμ, fvar), train_ratio::AbstractFloat=0.5)
+    #@assert typeof(model) == :Laplace "Model must be of type Laplace"
      return BayesRegressor(model, coverage, nothing, heuristic, train_ratio)
  end
 
@@ -33,8 +45,8 @@
      fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, Xcal)...)
 
      # Nonconformity Scores:
-     ŷ = pdf.(MMI.predict(conf_model.model, fitresult, Xcal), ycal)      # predict returns a vector of distributions
-     conf_model.scores = @.(conf_model.heuristic(ycal, ŷ))
+     fμ, fvar = MMI.predict(conf_model.model, fitresult, Xcal)    
+     conf_model.scores = @.(conf_model.heuristic(ycal, fμ, fvar))
 
      return (fitresult, cache, report)
  end
@@ -51,8 +63,9 @@
  where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
  """
  function MMI.predict(conf_model::BayesRegressor, fitresult, Xnew)
-     p̂ = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
-     v = conf_model.scores
-     q̂ = qplus(v, conf_model.coverage)
-     return p̂
+    fμ, fvar = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
+    v = conf_model.scores
+    q̂ = qplus(v, conf_model.coverage)
+    #normal_distr = [Normal(fμ[i], fstd[i]) for i in 1:size(fμ, 2)]
+     return fμ
  end
