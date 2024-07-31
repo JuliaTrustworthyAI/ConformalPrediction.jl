@@ -1,4 +1,8 @@
 #using LaplaceRedux.LaplaceRegression
+using LaplaceRedux: LaplaceRegression
+
+
+
  "The `BayesRegressor` is the simplest approach to Inductive Conformalized Bayes."
  mutable struct BayesRegressor{Model <: Supervised}  <: ConformalInterval
      model::Model
@@ -16,10 +20,23 @@
     return -coeff .* exp.(exponent)
  end
 
+ function compute_interval(fμ, fvar, q̂ )
+    # Define the standard deviation
+    std = sqrt.(fvar)
+
+
+    delta= std .* sqrt.(-2* log.(- q̂ .* std .* sqrt(2π) ))
+
+
+    
+    return delta
+end
+    
+
  function BayesRegressor(model::Supervised; coverage::AbstractFloat=0.95, heuristic::Function=ConformalBayes, train_ratio::AbstractFloat=0.5)
     #@assert typeof(model.model) == :Laplace "Model must be of type Laplace"
-    #@assert typeof(model)== LaplaceRegression "Model must be of type Laplace"
-     return BayesRegressor(model, coverage, nothing, heuristic, train_ratio)
+    @assert typeof(model)== LaplaceRegression "Model must be of type Laplace"
+    return BayesRegressor(model, coverage, nothing, heuristic, train_ratio)
  end
 
  @doc raw"""
@@ -40,6 +57,7 @@
      # Training: 
     fitresult, cache, report = MMI.fit(
         conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...)
+        println(fitresult)
 
 
      # Nonconformity Scores:
@@ -47,6 +65,9 @@
 
     fμ = vcat([x[1] for x in yhat]...)
     fvar = vcat([x[2] for x in yhat]...)
+
+
+    println(fμ)
 
 
 
@@ -67,9 +88,19 @@
  where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
  """
  function MMI.predict(conf_model::BayesRegressor, fitresult, Xnew)
-    fμ, fvar = MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xnew)...)
+    chain = fitresult
+    yhat = MMI.predict(conf_model.model, chain,   Xnew )
+    fμ = vcat([x[1] for x in yhat]...)
+    fvar = vcat([x[2] for x in yhat]...)
     v = conf_model.scores
     q̂ = qplus(v, conf_model.coverage)
-    #normal_distr = [Normal(fμ[i], fstd[i]) for i in 1:size(fμ, 2)]
-     return fμ, fvar
+    delta = compute_interval(fμ, fvar,q̂ )
+     
+    # Calculate the interval
+    lower_bound = fμ .- delta
+    upper_bound = fμ .+ delta
+    #data= hcat(lower_bound, upper_bound)
+
+
+     return (yhat, delta)
  end
