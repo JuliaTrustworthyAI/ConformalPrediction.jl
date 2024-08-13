@@ -26,6 +26,11 @@ using LaplaceRedux: LaplaceRegression
 
 
     delta= std .* sqrt.(-2* log.(- q̂ .* std .* sqrt(2π) ))
+    # Calculate the interval
+    lower_bound = fμ .- delta
+    upper_bound = fμ .+ delta
+
+    data= hcat(lower_bound, upper_bound)
 
 
     
@@ -57,17 +62,18 @@ end
      # Training: 
     fitresult, cache, report = MMI.fit(
         conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...)
-        println(fitresult)
+
+        lap= fitresult[1]
 
 
      # Nonconformity Scores:
-    yhat  =  MMI.predict(conf_model.model, fitresult,  Xcal)
+    #yhat  =  MMI.predict(conf_model.model, fitresult[2],  Xcal)
+    yhat  =  MMI.predict(  fitresult[2], fitresult , Xcal)
 
     fμ = vcat([x[1] for x in yhat]...)
     fvar = vcat([x[2] for x in yhat]...)
-
-
-    println(fμ)
+    cache=()
+    report=()
 
 
 
@@ -89,18 +95,14 @@ end
  """
  function MMI.predict(conf_model::BayesRegressor, fitresult, Xnew)
     chain = fitresult
-    yhat = MMI.predict(conf_model.model, chain,   Xnew )
+    yhat = MMI.predict(conf_model.model,  fitresult,   Xnew )
     fμ = vcat([x[1] for x in yhat]...)
     fvar = vcat([x[2] for x in yhat]...)
     v = conf_model.scores
     q̂ = qplus(v, conf_model.coverage)
-    delta = compute_interval(fμ, fvar,q̂ )
-     
-    # Calculate the interval
-    lower_bound = fμ .- delta
-    upper_bound = fμ .+ delta
-    #data= hcat(lower_bound, upper_bound)
+    data = compute_interval(fμ, fvar,q̂ )
 
 
-     return (yhat, delta)
+
+     return data
  end
