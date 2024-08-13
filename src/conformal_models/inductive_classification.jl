@@ -7,7 +7,6 @@ function score(conf_model::ConformalProbabilisticSet, fitresult, X, y=nothing)
     return score(conf_model, conf_model.model, fitresult, X, y)
 end
 
-
 # Simple
 "The `SimpleInductiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset."
 mutable struct SimpleInductiveClassifier{Model<:Supervised} <: ConformalProbabilisticSet

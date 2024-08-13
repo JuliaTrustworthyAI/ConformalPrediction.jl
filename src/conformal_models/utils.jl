@@ -164,7 +164,5 @@ end
 Check if the model is a classification model or a regression model
 """
 function is_classifier(model::Supervised)
-
     return target_scitype(model) <: AbstractVector{<:Finite}
-
 end
