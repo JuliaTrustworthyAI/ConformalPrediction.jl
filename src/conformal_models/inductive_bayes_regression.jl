@@ -1,7 +1,12 @@
 #using LaplaceRedux.LaplaceRegression
 using LaplaceRedux: LaplaceRegression
 
-"The `BayesRegressor` is the simplest approach to Inductive Conformalized Bayes."
+@doc raw"""
+The `BayesRegressor` is the simplest approach to Inductive Conformalized Bayes. As explained in https://arxiv.org/abs/2107.07511,
+the  conformal score is  defined as the opposite of the probability of observing y given x : `` s= -P(Y|X) ``. Once the treshold ``\hat{q}`` is chosen, The credible interval is then
+ computed as the range of y values so that 
+ `` C(x)= \big\{y : P(Y|X) > -\hat{q} \big} ``
+"""
 mutable struct BayesRegressor{Model<:Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
@@ -10,6 +15,20 @@ mutable struct BayesRegressor{Model<:Supervised} <: ConformalInterval
     train_ratio::AbstractFloat
 end
 
+
+
+
+@doc raw"""
+    ConformalBayes(y, fμ, fvar)
+computes the probability of observing a value y given a Gaussian distribution with mean fμ and a variance fvar.
+    inputs:
+        - y  the true values of the calibration set.
+        - fμ array of the mean values
+        - fvar array of the variance values
+
+    return:
+        -  the probability of observing a value y given a mean fμ and a variance fvar.
+"""
 function ConformalBayes(y, fμ, fvar)
     # compute the standard deviation from the variance
     std = sqrt.(fvar)
@@ -19,6 +38,21 @@ function ConformalBayes(y, fμ, fvar)
     return -coeff .* exp.(exponent)
 end
 
+
+
+
+@doc raw"""
+    compute_interval(fμ, fvar, q̂)
+compute the credible interval for a treshold score of q̂ under the assumption that each data point pdf is a gaussian distribution with mean fμ and variance fvar
+ 
+    inputs:
+        - fμ array of the mean values
+        - fvar array of the variance values
+        - q̂ the treshold.
+
+    return:
+        -  hcat(lower_bound, upper_bound) where lower_bound and upper_bound are,respectively, the arrays of the lower bounds and upper bounds for each data point.
+"""
 function compute_interval(fμ, fvar, q̂)
     # compute the standard deviation from the variance
     std = sqrt.(fvar)
@@ -32,6 +66,7 @@ function compute_interval(fμ, fvar, q̂)
 
     return data
 end
+
 
 function BayesRegressor(
     model::Supervised;
@@ -49,10 +84,9 @@ end
 For the [`BayesRegressor`](@ref) nonconformity scores are computed as follows:
 
 ``
-S_i^{\text{CAL}} = s(X_i, Y_i) = h(\hat\mu(X_i), Y_i), \ i \in \mathcal{D}_{\text{calibration}}
+S_i^{\text{CAL}} = s(X_i, Y_i) = h(\hat\mu(X_i), Y_i) = - P(Y_i|X_i), \ i \in \mathcal{D}_{\text{calibration}}
 ``
-
-A typical choice for the heuristic function is ``h(\hat\mu(X_i), Y_i)=1-\hat\mu(X_i)_{Y_i}`` where ``\hat\mu(X_i)_{Y_i}`` denotes the softmax output of the true class and ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``. The simple approach only takes the softmax probability of the true label into account.
+where  ``P(Y_i|X_i)`` denotes the posterior probability distribution of getting ``Y_i`` given ``X_i``.
 """
 function MMI.fit(conf_model::BayesRegressor, verbosity, X, y)
     # Data Splitting:
@@ -62,12 +96,9 @@ function MMI.fit(conf_model::BayesRegressor, verbosity, X, y)
     fitresult, cache, report = MMI.fit(
         conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...
     )
-
-    lap = fitresult[1]
-
     # Nonconformity Scores:
-    #yhat  =  MMI.predict(conf_model.model, fitresult[2],  Xcal)
-    yhat = MMI.predict(fitresult[2], fitresult, Xcal)
+    yhat  =  MMI.predict(conf_model.model, fitresult,  Xcal)
+    #yhat = MMI.predict(fitresult[2], fitresult, Xcal)
 
     fμ = vcat([x[1] for x in yhat]...)
     fvar = vcat([x[2] for x in yhat]...)
@@ -85,7 +116,7 @@ end
 For the [`BayesRegressor`](@ref) prediction sets are computed as follows,
 
 ``
-\hat{C}_{n,\alpha}(X_{n+1}) = \left\{y: s(X_{n+1},y) \le \hat{q}_{n, \alpha}^{+} \{S_i^{\text{CAL}}\} \right\}, \ i \in \mathcal{D}_{\text{calibration}}
+\hat{C}_{n,\alpha}(X_{n+1}) = \left\{y: f(y|X_{n+1}) \le -\hat{q}_{ \alpha} \{S_i^{\text{CAL}}\} \right\}, \ i \in \mathcal{D}_{\text{calibration}}
 ``
 
 where ``\mathcal{D}_{\text{calibration}}`` denotes the designated calibration data.
