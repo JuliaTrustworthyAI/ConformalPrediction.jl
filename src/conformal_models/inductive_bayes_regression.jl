@@ -15,32 +15,6 @@ mutable struct BayesRegressor{Model<:Supervised} <: ConformalInterval
     train_ratio::AbstractFloat
 end
 
-
-
-
-@doc raw"""
-    ConformalBayes(y, fμ, fvar)
-computes the probability of observing a value y given a Gaussian distribution with mean fμ and a variance fvar.
-    inputs:
-        - y  the true values of the calibration set.
-        - fμ array of the mean values
-        - fvar array of the variance values
-
-    return:
-        -  the probability of observing a value y given a mean fμ and a variance fvar.
-"""
-function ConformalBayes(y, fμ, fvar)
-    # compute the standard deviation from the variance
-    std = sqrt.(fvar)
-    # Compute the probability density
-    coeff = 1 ./ (std .* sqrt(2 * π))
-    exponent = -((y .- fμ) .^ 2) ./ (2 .* std .^ 2)
-    return -coeff .* exp.(exponent)
-end
-
-
-
-
 @doc raw"""
     compute_interval(fμ, fvar, q̂)
 compute the credible interval for a treshold score of q̂ under the assumption that each data point pdf is a gaussian distribution with mean fμ and variance fvar
@@ -66,7 +40,6 @@ function compute_interval(fμ, fvar, q̂)
 
     return data
 end
-
 
 function BayesRegressor(
     model::Supervised;
@@ -97,7 +70,7 @@ function MMI.fit(conf_model::BayesRegressor, verbosity, X, y)
         conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...
     )
     # Nonconformity Scores:
-    yhat  =  MMI.predict(conf_model.model, fitresult,  Xcal)
+    yhat = MMI.predict(conf_model.model, fitresult, Xcal)
     #yhat = MMI.predict(fitresult[2], fitresult, Xcal)
 
     fμ = vcat([x[1] for x in yhat]...)
