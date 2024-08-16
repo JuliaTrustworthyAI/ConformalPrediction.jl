@@ -15,6 +15,16 @@ mutable struct BayesRegressor{Model<:Supervised} <: ConformalInterval
     train_ratio::AbstractFloat
 end
 
+function BayesRegressor(
+    model::Supervised;
+    coverage::AbstractFloat=0.95,
+    heuristic::Function=ConformalBayes,
+    train_ratio::AbstractFloat=0.5,
+)
+    @assert typeof(model) == LaplaceRegression "Model must be of type Laplace"
+    return BayesRegressor(model, coverage, nothing, heuristic, train_ratio)
+end
+
 @doc raw"""
     compute_interval(fμ, fvar, q̂)
 compute the credible interval for a treshold score of q̂ under the assumption that each data point pdf is a gaussian distribution with mean fμ and variance fvar
@@ -39,16 +49,6 @@ function compute_interval(fμ, fvar, q̂)
     data = hcat(lower_bound, upper_bound)
 
     return data
-end
-
-function BayesRegressor(
-    model::Supervised;
-    coverage::AbstractFloat=0.95,
-    heuristic::Function=ConformalBayes,
-    train_ratio::AbstractFloat=0.5,
-)
-    @assert typeof(model) == LaplaceRegression "Model must be of type Laplace"
-    return BayesRegressor(model, coverage, nothing, heuristic, train_ratio)
 end
 
 @doc raw"""
