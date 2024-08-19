@@ -22,6 +22,10 @@ function BayesRegressor(
     train_ratio::AbstractFloat=0.5,
 )
     @assert typeof(model) == LaplaceRegression "Model must be of type Laplace"
+    if model.ret_distr != false
+        @warn "model.ret_distr is not false. Setting model.ret_distr to false."
+        model.ret_distr = false
+    end
     return BayesRegressor(model, coverage, nothing, heuristic, train_ratio)
 end
 
