@@ -14,7 +14,9 @@ absolute_error(y, ŷ) = abs(y - ŷ)
 
 @doc raw"""
     ConformalBayes(y, fμ, fvar)
-computes the probability of observing a value y given a Gaussian distribution with mean fμ and a variance fvar.
+computes the conformal score as the negative of probability of observing a value y given a Gaussian distribution with mean fμ and a variance σ^2 N(y|fμ,σ^2).
+In other words, it computes  -1/(sqrt(σ *2*π)) * e^[-(y- fμ)^2/(2*σ^2)]
+
     inputs:
         - y  the true values of the calibration set.
         - fμ array of the mean values
@@ -23,7 +25,7 @@ computes the probability of observing a value y given a Gaussian distribution wi
     return:
         -  the probability of observing a value y given a mean fμ and a variance fvar.
 """
-function ConformalBayes(y, fμ, fvar)
+function conformal_bayes_score(y, fμ, fvar)
     # compute the standard deviation from the variance
     std = sqrt.(fvar)
     # Compute the probability density

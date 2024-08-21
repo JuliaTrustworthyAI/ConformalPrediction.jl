@@ -1,5 +1,3 @@
-#using LaplaceRedux.LaplaceRegression
-using LaplaceRedux: LaplaceRegression
 
 @doc raw"""
 The `BayesRegressor` is the simplest approach to Inductive Conformalized Bayes. As explained in https://arxiv.org/abs/2107.07511,
@@ -18,20 +16,17 @@ end
 function BayesRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=ConformalBayes,
+    heuristic::Function=conformal_bayes_score,
     train_ratio::AbstractFloat=0.5,
 )
-    @assert typeof(model) == LaplaceRegression "Model must be of type Laplace"
-    if model.ret_distr != false
-        @warn "model.ret_distr is not false. Setting model.ret_distr to false."
-        model.ret_distr = false
-    end
     return BayesRegressor(model, coverage, nothing, heuristic, train_ratio)
 end
 
 @doc raw"""
     compute_interval(fμ, fvar, q̂)
-compute the credible interval for a treshold score of q̂ under the assumption that each data point pdf is a gaussian distribution with mean fμ and variance fvar
+compute the credible interval for a treshold score of q̂ under the assumption that each data point pdf is a gaussian distribution with mean fμ and variance fvar.
+    More precisely, assuming that f(x) is the pdf of a Gaussian, it computes the values of x so that f(x) > -q, or equivalently ln(f(x))> ln(-q).
+The end result is the interval [ μ -  \sigma*\sqrt{-2 *ln(-q \sigma \sqrt{2 \pi} )},μ +  \sigma*\sqrt{-2 *ln(-q \sigma \sqrt{2 \pi} )}]
  
     inputs:
         - fμ array of the mean values
