@@ -1,4 +1,5 @@
 
+using LaplaceRedux: LaplaceRegression
 @doc raw"""
 The `BayesRegressor` is the simplest approach to Inductive Conformalized Bayes. As explained in https://arxiv.org/abs/2107.07511,
 the  conformal score is  defined as the opposite of the probability of observing y given x : `` s= -P(Y|X) ``. Once the treshold ``\hat{q}`` is chosen, The credible interval is then
@@ -19,6 +20,7 @@ function BayesRegressor(
     heuristic::Function=conformal_bayes_score,
     train_ratio::AbstractFloat=0.5,
 )
+    @assert typeof(model) == LaplaceRegression "Model must be of type Laplace"
     return BayesRegressor(model, coverage, nothing, heuristic, train_ratio)
 end
 

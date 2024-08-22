@@ -126,7 +126,7 @@ const tested_atomic_models = Dict(
         :nearest_neighbor => :(@load KNNRegressor pkg = NearestNeighborModels),
         :decision_tree_regressor => :(@load DecisionTreeRegressor pkg = DecisionTree),
         :random_forest_regressor => :(@load RandomForestRegressor pkg = DecisionTree),
-        :bayesregressor => :(@load BayesRegressor pkg = LaplaceRedux),
+        #:bayesregressor => :(@load BayesRegressor pkg = LaplaceRedux),
         # :light_gbm => :(@load LGBMRegressor pkg = LightGBM),
         # :neural_network => :(@load NeuralNetworkRegressor pkg = MLJFlux),
         # :symbolic_regression => (@load SRRegressor pkg = SymbolicRegression),
