@@ -18,6 +18,7 @@ const ConformalModel = Union{
 }
 
 include("utils.jl")
+export split_data, is_classifier
 include("heuristics.jl")
 
 # Main API call to wrap model:
@@ -29,12 +30,12 @@ A simple wrapper function that turns a `model::Supervised` into a conformal mode
 function conformal_model(
     model::Supervised; method::Union{Nothing,Symbol}=nothing, kwargs...
 )
-    is_classifier = target_scitype(model) <: AbstractVector{<:Finite}
+    classifier = is_classifier(model)
 
     if isnothing(method)
-        _method = is_classifier ? SimpleInductiveClassifier : SimpleInductiveRegressor
+        _method = classifier ? SimpleInductiveClassifier : SimpleInductiveRegressor
     else
-        if is_classifier
+        if classifier
             classification_methods = merge(values(available_models[:classification])...)
             @assert method in keys(classification_methods) "$(method) is not a valid method for classifiers."
             _method = classification_methods[method]
@@ -53,9 +54,10 @@ end
 # Regression Models:
 include("inductive_regression.jl")
 include("transductive_regression.jl")
-
+include("inductive_bayes_regression.jl")
 # Classification Models
 include("inductive_classification.jl")
+#include("inductive_bayes_classification.jl")
 include("transductive_classification.jl")
 
 # Training:
@@ -68,6 +70,7 @@ const InductiveModel = Union{
     SimpleInductiveClassifier,
     AdaptiveInductiveClassifier,
     ConformalQuantileRegressor,
+    BayesRegressor,
 }
 
 const TransductiveModel = Union{
@@ -100,6 +103,7 @@ const available_models = Dict(
         :inductive => Dict(
             :simple_inductive => SimpleInductiveRegressor,
             :quantile_regression => ConformalQuantileRegressor,
+            :inductive_Bayes_regression => BayesRegressor,
         ),
     ),
     :classification => Dict(
@@ -122,6 +126,7 @@ const tested_atomic_models = Dict(
         :nearest_neighbor => :(@load KNNRegressor pkg = NearestNeighborModels),
         :decision_tree_regressor => :(@load DecisionTreeRegressor pkg = DecisionTree),
         :random_forest_regressor => :(@load RandomForestRegressor pkg = DecisionTree),
+        #:bayesregressor => :(@load BayesRegressor pkg = LaplaceRedux),
         # :light_gbm => :(@load LGBMRegressor pkg = LightGBM),
         # :neural_network => :(@load NeuralNetworkRegressor pkg = MLJFlux),
         # :symbolic_regression => (@load SRRegressor pkg = SymbolicRegression),
