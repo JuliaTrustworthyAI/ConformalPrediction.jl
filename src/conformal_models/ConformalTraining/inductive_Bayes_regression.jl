@@ -15,7 +15,7 @@ function ConformalPrediction.score(
     X = matrix(X)
     fμ, fvar = fitresult[1](X)
 
-    scores = @.(conf_model.heuristic(y, ŷ))
+    scores = @.(conf_model.heuristic(ycal, fμ, fvar))
     return scores
 end
 
