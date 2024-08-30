@@ -103,7 +103,7 @@ const available_models = Dict(
         :inductive => Dict(
             :simple_inductive => SimpleInductiveRegressor,
             :quantile_regression => ConformalQuantileRegressor,
-            :inductive_Bayes_regression => BayesRegressor,
+            :inductive_bayes_regression => BayesRegressor,
         ),
     ),
     :classification => Dict(
@@ -111,6 +111,7 @@ const available_models = Dict(
         :inductive => Dict(
             :simple_inductive => SimpleInductiveClassifier,
             :adaptive_inductive => AdaptiveInductiveClassifier,
+            :inductive_bayes_classification => BayesClassifier,
         ),
     ),
 )

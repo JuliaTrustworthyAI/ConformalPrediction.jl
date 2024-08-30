@@ -25,11 +25,56 @@ In other words, it computes  -1/(sqrt(σ *2*π)) * e^[-(y- fμ)^2/(2*σ^2)]
     return:
         -  the probability of observing a value y given a mean fμ and a variance fvar.
 """
-function conformal_bayes_score(y, fμ, fvar)
+function gaussian_bayes_score(y, fμ, fvar)
     # compute the standard deviation from the variance
     std = sqrt.(fvar)
     # Compute the probability density
     coeff = 1 ./ (std .* sqrt(2 * π))
     exponent = -((y .- fμ) .^ 2) ./ (2 .* std .^ 2)
     return -coeff .* exp.(exponent)
+end
+
+
+"""
+    simple_score( fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+
+"""
+function simple_classifier_score( fitresult, X, y=nothing)
+    p̂ = reformat_mlj_prediction(MMI.predict(atomic, fitresult, MMI.reformat(atomic, X)...))
+    L = p̂.decoder.classes
+    probas = pdf(p̂, L)
+    scores = @.(conf_model.heuristic(y, probas))
+    if isnothing(y)
+        return scores
+    else
+        cal_scores = getindex.(Ref(scores), 1:size(scores, 1), levelcode.(y))
+        return cal_scores, scores
+    end
+end
+
+
+
+
+
+"""
+    score(conf_model::BayesClassifier, ::Type{<:Supervised}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
+
+"""
+function aps_score(fitresult, X, y=nothing)
+    p̂ = reformat_mlj_prediction(MMI.predict(fitresult, MMI.reformat(atomic, X)...))
+    L = p̂.decoder.classes
+    probas = pdf(p̂, L)                                              # compute probabilities for all classes
+    scores = map(Base.Iterators.product(eachrow(probas), L)) do Z
+        probasᵢ, yₖ = Z
+        Π = sortperm(.-probasᵢ)                                 # rank in descending order
+        πₖ = findall(L[Π] .== yₖ)[1]                            # index of true y in sorted array
+        scoresᵢ = last(cumsum(probasᵢ[Π][1:πₖ]))                # sum up until true y is reached
+        return scoresᵢ
+    end
+    if isnothing(y)
+        return scores
+    else
+        cal_scores = getindex.(Ref(scores), 1:size(scores, 1), levelcode.(y))
+        return cal_scores, scores
+    end
 end

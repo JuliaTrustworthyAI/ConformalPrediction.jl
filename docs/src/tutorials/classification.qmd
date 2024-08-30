@@ -80,7 +80,7 @@ When specifying a coverage rate very close to one, the prediction set will typic
 ```{julia}
 #| output: true
 
-conf_model = conformal_model(model; coverage=coverage, method=:simple_inductive)
+conf_model = conformal_model(model; coverage=1.0, method=:simple_inductive)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 
@@ -103,7 +103,7 @@ Conversely, for low coverage rates, prediction sets can also be empty. For a cho
 ```{julia}
 #| output: true
 
-conf_model = conformal_model(model; coverage=coverage)
+conf_model = conformal_model(model; coverage=0.1)
 mach = machine(conf_model, X, y)
 fit!(mach, rows=train)
 

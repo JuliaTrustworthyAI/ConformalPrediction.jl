@@ -16,60 +16,11 @@ end
 function BayesClassifier(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=minus_softmax,
+    heuristic::Function= aps_score,
     train_ratio::AbstractFloat=0.5,
 )
     return BayesClassifier(model, coverage, nothing, heuristic, train_ratio)
 end
-
-
-"""
-    simple_score( fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
-
-"""
-function simple_score(
-    conf_model::SimpleInductiveClassifier, atomic::Supervised, fitresult, X, y=nothing
-)
-    p̂ = reformat_mlj_prediction(MMI.predict(atomic, fitresult, MMI.reformat(atomic, X)...))
-    L = p̂.decoder.classes
-    probas = pdf(p̂, L)
-    scores = @.(conf_model.heuristic(y, probas))
-    if isnothing(y)
-        return scores
-    else
-        cal_scores = getindex.(Ref(scores), 1:size(scores, 1), levelcode.(y))
-        return cal_scores, scores
-    end
-end
-
-
-
-
-
-"""
-    score(conf_model::BayesClassifier, ::Type{<:Supervised}, fitresult, X, y::Union{Nothing,AbstractArray}=nothing)
-
-"""
-function aps_score(fitresult, X, y=nothing)
-    p̂ = reformat_mlj_prediction(MMI.predict(fitresult, MMI.reformat(atomic, X)...))
-    L = p̂.decoder.classes
-    probas = pdf(p̂, L)                                              # compute probabilities for all classes
-    scores = map(Base.Iterators.product(eachrow(probas), L)) do Z
-        probasᵢ, yₖ = Z
-        Π = sortperm(.-probasᵢ)                                 # rank in descending order
-        πₖ = findall(L[Π] .== yₖ)[1]                            # index of true y in sorted array
-        scoresᵢ = last(cumsum(probasᵢ[Π][1:πₖ]))                # sum up until true y is reached
-        return scoresᵢ
-    end
-    if isnothing(y)
-        return scores
-    else
-        cal_scores = getindex.(Ref(scores), 1:size(scores, 1), levelcode.(y))
-        return cal_scores, scores
-    end
-end
-
-
 
 
 @doc raw"""
@@ -90,9 +41,8 @@ function MMI.fit(conf_model::BayesClassifier, verbosity, X, y)
     # Training: 
     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, Xtrain, ytrain)
 
-
     # Nonconformity Scores:
-    cal_scores, scores = aps_score( fitresult, Xcal, ycal)
+    cal_scores, scores = conf_model.heuristic(fitresult, Xcal, ycal)
     conf_model.scores = Dict(:calibration => cal_scores, :all => scores)
 
     return (fitresult, cache, report)

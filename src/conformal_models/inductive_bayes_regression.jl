@@ -17,7 +17,7 @@ end
 function BayesRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
-    heuristic::Function=conformal_bayes_score,
+    heuristic::Function=gaussian_bayes_score,
     train_ratio::AbstractFloat=0.5,
 )
     @assert typeof(model) == LaplaceRegression "Model must be of type Laplace"
