@@ -1,4 +1,5 @@
 # Simple
+using LaplaceRedux: LaplaceClassification
 @doc raw"""
 The `BayesClassifier` is the simplest approach to Inductive Conformalized Bayes. As explained in https://arxiv.org/abs/2107.07511,
 the  conformal score is  defined as the opposite of the probability of observing y given x : `` s= -P(Y|X) ``. Once the treshold ``\hat{q}`` is chosen, The credible interval is then
@@ -18,7 +19,9 @@ function BayesClassifier(
     coverage::AbstractFloat=0.95,
     heuristic::Function= aps_score,
     train_ratio::AbstractFloat=0.5,
+
 )
+    @assert typeof(model) == LaplaceClassification "Model must be of type Laplace"
     return BayesClassifier(model, coverage, nothing, heuristic, train_ratio)
 end
 

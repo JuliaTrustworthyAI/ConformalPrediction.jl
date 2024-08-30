@@ -61,7 +61,7 @@ end
 
 """
 function aps_score(fitresult, X, y=nothing)
-    p̂ = reformat_mlj_prediction(MMI.predict(fitresult, MMI.reformat(atomic, X)...))
+    p̂ = reformat_mlj_prediction(MMI.predict(fitresult,  X))
     L = p̂.decoder.classes
     probas = pdf(p̂, L)                                              # compute probabilities for all classes
     scores = map(Base.Iterators.product(eachrow(probas), L)) do Z

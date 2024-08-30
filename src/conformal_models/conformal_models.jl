@@ -57,7 +57,7 @@ include("transductive_regression.jl")
 include("inductive_bayes_regression.jl")
 # Classification Models
 include("inductive_classification.jl")
-#include("inductive_bayes_classification.jl")
+include("inductive_bayes_classification.jl")
 include("transductive_classification.jl")
 
 # Training:
@@ -71,6 +71,7 @@ const InductiveModel = Union{
     AdaptiveInductiveClassifier,
     ConformalQuantileRegressor,
     BayesRegressor,
+    BayesClassifier,
 }
 
 const TransductiveModel = Union{
@@ -127,7 +128,7 @@ const tested_atomic_models = Dict(
         :nearest_neighbor => :(@load KNNRegressor pkg = NearestNeighborModels),
         :decision_tree_regressor => :(@load DecisionTreeRegressor pkg = DecisionTree),
         :random_forest_regressor => :(@load RandomForestRegressor pkg = DecisionTree),
-        #:bayesregressor => :(@load BayesRegressor pkg = LaplaceRedux),
+        #:bayes_regressor => :(@load BayesRegressor pkg = LaplaceRedux),
         # :light_gbm => :(@load LGBMRegressor pkg = LightGBM),
         # :neural_network => :(@load NeuralNetworkRegressor pkg = MLJFlux),
         # :symbolic_regression => (@load SRRegressor pkg = SymbolicRegression),
@@ -138,6 +139,7 @@ const tested_atomic_models = Dict(
         :nearest_neighbor => :(@load KNNClassifier pkg = NearestNeighborModels),
         :decision_tree_classifier => :(@load DecisionTreeClassifier pkg = DecisionTree),
         :random_forest_classifier => :(@load RandomForestClassifier pkg = DecisionTree),
+        #:bayes_classifier => :(@load BayesClassifier pkg = LaplaceRedux),
         # :light_gbm => :(@load LGBMClassifier pkg = LightGBM),
         # :neural_network => :(@load NeuralNetworkClassifier pkg = MLJFlux),
     ),
