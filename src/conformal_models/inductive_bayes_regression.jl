@@ -1,5 +1,6 @@
 
 using LaplaceRedux: LaplaceRegression
+
 @doc raw"""
 The `BayesRegressor` is the simplest approach to Inductive Conformalized Bayes. As explained in https://arxiv.org/abs/2107.07511,
 the  conformal score is  defined as the opposite of the probability of observing y given x : `` s= -P(Y|X) ``. Once the treshold ``\hat{q}`` is chosen, The credible interval is then

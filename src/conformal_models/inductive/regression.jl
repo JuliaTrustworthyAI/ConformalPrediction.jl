@@ -4,8 +4,9 @@ using MLJLinearModels: MLJLinearModels
 mutable struct SimpleInductiveRegressor{Model<:Supervised} <: ConformalInterval
     model::Model
     coverage::AbstractFloat
-    scores::Union{Nothing,AbstractArray}
+    scores::Union{Nothing,Dict{Any,Any}}
     heuristic::Function
+    parallelizer::Union{Nothing,AbstractParallelizer}
     train_ratio::AbstractFloat
 end
 
@@ -13,13 +14,16 @@ function SimpleInductiveRegressor(
     model::Supervised;
     coverage::AbstractFloat=0.95,
     heuristic::Function=absolute_error,
+    parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
     train_ratio::AbstractFloat=0.5,
 )
-    return SimpleInductiveRegressor(model, coverage, nothing, heuristic, train_ratio)
+    return SimpleInductiveRegressor(
+        model, coverage, nothing, heuristic, parallelizer, train_ratio
+    )
 end
 
 @doc raw"""
-    MMI.fit(conf_model::SimpleInductiveRegressor, verbosity, X, y)
+    score(conf_model::SimpleInductiveRegressor, atomic::Supervised, fitresult, X, y=nothing)
 
 For the [`SimpleInductiveRegressor`](@ref) nonconformity scores are computed as follows:
 
@@ -29,22 +33,16 @@ S_i^{\text{CAL}} = s(X_i, Y_i) = h(\hat\mu(X_i), Y_i), \ i \in \mathcal{D}_{\tex
 
 A typical choice for the heuristic function is ``h(\hat\mu(X_i),Y_i)=|Y_i-\hat\mu(X_i)|`` where ``\hat\mu`` denotes the model fitted on training data ``\mathcal{D}_{\text{train}}``.
 """
-function MMI.fit(conf_model::SimpleInductiveRegressor, verbosity, X, y)
-
-    # Data Splitting:
-    Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
-    # Training:
-    fitresult, cache, report = MMI.fit(
-        conf_model.model, verbosity, MMI.reformat(conf_model.model, Xtrain, ytrain)...
-    )
-
-    # Nonconformity Scores:
-    ŷ = reformat_mlj_prediction(
-        MMI.predict(conf_model.model, fitresult, MMI.reformat(conf_model.model, Xcal)...)
-    )
-    conf_model.scores = @.(conf_model.heuristic(ycal, ŷ))
-
-    return (fitresult, cache, report)
+function score(
+    conf_model::SimpleInductiveRegressor, atomic::Supervised, fitresult, X, y=nothing
+)
+    ŷ = reformat_mlj_prediction(MMI.predict(atomic, fitresult, MMI.reformat(atomic, X)...))
+    scores = @.(conf_model.heuristic(y, ŷ))
+    if isnothing(y)
+        return scores
+    else
+        return scores, scores
+    end
 end
 
 # Prediction
@@ -79,6 +77,7 @@ mutable struct ConformalQuantileRegressor{Model<:QuantileModel} <: ConformalInte
     coverage::AbstractFloat
     scores::Union{Nothing,AbstractArray}
     heuristic::Function
+    parallelizer::Union{Nothing,AbstractParallelizer}
     train_ratio::AbstractFloat
 end
 
@@ -88,10 +87,18 @@ function ConformalQuantileRegressor(
     heuristic::Function=function f(y, ŷ_lb, ŷ_ub)
         return reduce((x, y) -> max.(x, y), [ŷ_lb - y, y - ŷ_ub])
     end,
+    parallelizer::Union{Nothing,AbstractParallelizer}=nothing,
     train_ratio::AbstractFloat=0.5,
 )
-    return ConformalQuantileRegressor(model, coverage, nothing, heuristic, train_ratio)
+    return ConformalQuantileRegressor(
+        model, coverage, nothing, heuristic, parallelizer, train_ratio
+    )
 end
+
+# function fit_atomic(conf_model::ConformalQuantileRegressor, verbosity, X, y)
+#     fitresult, cache, report = MMI.fit(conf_model.model, verbosity, MMI.reformat(conf_model.model, X, y)...)
+#     return fitresult, cache, report
+# end
 
 @doc raw"""
     MMI.fit(conf_model::ConformalQuantileRegressor, verbosity, X, y)
@@ -109,13 +116,7 @@ A typical choice for the heuristic function is ``h(\hat\mu_{\alpha_{lo}}(X_i), \
 function MMI.fit(conf_model::ConformalQuantileRegressor, verbosity, X, y)
 
     # Data Splitting:
-    train, calibration = partition(eachindex(y), conf_model.train_ratio)
-    Xtrain = selectrows(X, train)
-    ytrain = y[train]
-    Xtrain, ytrain = MMI.reformat(conf_model.model, Xtrain, ytrain)
-    Xcal = selectrows(X, calibration)
-    ycal = y[calibration]
-    Xcal, ycal = MMI.reformat(conf_model.model, Xcal, ycal)
+    Xtrain, ytrain, Xcal, ycal = split_data(conf_model, X, y)
 
     # Training:
     fitresult, cache, report, y_pred = ([], [], [], [])
