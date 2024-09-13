@@ -7,6 +7,7 @@ const InductiveModel = Union{
     SimpleInductiveClassifier,
     AdaptiveInductiveClassifier,
     ConformalQuantileRegressor,
+    BayesRegressor,
 }
 
 """

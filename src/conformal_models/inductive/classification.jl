@@ -1,3 +1,12 @@
+"""
+    score(conf_model::ConformalProbabilisticSet, fitresult, X, y=nothing)
+
+Generic score method for the [`ConformalProbabilisticSet`](@ref). It computes nonconformity scores using the heuristic function `h` and the softmax probabilities of the true class. Method is dispatched for different Conformal Probabilistic Sets and atomic models.
+"""
+function score(conf_model::ConformalProbabilisticSet, fitresult, X, y=nothing)
+    return score(conf_model, conf_model.model, fitresult, X, y)
+end
+
 # Simple
 "The `SimpleInductiveClassifier` is the simplest approach to Inductive Conformal Classification. Contrary to the [`NaiveClassifier`](@ref) it computes nonconformity scores using a designated calibration dataset."
 mutable struct SimpleInductiveClassifier{Model<:Supervised} <: ConformalProbabilisticSet
