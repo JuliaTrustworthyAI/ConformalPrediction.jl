@@ -6,7 +6,6 @@ export ConformalModel
 export conformal_model, fit, predict, partial_fit
 export available_models, tested_atomic_models
 export set_size
-export soft_assignment
 
 # Evaluation:
 include("evaluation/evaluation.jl")
