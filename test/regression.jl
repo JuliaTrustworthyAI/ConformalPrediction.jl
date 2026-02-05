@@ -1,5 +1,4 @@
 using MLJ
-using Plots
 
 # Data:
 data_specs = (
@@ -43,23 +42,6 @@ conformal_models = merge(values(available_models[:regression])...)
                                 fit!(mach; rows=train)
                                 @test !isnothing(conf_model.scores)
                                 predict(mach, selectrows(X, test))
-
-                                # Plotting:
-                                @testset "Plotting" begin
-                                    plot(mach.model, mach.fitresult, X, y)
-                                    plot(
-                                        mach.model,
-                                        mach.fitresult,
-                                        X,
-                                        y;
-                                        input_var=1,
-                                        xlims=(-1, 1),
-                                        ylims=(-1, 1),
-                                    )
-                                    plot(mach.model, mach.fitresult, X, y; input_var=:x1)
-                                    bar(mach.model, mach.fitresult, X)
-                                    @test true
-                                end
 
                                 # Evaluation:
                                 # Evaluation takes some time, so only testing for one method.

@@ -12,3 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Removed CounterfactualTraining module (which was a broken work-in-progress). 
 - Updated outdated symbol in Bayes regression.
 
+### Removed
+
+- Unit tests for plots (to be done in TaijaPlotting.jl).
+

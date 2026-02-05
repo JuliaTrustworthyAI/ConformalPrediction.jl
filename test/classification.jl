@@ -1,5 +1,4 @@
 using MLJ
-using Plots
 
 # Data:
 data_specs = (
