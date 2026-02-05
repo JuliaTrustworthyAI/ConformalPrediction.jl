@@ -1,6 +1,5 @@
 using ConformalPrediction
 using Documenter
-using TaijaPlotting
 using Test
 
 # Doctests:

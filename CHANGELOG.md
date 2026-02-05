@@ -1,0 +1,18 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+*Note*: We try to adhere to these practices as of version [v0.2.0].
+
+## Version [0.2.0] - 2026-02-05
+
+- Updated various outdated compat bounds.
+- Removed CounterfactualTraining module (which was a broken work-in-progress). 
+- Updated outdated symbol in Bayes regression.
+
+### Removed
+
+- Unit tests for plots (to be done in TaijaPlotting.jl).
+
