@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 *Note*: We try to adhere to these practices as of version [v0.2.0].
 
+## Version [0.2.1] - 2026-02-14
+
+### Removed
+
+- Temporarily removed TaijaPlotting dependency from docs.
+
 ## Version [0.2.0] - 2026-02-05
 
 - Updated various outdated compat bounds.
