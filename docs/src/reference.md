@@ -29,7 +29,6 @@ Pages = ["_reference.md"]
 ``` @autodocs
 Modules = [
     ConformalPrediction,
-    ConformalPrediction.ConformalTraining,
 ]
 Private = false
 ```
@@ -39,7 +38,6 @@ Private = false
 ``` @autodocs
 Modules = [
     ConformalPrediction,
-    ConformalPrediction.ConformalTraining,
 ]
 Public = false
 ```
