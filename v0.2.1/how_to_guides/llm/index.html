@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>How to Conformalize a Large Language Model · ConformalPrediction.jl</title><meta name="title" content="How to Conformalize a Large Language Model · ConformalPrediction.jl"/><meta property="og:title" content="How to Conformalize a Large Language Model · ConformalPrediction.jl"/><meta property="twitter:title" content="How to Conformalize a Large Language Model · ConformalPrediction.jl"/><meta name="description" content="Documentation for ConformalPrediction.jl."/><meta property="og:description" content="Documentation for ConformalPrediction.jl."/><meta property="twitter:description" content="Documentation for ConformalPrediction.jl."/><meta property="og:url" content="https://juliatrustworthyai.github.io/ConformalPrediction.jl/how_to_guides/llm/"/><meta property="twitter:url" content="https://juliatrustworthyai.github.io/ConformalPrediction.jl/how_to_guides/llm/"/><link rel="canonical" href="https://juliatrustworthyai.github.io/ConformalPrediction.jl/how_to_guides/llm/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.svg" alt="ConformalPrediction.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">ConformalPrediction.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">🏠 Home</a></li><li><span class="tocitem">🫣 Tutorials</span><ul><li><a class="tocitem" href="../../tutorials/">Overview</a></li><li><a class="tocitem" href="../../tutorials/classification/">Classification</a></li><li><a class="tocitem" href="../../tutorials/regression/">Regression</a></li></ul></li><li><span class="tocitem">🫡 How-To Guides</span><ul><li><a class="tocitem" href="../">Overview</a></li><li><a class="tocitem" href="../mnist/">How to Conformalize a Deep Image Classifier</a></li><li class="is-active"><a class="tocitem" href>How to Conformalize a Large Language Model</a><ul class="internal"><li><a class="tocitem" href="#Data"><span>Data</span></a></li><li><a class="tocitem" href="#HuggingFace-Model"><span>HuggingFace Model</span></a></li><li><a class="tocitem" href="#MLJ-Interface"><span><code>MLJ</code> Interface</span></a></li><li><a class="tocitem" href="#Conformal-Chatbot"><span>Conformal Chatbot</span></a></li><li><a class="tocitem" href="#Final-Remarks"><span>Final Remarks</span></a></li><li><a class="tocitem" href="#References"><span>References</span></a></li></ul></li><li><a class="tocitem" href="../timeseries/">How to Conformalize a Time Series Model</a></li></ul></li><li><span class="tocitem">🤓 Explanation</span><ul><li><a class="tocitem" href="../../explanation/">Overview</a></li><li><a class="tocitem" href="../../explanation/architecture/">Package Architecture</a></li><li><a class="tocitem" href="../../explanation/finite_sample_correction/">Finite-sample Correction</a></li></ul></li><li><a class="tocitem" href="../../reference/">🧐 Reference</a></li><li><a class="tocitem" href="../../contribute/">🛠 Contribute</a></li><li><a class="tocitem" href="../../faq/">❓ FAQ</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">🫡 How-To Guides</a></li><li class="is-active"><a href>How to Conformalize a Large Language Model</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>How to Conformalize a Large Language Model</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/juliatrustworthyai/ConformalPrediction.jl/blob/main/docs/src/how_to_guides/llm.md#" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="How-to-Build-a-Conformal-Chatbot"><a class="docs-heading-anchor" href="#How-to-Build-a-Conformal-Chatbot">How to Build a Conformal Chatbot</a><a id="How-to-Build-a-Conformal-Chatbot-1"></a><a class="docs-heading-anchor-permalink" href="#How-to-Build-a-Conformal-Chatbot" title="Permalink"></a></h1><p>Large Language Models are all the buzz right now. They are used for a variety of tasks, including text classification, question answering, and text generation. In this tutorial, we will show how to conformalize a transformer language model for text classification. We will use the <a href="https://arxiv.org/abs/2003.04807">Banking77</a> dataset (Casanueva et al. 2020), which consists of 13,083 queries from 77 intents. On the model side, we will use the <a href="https://huggingface.co/mrm8488/distilroberta-finetuned-banking77">DistilRoBERTa</a> model, which is a distilled version of <a href="https://arxiv.org/abs/1907.11692">RoBERTa</a> (Liu et al. 2019) finetuned on the Banking77 dataset.</p><h2 id="Data"><a class="docs-heading-anchor" href="#Data">Data</a><a id="Data-1"></a><a class="docs-heading-anchor-permalink" href="#Data" title="Permalink"></a></h2><p>The data was downloaded from <a href="https://huggingface.co/datasets/PolyAI/banking77">HuggingFace</a> 🤗 (HF) and split into a proper training, calibration, and test set. All that’s left to do is to load the data and preprocess it. We add 1 to the labels to make them 1-indexed (sorry Pythonistas 😜)</p><pre><code class="language-julia hljs"># Get labels:
+df_labels = CSV.read(&quot;dev/artifacts/data/banking77/labels.csv&quot;, DataFrame, drop=[1])
+labels = df_labels[:,1]
+
+# Get data:
+df_train = CSV.read(&quot;dev/artifacts/data/banking77/train.csv&quot;, DataFrame, drop=[1])
+df_cal = CSV.read(&quot;dev/artifacts/data/banking77/calibration.csv&quot;, DataFrame, drop=[1])
+df_full_train = vcat(df_train, df_cal)
+train_ratio = round(nrow(df_train)/nrow(df_full_train), digits=2)
+df_test = CSV.read(&quot;dev/artifacts/data/banking77/test.csv&quot;, DataFrame, drop=[1])
+
+# Preprocess data:
+queries_train, y_train = collect(df_train.text), categorical(df_train.labels .+ 1)
+queries_cal, y_cal = collect(df_cal.text), categorical(df_cal.labels .+ 1)
+queries, y = collect(df_full_train.text), categorical(df_full_train.labels .+ 1)
+queries_test, y_test = collect(df_test.text), categorical(df_test.labels .+ 1)</code></pre><h2 id="HuggingFace-Model"><a class="docs-heading-anchor" href="#HuggingFace-Model">HuggingFace Model</a><a id="HuggingFace-Model-1"></a><a class="docs-heading-anchor-permalink" href="#HuggingFace-Model" title="Permalink"></a></h2><p>The model can be loaded from HF straight into our running Julia session using the <a href="https://github.com/chengchingwen/Transformers.jl/tree/master"><code>Transformers.jl</code></a> package. Below we load the tokenizer <code>tkr</code> and the model <code>mod</code>. The tokenizer is used to convert the text into a sequence of integers, which is then fed into the model. The model outputs a hidden state, which is then fed into a classifier to get the logits for each class. Finally, the logits are then passed through a softmax function to get the corresponding predicted probabilities. Below we run a few queries through the model to see how it performs.</p><pre><code class="language-julia hljs"># Load model from HF 🤗:
+tkr = hgf&quot;mrm8488/distilroberta-finetuned-banking77:tokenizer&quot;
+mod = hgf&quot;mrm8488/distilroberta-finetuned-banking77:ForSequenceClassification&quot;
+
+# Test model:
+query = [
+    &quot;What is the base of the exchange rates?&quot;,
+    &quot;Why is my card not working?&quot;,
+    &quot;My Apple Pay is not working, what should I do?&quot;,
+]
+a = encode(tkr, query)
+b = mod.model(a)
+c = mod.cls(b.hidden_state)
+d = softmax(c.logit)
+[labels[i] for i in Flux.onecold(d)]</code></pre><pre><code class="nohighlight hljs">3-element Vector{String}:
+ &quot;exchange_rate&quot;
+ &quot;card_not_working&quot;
+ &quot;apple_pay_or_google_pay&quot;</code></pre><h2 id="MLJ-Interface"><a class="docs-heading-anchor" href="#MLJ-Interface"><code>MLJ</code> Interface</a><a id="MLJ-Interface-1"></a><a class="docs-heading-anchor-permalink" href="#MLJ-Interface" title="Permalink"></a></h2><p>Since our package is interfaced to <a href="https://alan-turing-institute.github.io/MLJ.jl/dev/"><code>MLJ.jl</code></a>, we need to define a wrapper model that conforms to the <code>MLJ</code> interface. In order to add the model for general use, we would probably go through <a href="https://github.com/FluxML/MLJFlux.jl"><code>MLJFlux.jl</code></a>, but for this tutorial, we will make our life easy and simply overload the <code>MLJBase.fit</code> and <code>MLJBase.predict</code> methods. Since the model from HF is already pre-trained and we are not interested in further fine-tuning, we will simply return the model object in the <code>MLJBase.fit</code> method. The <code>MLJBase.predict</code> method will then take the model object and the query and return the predicted probabilities. We also need to define the <code>MLJBase.target_scitype</code> and <code>MLJBase.predict_mode</code> methods. The former tells <code>MLJ</code> what the output type of the model is, and the latter can be used to retrieve the label with the highest predicted probability.</p><pre><code class="language-julia hljs">struct IntentClassifier &lt;: MLJBase.Probabilistic
+    tkr::TextEncoders.AbstractTransformerTextEncoder
+    mod::HuggingFace.HGFRobertaForSequenceClassification
+end
+
+function IntentClassifier(;
+    tokenizer::TextEncoders.AbstractTransformerTextEncoder, 
+    model::HuggingFace.HGFRobertaForSequenceClassification,
+)
+    IntentClassifier(tkr, mod)
+end
+
+function get_hidden_state(clf::IntentClassifier, query::Union{AbstractString, Vector{&lt;:AbstractString}})
+    token = encode(clf.tkr, query)
+    hidden_state = clf.mod.model(token).hidden_state
+    return hidden_state
+end
+
+# This doesn&#39;t actually retrain the model, but it retrieves the classifier object
+function MLJBase.fit(clf::IntentClassifier, verbosity, X, y)
+    cache=nothing
+    report=nothing
+    fitresult = (clf = clf.mod.cls, labels = levels(y))
+    return fitresult, cache, report
+end
+
+function MLJBase.predict(clf::IntentClassifier, fitresult, Xnew)
+    output = fitresult.clf(get_hidden_state(clf, Xnew))
+    p̂ = UnivariateFinite(fitresult.labels,softmax(output.logit)&#39;,pool=missing)
+    return p̂
+end
+
+MLJBase.target_scitype(clf::IntentClassifier) = AbstractVector{&lt;:Finite}
+
+MLJBase.predict_mode(clf::IntentClassifier, fitresult, Xnew) = mode.(MLJBase.predict(clf, fitresult, Xnew))</code></pre><p>To test that everything is working as expected, we fit the model and generated predictions for a subset of the test data:</p><pre><code class="language-julia hljs">clf = IntentClassifier(tkr, mod)
+top_n = 10
+fitresult, _, _ = MLJBase.fit(clf, 1, nothing, y_test[1:top_n])
+@time ŷ = MLJBase.predict(clf, fitresult, queries_test[1:top_n]);</code></pre><h2 id="Conformal-Chatbot"><a class="docs-heading-anchor" href="#Conformal-Chatbot">Conformal Chatbot</a><a id="Conformal-Chatbot-1"></a><a class="docs-heading-anchor-permalink" href="#Conformal-Chatbot" title="Permalink"></a></h2><p>To turn the wrapped, pre-trained model into a conformal intent classifier, we can now rely on standard API calls. We first wrap our atomic model where we also specify the desired coverage rate and method. Since even simple forward passes are computationally expensive for our (small) LLM, we rely on Simple Inductive Conformal Classification.</p><pre><code class="language-julia hljs">#| eval: false
+
+conf_model = conformal_model(clf; coverage=0.95, method=:simple_inductive, train_ratio=train_ratio)
+mach = machine(conf_model, queries, y)
+@time fit!(mach)
+Serialization.serialize(&quot;dev/artifacts/models/banking77/simple_inductive.jls&quot;, mach)</code></pre><p>Finally, we use our conformal LLM to build a simple and yet powerful chatbot that runs directly in the Julia REPL. Without dwelling on the details too much, the <code>conformal_chatbot</code> works as follows:</p><ol><li>Prompt user to explain their intent.</li><li>Feed user input through conformal LLM and present the output to the user.</li><li>If the conformal prediction sets includes more than one label, prompt the user to either refine their input or choose one of the options included in the set.</li></ol><pre><code class="language-julia hljs">mach = Serialization.deserialize(&quot;dev/artifacts/models/banking77/simple_inductive.jls&quot;)
+
+function prediction_set(mach, query::String)
+    p̂ = MLJBase.predict(mach, query)[1]
+    probs = pdf.(p̂, collect(1:77))
+    in_set = findall(probs .!= 0)
+    labels_in_set = labels[in_set]
+    probs_in_set = probs[in_set]
+    _order = sortperm(-probs_in_set)
+    plt = UnicodePlots.barplot(labels_in_set[_order], probs_in_set[_order], title=&quot;Possible Intents&quot;)
+    return labels_in_set, plt
+end
+
+function conformal_chatbot()
+    println(&quot;👋 Hi, I&#39;m a Julia, your conformal chatbot. I&#39;m here to help you with your banking query. Ask me anything or type &#39;exit&#39; to exit ...\n&quot;)
+    completed = false
+    queries = &quot;&quot;
+    while !completed
+        query = readline()
+        queries = queries * &quot;,&quot; * query
+        labels, plt = prediction_set(mach, queries)
+        if length(labels) &gt; 1
+            println(&quot;🤔 Hmmm ... I can think of several options here. If any of these applies, simply type the corresponding number (e.g. &#39;1&#39; for the first option). Otherwise, can you refine your question, please?\n&quot;)
+            println(plt)
+        else
+            println(&quot;🥳 I think you mean $(labels[1]). Correct?&quot;)
+        end
+
+        # Exit:
+        if query == &quot;exit&quot;
+            println(&quot;👋 Bye!&quot;)
+            break
+        end
+        if query ∈ string.(collect(1:77))
+            println(&quot;👍 Great! You&#39;ve chosen &#39;$(labels[parse(Int64, query)])&#39;. I&#39;m glad I could help you. Have a nice day!&quot;)
+            completed = true
+        end
+    end
+end</code></pre><p>Below we show the output for two example queries. The first one is very ambiguous. As expected, the size of the prediction set is therefore large.</p><pre><code class="language-julia hljs">ambiguous_query = &quot;transfer mondey?&quot;
+prediction_set(mach, ambiguous_query)[2]</code></pre><pre><code class="nohighlight hljs">                                                        Possible Intents              
+                                           ┌                                        ┐ 
+                   beneficiary_not_allowed ┤■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 0.150517   
+   balance_not_updated_after_bank_transfer ┤■■■■■■■■■■■■■■■■■■■■■■ 0.111409           
+                     transfer_into_account ┤■■■■■■■■■■■■■■■■■■■ 0.0939535             
+        transfer_not_received_by_recipient ┤■■■■■■■■■■■■■■■■■■ 0.091163               
+            top_up_by_bank_transfer_charge ┤■■■■■■■■■■■■■■■■■■ 0.089306               
+                           failed_transfer ┤■■■■■■■■■■■■■■■■■■ 0.0888322              
+                           transfer_timing ┤■■■■■■■■■■■■■ 0.0641952                   
+                      transfer_fee_charged ┤■■■■■■■ 0.0361131                         
+                          pending_transfer ┤■■■■■ 0.0270795                           
+                           receiving_money ┤■■■■■ 0.0252126                           
+                         declined_transfer ┤■■■ 0.0164443                             
+                           cancel_transfer ┤■■■ 0.0150444                             
+                                           └                                        ┘</code></pre><p>The more refined version of the prompt yields a smaller prediction set: less ambiguous prompts result in lower predictive uncertainty.</p><pre><code class="language-julia hljs">refined_query = &quot;I tried to transfer money to my friend, but it failed.&quot;
+prediction_set(mach, refined_query)[2]</code></pre><pre><code class="nohighlight hljs">                                                        Possible Intents              
+                                           ┌                                        ┐ 
+                           failed_transfer ┤■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 0.59042   
+                   beneficiary_not_allowed ┤■■■■■■■ 0.139806                          
+        transfer_not_received_by_recipient ┤■■ 0.0449783                              
+   balance_not_updated_after_bank_transfer ┤■■ 0.037894                               
+                         declined_transfer ┤■ 0.0232856                               
+                     transfer_into_account ┤■ 0.0108771                               
+                           cancel_transfer ┤ 0.00876369                               
+                                           └                                        ┘</code></pre><p>Below we include a short demo video that shows the REPL-based chatbot in action.</p><p><img src="../../www/demo_llm.gif" alt/></p><h2 id="Final-Remarks"><a class="docs-heading-anchor" href="#Final-Remarks">Final Remarks</a><a id="Final-Remarks-1"></a><a class="docs-heading-anchor-permalink" href="#Final-Remarks" title="Permalink"></a></h2><p>This work was done in collaboration with colleagues at ING as part of the ING Analytics 2023 Experiment Week. Our team demonstrated that Conformal Prediction provides a powerful and principled alternative to top-<em>K</em> intent classification. We won the first prize by popular vote.</p><h2 id="References"><a class="docs-heading-anchor" href="#References">References</a><a id="References-1"></a><a class="docs-heading-anchor-permalink" href="#References" title="Permalink"></a></h2><p>Casanueva, Iñigo, Tadas Temčinas, Daniela Gerz, Matthew Henderson, and Ivan Vulić. 2020. “Efficient Intent Detection with Dual Sentence Encoders.” In <em>Proceedings of the 2nd Workshop on Natural Language Processing for Conversational AI</em>, 38–45. Online: Association for Computational Linguistics. <a href="https://doi.org/10.18653/v1/2020.nlp4convai-1.5">https://doi.org/10.18653/v1/2020.nlp4convai-1.5</a>.</p><p>Liu, Yinhan, Myle Ott, Naman Goyal, Jingfei Du, Mandar Joshi, Danqi Chen, Omer Levy, Mike Lewis, Luke Zettlemoyer, and Veselin Stoyanov. 2019. “RoBERTa: A Robustly Optimized BERT Pretraining Approach.” arXiv. <a href="https://doi.org/10.48550/arXiv.1907.11692">https://doi.org/10.48550/arXiv.1907.11692</a>.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../mnist/">« How to Conformalize a Deep Image Classifier</a><a class="docs-footer-nextpage" href="../timeseries/">How to Conformalize a Time Series Model »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Tuesday 17 February 2026 09:21">Tuesday 17 February 2026</span>. Using Julia version 1.12.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
